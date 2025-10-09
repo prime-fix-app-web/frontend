@@ -1,13 +1,18 @@
 import {createRouter, createWebHistory} from "vue-router";
 import iamRoutes from "@/iam/presentation/iam-routes.js";
 
+
+
 const layoutOwner = () => import("./shared/presentation/components/layout-owner.vue");
 const layoutWorkshop = () => import("./shared/presentation/components/layout-workshop.vue");
 const homeOwner = () => import("./shared/presentation/views/home-owner.vue");
 const homeWorkshop = () => import("./shared/presentation/views/home-workshop.vue");
 const pageNotFound = () => import("./shared/presentation/views/page-not-found.vue");
 
+
 const routes = [
+
+
     {
         path: '/iam',
         name: 'iam',
@@ -49,7 +54,8 @@ const routes = [
     },
     {
         path: '/',
-        redirect: '/iam/login'
+        //redirect: '/iam/login'
+        redirect: '/technicians'
     },
     {
         path: '/:pathMatch(.*)*',
@@ -72,3 +78,45 @@ router.beforeEach((to, from, next) => {
 })
 
 export default router;
+import { createRouter, createWebHistory } from 'vue-router';
+import AutoRepairRegisterForm from './autorepair-registration/presentation/views/auto-repair-register-form.vue';
+
+const routes = [
+  {
+    path: '/',
+    name: 'AutoRepairRegisterForm',
+    component: AutoRepairRegisterForm
+  }
+];
+
+const router = createRouter({
+  history: createWebHistory(),
+  routes
+});
+
+export default router;
+
+
+/*import { createRouter, createWebHistory } from 'vue-router';
+import AutoRepairRegisterForm from './autorepair-registration/presentation/views/auto-repair-register-form.vue';
+import Techniques from './autorepair-registration/presentation/views/technician-details.vue';
+const routes = [
+    {
+        path: '/technician-details',
+        name: 'TechnicianDetails',
+        component: () => import('@/autorepair-registration/presentation/views/technician-details.vue')
+    },
+    {
+        path: '/technicians',
+        component: () => import('./autorepair-registration/presentation/views/technician-list.vue'), // Este componente
+        name: 'technicians'
+    }
+];
+
+
+const router = createRouter({
+    history: createWebHistory(),
+    routes
+});
+
+export default router;*/
