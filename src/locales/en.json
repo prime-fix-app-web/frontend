@@ -39,7 +39,8 @@
     "noAccount": "Don't have an account?",
     "signIn": "Sign In",
     "signUp": "Sign Up",
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "invalidCredentials": "Invalid email or password. Please try again."
   },
   "register-owner": {
     "title": "Create your account, manage visits",

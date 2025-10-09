@@ -1,5 +1,6 @@
 import {createRouter, createWebHistory} from "vue-router";
 import iamRoutes from "@/iam/presentation/iam-routes.js";
+import {authGuard} from "@/shared/infrastructure/guards/auth.guard.js";
 
 const layoutOwner = () => import("./shared/presentation/components/layout-owner.vue");
 const layoutWorkshop = () => import("./shared/presentation/components/layout-workshop.vue");
@@ -17,16 +18,14 @@ const routes = [
         path: '/layout-owner',
         name: 'layout-owner',
         component: layoutOwner,
+        beforeEnter: authGuard,
+        redirect: '/layout-owner/home-owner',
         children: [
             {
                 path: 'home-owner',
                 name: 'home-owner',
                 component: homeOwner,
                 meta: { title: 'Home Owner' }
-            },
-            {
-                path: '',
-                redirect: '/layout-owner/home-owner'
             }
         ]
     },
@@ -34,16 +33,14 @@ const routes = [
         path: '/layout-workshop',
         name: 'layout-workshop',
         component: layoutWorkshop,
+        beforeEnter: authGuard,
+        redirect: '/layout-workshop/home-workshop',
         children: [
             {
                 path: 'home-workshop',
                 name: 'home-workshop',
                 component: homeWorkshop,
                 meta: { title: 'Home Workshop' }
-            },
-            {
-                path: '',
-                redirect: '/layout-workshop/home-workshop'
             }
         ]
     },

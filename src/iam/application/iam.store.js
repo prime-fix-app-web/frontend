@@ -6,38 +6,201 @@ import {PaymentAssembler} from "@/iam/infrastructure/payment.assembler.js";
 import {UserAccountAssembler} from "@/iam/infrastructure/user-account.assembler.js";
 import {UserAssembler} from "@/iam/infrastructure/user.assembler.js";
 
+/**
+ * Singleton instance of IamApi to be used across the store.
+ * @type {IamApi}
+ */
 const iamApi = new IamApi();
 
 const useIamStore = defineStore('iam', () => {
+    /**
+     * List of locations.
+     * @type {import('vue').Ref<Location[]>}
+     */
     const locations = ref([]);
+    /**
+     * List of payments.
+     * @type {import('vue').Ref<Payment[]>}
+     */
     const payments = ref([]);
+    /**
+     * List of users.
+     * @type {import('vue').Ref<User[]>}
+     */
     const users = ref([]);
+    /**
+     * List of user accounts.
+     * @type {import('vue').Ref<UserAccount[]>}
+     */
     const userAccounts = ref([]);
 
+    /**
+     * List of errors.
+     * @type {import('vue').Ref<Error[]>}
+     */
     const errors = ref([]);
 
-
+    /**
+     * Indicates if locations have been loaded.
+     * @type {import('vue').Ref<boolean>}
+     */
     const locationsLoaded = ref(false);
+    /**
+     * Indicates if payments have been loaded.
+     * @type {import('vue').Ref<boolean>}
+     */
     const paymentsLoaded = ref(false);
+    /**
+     * Indicates if users have been loaded.
+     * @type {import('vue').Ref<boolean>}
+     */
     const usersLoaded = ref(false);
+    /**
+     * Indicates if user accounts have been loaded.
+     * @type {import('vue').Ref<boolean>}
+     */
     const userAccountsLoaded = ref(false);
 
+    /**
+     * Count of locations.
+     * @type {import('vue').ComputedRef<number>}
+     */
     const locationsCount = computed(() => {
         return locationsLoaded ? locations.value.length : 0;
     });
 
+    /**
+     * Count of payments.
+     * @type {import('vue').ComputedRef<number>}
+     */
     const paymentsCount = computed(() => {
         return paymentsLoaded ? payments.value.length : 0;
     });
 
+    /**
+     * Count of users.
+     * @type {import('vue').ComputedRef<number>}
+     */
     const usersCount = computed(() => {
         return usersLoaded ? users.value.length : 0;
     });
 
+    /**
+     * Count of user accounts.
+     * @type {import('vue').ComputedRef<number>}
+     */
     const userAccountsCount = computed(() => {
         return userAccountsLoaded ? userAccounts.value.length : 0;
     });
 
+
+    /**
+     * The currently authenticated user's account.
+     * @type {import('vue').Ref<UserAccount|null>}
+     */
+    const sessionUserAccount = ref(null);
+    /**
+     * The currently authenticated user.
+     * @type {import('vue').Ref<User|null>}
+     */
+    const sessionUser = ref(null);
+    /**
+     * Indicates if a user is authenticated.
+     * @type {import('vue').ComputedRef<boolean>}
+     */
+    const isAuthenticated = computed(() => !!sessionUserAccount.value);
+    /**
+     * The role ID of the currently authenticated user.
+     * @type {import('vue').ComputedRef<number|null>}
+     */
+    const roleId = computed(() => sessionUserAccount.value ? sessionUserAccount.value.id_role : null);
+
+    /**
+     * Load session from localStorage if available.
+     * This function should be called on application startup to restore the session.
+     * @returns {void}
+     */
+    function loadSessionFromStorage() {
+        const storedUserAccount = localStorage.getItem('userAccount');
+        const storedUser = localStorage.getItem('user');
+        const storedIsAuthenticated = localStorage.getItem('isAuthenticated');
+
+        if (storedIsAuthenticated === 'true' && storedUserAccount) {
+            try {
+                sessionUserAccount.value = JSON.parse(storedUserAccount);
+                if (storedUser) {
+                    sessionUser.value = JSON.parse(storedUser);
+                }
+                console.log('Session loaded from storage', sessionUserAccount.value);
+            } catch (e) {
+                console.error('Error loading session from storage', e);
+                clearSession();
+            }
+        }
+    }
+
+    /**
+     * Simulated login function.
+     * @param email - User email
+     * @param password - User password
+     * @returns {Promise<unknown>} - Resolves with user account on success, rejects with error on failure.
+     */
+    function login(email, password) {
+        return new Promise((resolve, reject) => {
+            const userAccount = userAccounts.value.find(
+                account => account.email === email && account.password === password
+            );
+            if (userAccount) {
+                sessionUserAccount.value = userAccount;
+                const user = users.value.find(u => u.id === userAccount.id_user);
+                if (user) {
+                    sessionUser.value = user;
+                    localStorage.setItem('user', JSON.stringify(user));
+                }
+                localStorage.setItem('userAccount', JSON.stringify(userAccount));
+                localStorage.setItem('isAuthenticated', 'true');
+
+                console.log('Login successful', userAccount);
+                resolve(userAccount);
+            } else {
+                reject(new Error('Invalid credentials'));
+            }
+        });
+    }
+
+    /**
+     * Logs out the current user and clears the session.
+     * @returns {void}
+     */
+    function logout() {
+        sessionUserAccount.value = null;
+        sessionUser.value = null;
+        clearSession();
+        console.log('Logout successful');
+    }
+
+    /**
+     * Clears session data from localStorage.
+     * @returns {void}
+     */
+    function clearSession() {
+        localStorage.removeItem('userAccount');
+        localStorage.removeItem('user');
+        localStorage.removeItem('isAuthenticated');
+    }
+
+    /**
+     * Gets the access token for the current session.
+     * @returns {string|null} - The access token if authenticated, otherwise null.
+     */
+    function getAccessToken() {
+        return isAuthenticated.value ? 'simulated-token-' + sessionUserAccount.value?.id : null;
+    }
+
+    /**
+     * Fetches all locations from the API and updates the store.
+     * @returns {void}
+     */
     function fetchLocations() {
         iamApi.getLocations().then(response => {
             locations.value = LocationAssembler.toEntitiesFromResponse(response);
@@ -49,6 +212,10 @@ const useIamStore = defineStore('iam', () => {
         });
     }
 
+    /**
+     * Fetches all payments from the API and updates the store.
+     * @returns {void}
+     */
     function fetchPayments() {
         iamApi.getPayments().then(response => {
             payments.value = PaymentAssembler.toEntitiesFromResponse(response);
@@ -60,6 +227,10 @@ const useIamStore = defineStore('iam', () => {
         });
     }
 
+    /**
+     * Fetches all users from the API and updates the store.
+     * @returns {void}
+     */
     function fetchUsers() {
         iamApi.getUsers().then(response => {
             users.value = UserAssembler.toEntitiesFromResponse(response);
@@ -71,6 +242,10 @@ const useIamStore = defineStore('iam', () => {
         });
     }
 
+    /**
+     * Fetches all user accounts from the API and updates the store.
+     * @returns {void}
+     */
     function fetchUserAccounts() {
         iamApi.getUserAccounts().then(response => {
             userAccounts.value = UserAccountAssembler.toEntitiesFromResponse(response);
@@ -82,10 +257,20 @@ const useIamStore = defineStore('iam', () => {
         });
     }
 
+    /**
+     * Gets a location by its ID.
+     * @param id - The ID of the location to retrieve.
+     * @returns {Location} - The location with the specified ID, or undefined if not found.
+     */
     function getLocationById(id) {
         return locations.value.find(location => location.id === id);
     }
 
+    /**
+     * Adds a new location.
+     * @param location - The location to add.
+     * @returns {void}
+     */
     function addLocation(location) {
         iamApi.createLocation(location).then(response => {
             const resource = response.data;
@@ -96,6 +281,11 @@ const useIamStore = defineStore('iam', () => {
         })
     }
 
+    /**
+     * Updates an existing location.
+     * @param location - The location to update.
+     * @returns {void}
+     */
     function updateLocation(location) {
         iamApi.updateLocation(location).then(response => {
             const resource = response.data;
@@ -107,6 +297,11 @@ const useIamStore = defineStore('iam', () => {
         })
     }
 
+    /**
+     * Deletes a location.
+     * @param location - The location to delete.
+     * @returns {void}
+     */
     function deleteLocation(location) {
         iamApi.deleteLocation(location.id).then(() => {
             const index = locations.value.findIndex(loc => loc.id === location.id);
@@ -116,10 +311,20 @@ const useIamStore = defineStore('iam', () => {
         })
     }
 
+    /**
+     * Gets a payment by its ID.
+     * @param id - The ID of the payment to retrieve.
+     * @returns {Payment} - The payment with the specified ID, or undefined if not found.
+     */
     function getPaymentById(id) {
         return payments.value.find(payment => payment.id === id);
     }
 
+    /**
+     * Adds a new payment.
+     * @param payment - The payment to add.
+     * @return {void}
+     */
     function addPayment(payment) {
         iamApi.createPayment(payment).then(response => {
             const resource = response.data;
@@ -130,6 +335,11 @@ const useIamStore = defineStore('iam', () => {
         })
     }
 
+    /**
+     * Updates an existing payment.
+     * @param payment - The payment to update.
+     * @return {void}
+     */
     function updatePayment(payment) {
         iamApi.updatePayment(payment).then(response => {
             const resource = response.data;
@@ -141,6 +351,11 @@ const useIamStore = defineStore('iam', () => {
         })
     }
 
+    /**
+     * Deletes a payment.
+     * @param payment - The payment to delete.
+     * @return {void}
+     */
     function deletePayment(payment) {
         iamApi.deletePayment(payment.id).then(() => {
             const index = payments.value.findIndex(pay => pay.id === payment.id);
@@ -150,10 +365,20 @@ const useIamStore = defineStore('iam', () => {
         })
     }
 
+    /**
+     * Gets a user by their ID.
+     * @param id - The ID of the user to retrieve.
+     * @returns {User} - The user with the specified ID, or undefined if not found.
+     */
     function getUserById(id) {
         return users.value.find(user => user.id === id);
     }
 
+    /**
+     * Adds a new user.
+     * @param user - The user to add.
+     * @returns {void}
+     */
     function addUser(user) {
         iamApi.createUser(user).then(response => {
             const resource = response.data;
@@ -164,6 +389,10 @@ const useIamStore = defineStore('iam', () => {
         })
     }
 
+    /**
+     * Updates an existing user.
+     * @param user - The user to update.
+     */
     function updateUser(user) {
         iamApi.updateUser(user).then(response => {
             const resource = response.data;
@@ -175,6 +404,10 @@ const useIamStore = defineStore('iam', () => {
         })
     }
 
+    /**
+     * Deletes a user.
+     * @param user - The user to delete.
+     */
     function deleteUser(user) {
         iamApi.deleteUser(user.id).then(() => {
             const index = users.value.findIndex(u => u.id === user.id);
@@ -184,10 +417,20 @@ const useIamStore = defineStore('iam', () => {
         })
     }
 
+    /**
+     * Gets a user account by its ID.
+     * @param id - The ID of the user account to retrieve.
+     * @returns {UserAccount} - The user account with the specified ID, or undefined if not found.
+     */
     function getUserAccountById(id) {
         return userAccounts.value.find(account => account.id === id);
     }
 
+    /**
+     * Adds a new user account.
+     * @param userAccount - The user account to add.
+     * @return {void}
+     */
     function addUserAccount(userAccount) {
         iamApi.createUserAccount(userAccount).then(response => {
             const resource = response.data;
@@ -198,6 +441,11 @@ const useIamStore = defineStore('iam', () => {
         })
     }
 
+    /**
+     * Updates an existing user account.
+     * @param userAccount - The user account to update.
+     * @return {void}
+     */
     function updateUserAccount(userAccount) {
         iamApi.updateUserAccount(userAccount).then(response => {
             const resource = response.data;
@@ -209,6 +457,11 @@ const useIamStore = defineStore('iam', () => {
         })
     }
 
+    /**
+     * Deletes a user account.
+     * @param userAccount - The user account to delete.
+     * @return {void}
+     */
     function deleteUserAccount(userAccount) {
         iamApi.deleteUserAccount(userAccount.id).then(() => {
             const index = userAccounts.value.findIndex(acc => acc.id === userAccount.id);
@@ -232,6 +485,15 @@ const useIamStore = defineStore('iam', () => {
         paymentsCount,
         usersCount,
         userAccountsCount,
+        sessionUserAccount,
+        sessionUser,
+        isAuthenticated,
+        roleId,
+        loadSessionFromStorage,
+        login,
+        logout,
+        clearSession,
+        getAccessToken,
         fetchLocations,
         fetchPayments,
         fetchUsers,

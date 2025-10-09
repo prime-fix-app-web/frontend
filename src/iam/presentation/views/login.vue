@@ -2,24 +2,55 @@
 import {useI18n} from "vue-i18n";
 import {computed, onMounted, ref} from "vue";
 import {useRouter} from "vue-router";
-import iamStore from "@/iam/application/iam.store.js";
+import useIamStore from "@/iam/application/iam.store.js";
 
 const { t } = useI18n();
 const router = useRouter();
-const store = iamStore();
-const {userAccounts, userAccountsLoaded, errors, fetchUserAccounts} = store;
+const store = useIamStore();
+const {userAccounts, userAccountsLoaded, usersLoaded, errors, fetchUserAccounts, fetchUsers, login} = store;
 
+/**
+ * Login form data
+ * @type {Ref<UnwrapRef<{email: string, password: string}>, UnwrapRef<{email: string, password: string}> | {email: string, password: string}>} - form data with email and password
+ */
 const form = ref({ email: '', password: '' });
+/**
+ * Password visibility toggle
+ * @type {Ref<UnwrapRef<boolean>, UnwrapRef<boolean> | boolean>} - whether the password is visible or not
+ */
 const isPasswordVisible = ref(false);
+/**
+ * Form submission state
+ * @type {Ref<UnwrapRef<boolean>, UnwrapRef<boolean> | boolean>} - whether the form is being submitted or not
+ */
 const isSubmitting = ref(false);
+
+/**
+ * Form errors
+ * @type {Ref<UnwrapRef<{email: null, password: null}>, UnwrapRef<{email: null, password: null}> | {email: null, password: null}>} - form errors for email and password
+ */
 const errorsForm = ref({ email: null, password: null });
 
+/**
+ * Login error message
+ * @type {Ref<UnwrapRef<string>, UnwrapRef<string> | string>} - error message to display when login fails
+ */
+const loginError = ref('');
+
+/**
+ * On component mount, fetch user accounts and users if not already loaded
+ */
 onMounted(() => {
   if (!userAccountsLoaded) fetchUserAccounts();
+  if (!usersLoaded) fetchUsers();
   console.log(userAccounts);
 });
 
-// Validation functions
+/**
+ * Validate email format
+ * @param email - the email string to validate
+ * @returns {{invalid: boolean}|null|{required: boolean}} - validation error or null if valid
+ */
 function validateEmail(email) {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!email) {
@@ -31,6 +62,11 @@ function validateEmail(email) {
   return null;
 }
 
+/**
+ * Validate password
+ * @param password - string
+ * @returns {{minLength: boolean}|null|{required: boolean}} - validation error or null if valid
+ */
 function validatePassword(password) {
   if (!password) {
     return { required: true };
@@ -41,7 +77,10 @@ function validatePassword(password) {
   return null;
 }
 
-// Computed property for form validation
+/**
+ * Computed property to check if the form is valid
+ * @type {ComputedRef<unknown>} - true if the form is valid, false otherwise
+ */
 const isFormValid = computed(() => {
   return form.value.email &&
          form.value.password &&
@@ -49,13 +88,20 @@ const isFormValid = computed(() => {
          /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.value.email);
 });
 
+/**
+ * Toggle password visibility
+ */
 function togglePasswordVisibility() {
   isPasswordVisible.value = !isPasswordVisible.value;
 }
 
+/**
+ * Handle form submission
+ */
 function onSubmit() {
   // Reset errors
   errorsForm.value = { email: null, password: null };
+  loginError.value = '';
 
   // Validate form
   const emailError = validateEmail(form.value.email);
@@ -67,39 +113,34 @@ function onSubmit() {
     return;
   }
 
-  // Start submitting
   isSubmitting.value = true;
+  login(form.value.email, form.value.password)
+    .then((userAccount) => {
+      console.log('Login successful', userAccount);
 
-  // Find user account
-  const userAccount = userAccounts.value.find(
-    account => account.email === form.value.email && account.password === form.value.password
-  );
-
-  if (userAccount) {
-    // Login successful
-    console.log('Login successful', userAccount);
-
-    // Store user data in localStorage
-    localStorage.setItem('userAccount', JSON.stringify(userAccount));
-    localStorage.setItem('isAuthenticated', 'true');
-
-    // Redirect based on role (id_role: 1 = owner, 2 = workshop)
-    isSubmitting.value = false;
-    if (userAccount.id_role === 'R001') {
-      router.push('/layout-owner/home-owner');
-    } else if (userAccount.id_role === 'R002') {
-      router.push('/layout-workshop/home-workshop');
-    } else {
-      router.push('/iam/user-role');
-    }
-  } else {
-    // Login failed
-    isSubmitting.value = false;
-    errorsForm.value.email = { invalid: true };
-    errorsForm.value.password = { invalid: true };
-  }
+      // Redirect based on role (id_role: R001 = owner, R002 = workshop)
+      isSubmitting.value = false;
+      if (userAccount.id_role === 'R001') {
+        router.push('/layout-owner/home-owner');
+      } else if (userAccount.id_role === 'R002') {
+        router.push('/layout-workshop/home-workshop');
+      } else {
+        router.push('/iam/user-role');
+      }
+    })
+    .catch((error) => {
+      // Login failed
+      console.error('Login failed', error);
+      isSubmitting.value = false;
+      errorsForm.value.email = { invalid: true };
+      errorsForm.value.password = { invalid: true };
+      loginError.value = t('login.invalidCredentials');
+    });
 }
 
+/**
+ * Navigate to user role selection for registration
+ */
 function navigateToUserRole() {
   router.push('/iam/user-role');
 }
@@ -135,7 +176,7 @@ function navigateToUserRole() {
           />
           <div v-if="errorsForm.email" class="error-message">
             <span v-if="errorsForm.email.required">{{ $t('login.emailRequired') }}</span>
-            <span v-if="errorsForm.email.invalid">{{ $t('login.emailInvalid') }}</span>
+            <span v-if="errorsForm.email.invalid && !loginError">{{ $t('login.emailInvalid') }}</span>
           </div>
         </div>
 
@@ -145,6 +186,7 @@ function navigateToUserRole() {
             <input
                 :type="isPasswordVisible ? 'text' : 'password'"
                 v-model="form.password"
+                autocomplete="current-password"
                 placeholder="••••••••••"
                 class="form-input password-input"
                 :class="{ error: errorsForm.password }"
@@ -162,7 +204,7 @@ function navigateToUserRole() {
           </div>
           <div v-if="errorsForm.password" class="error-message">
             <span v-if="errorsForm.password.required">{{ $t('login.passwordRequired') }}</span>
-            <span v-if="errorsForm.password.minLength">{{ $t('login.passwordMinLength') }}</span>
+            <span v-if="errorsForm.password.minLength && !loginError">{{ $t('login.passwordMinLength') }}</span>
           </div>
         </div>
 
@@ -177,9 +219,9 @@ function navigateToUserRole() {
           <div>{{ isSubmitting ? $t('login.loading') : $t('login.signIn') }}</div>
         </button>
 
-        <!-- Error from store -->
-        <p v-if="errors.length" class="error-message">
-          {{ t('errors.occurred') }}: {{ errors.map(e => e.message).join(', ') }}
+        <!-- Error message for invalid credentials -->
+        <p v-if="loginError" class="error-message-box">
+          {{ loginError }}
         </p>
       </form>
     </div>
@@ -335,8 +377,19 @@ function navigateToUserRole() {
 .error-message {
   color: #e74c3c;
   font-size: 0.875rem;
-  margin-top: 0.75rem;
+  margin-top: 0.25rem;
+  text-align: left;
+}
+
+.error-message-box {
+  background-color: rgba(231, 76, 60, 0.1);
+  border: 1px solid #e74c3c;
+  border-radius: 8px;
+  color: #e74c3c;
+  font-size: 0.9rem;
+  padding: 0.75rem 1rem;
   text-align: center;
+  margin: 0;
 }
 
 /* Submit Button */
