@@ -1,6 +1,7 @@
 <script setup>
 import { useAutoRepairRegisterStore } from '@/autorepair-registration/application/auto-repair.store.js';
-import { ref, computed, watch, inject } from 'vue'
+import LayoutOwner from "@/shared/presentation/components/layout-owner.vue"
+import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 // Props
@@ -139,382 +140,204 @@ async function submit() {
 </script>
 
 <template>
-  <div class="gestionar-tecnicos-container">
-    <!-- Sidebar -->
-    <aside class="sidebar">
-      <div class="profile-section">
-        <img src="/assets/images/profile-placeholder.jpg" alt="Perfil" class="profile-image" />
-      </div>
 
-      <nav class="sidebar-nav">
-        <RouterLink to="/perfil" class="nav-item">Perfil</RouterLink>
-        <RouterLink to="/menu-inicial" class="nav-item">Menú inicial</RouterLink>
-        <RouterLink to="/taller" class="nav-item">Taller</RouterLink>
-        <RouterLink to="/solicitudes" class="nav-item">Solicitudes</RouterLink>
-        <RouterLink to="/technicians" class="nav-item active">Gestionar técnicos</RouterLink>
-        <RouterLink to="/estado-coches" class="nav-item">Estado de coches</RouterLink>
-        <RouterLink to="/configuracion" class="nav-item">Configuración</RouterLink>
-      </nav>
+  <div class="technician-details-container">
+    <h1 class="page-title">{{ props.technician ? 'Editar' : 'Agregar' }} Técnico</h1>
 
-      <button class="btn-cerrar-sesion">Cerrar sesión</button>
-    </aside>
+    <div class="form-container">
+      <form class="technician-form" @submit.prevent="submit">
+        <div class="form-group">
+          <label for="nombre-tecnico">Nombre del técnico *</label>
+          <input
+              type="text"
+              id="nombre-tecnico"
+              placeholder="Jesús Grimaldo"
+              v-model="form.name"
+              required
+          />
+          <small v-if="errorsForm.name?.required" class="error">El nombre es obligatorio.</small>
+          <small v-if="errorsForm.name?.minLength" class="error">Mínimo 2 caracteres.</small>
+        </div>
 
-    <!-- Main Content -->
-    <main class="main-content">
-      <h1 class="page-title">{{ props.technician ? 'Editar' : 'Agregar' }} Técnico</h1>
+        <div class="form-group">
+          <label for="edad">Edad *</label>
+          <input
+              type="number"
+              id="edad"
+              placeholder="25"
+              v-model.number="form.age"
+              required
+          />
+          <small v-if="errorsForm.age?.required" class="error">La edad es obligatoria.</small>
+          <small v-if="errorsForm.age?.invalid" class="error">Debe tener entre 18 y 100 años.</small>
+        </div>
 
-      <div class="form-container">
-        <form class="technician-form" @submit.prevent="submit">
-          <div class="form-group">
-            <label for="nombre-tecnico">Nombre del técnico *</label>
-            <input
-                type="text"
-                id="nombre-tecnico"
-                placeholder="Jesús Grimaldo"
-                v-model="form.name"
-                required
-            />
-            <small v-if="errorsForm.name?.required" class="error">El nombre es obligatorio.</small>
-            <small v-if="errorsForm.name?.minLength" class="error">Mínimo 2 caracteres.</small>
-          </div>
+        <div class="form-group">
+          <label for="id-usuario">ID de Usuario *</label>
+          <input
+              type="text"
+              id="id-usuario"
+              placeholder="USER001"
+              v-model="form.id_user_account"
+              required
+          />
+          <small v-if="errorsForm.id_user_account?.required" class="error">
+            Campo obligatorio.
+          </small>
+        </div>
 
-          <div class="form-group">
-            <label for="edad">Edad *</label>
-            <input
-                type="number"
-                id="edad"
-                placeholder="25"
-                v-model.number="form.age"
-                required
-            />
-            <small v-if="errorsForm.age?.required" class="error">La edad es obligatoria.</small>
-            <small v-if="errorsForm.age?.invalid" class="error">Debe tener entre 18 y 100 años.</small>
-          </div>
+        <div class="form-group">
+          <label for="id-taller">ID del Taller *</label>
+          <input
+              type="text"
+              id="id-taller"
+              placeholder="AR001"
+              v-model="form.id_auto_repair"
+              required
+          />
+          <small v-if="selectedAutoRepair">Taller: {{ selectedAutoRepair }}</small>
+        </div>
 
-          <div class="form-group">
-            <label for="id-usuario">ID de Usuario *</label>
-            <input
-                type="text"
-                id="id-usuario"
-                placeholder="USER001"
-                v-model="form.id_user_account"
-                required
-            />
-            <small v-if="errorsForm.id_user_account?.required" class="error">
-              Campo obligatorio.
-            </small>
-          </div>
-
-          <div class="form-group">
-            <label for="id-taller">ID del Taller *</label>
-            <input
-                type="text"
-                id="id-taller"
-                placeholder="AR001"
-                v-model="form.id_auto_repair"
-                required
-            />
-            <small v-if="selectedAutoRepair">Taller: {{ selectedAutoRepair }}</small>
-          </div>
-
-          <div class="form-actions">
-            <button type="button" class="btn-cancelar" @click="router.push('/technicians')">
-              Cancelar
-            </button>
-            <button type="submit" class="btn-agregar" :disabled="isSubmitting || !isFormValid">
-              {{ props.technician ? 'Actualizar' : 'Agregar' }}
-            </button>
-          </div>
-        </form>
-      </div>
-    </main>
+        <div class="form-actions">
+          <button type="button" class="btn-cancelar" @click="router.push('/technicians')">
+            Cancelar
+          </button>
+          <button type="submit" class="btn-agregar" :disabled="isSubmitting || !isFormValid">
+            {{ props.technician ? 'Actualizar' : 'Agregar' }}
+          </button>
+        </div>
+      </form>
+    </div>
   </div>
+
+
 </template>
 
 <style scoped>
-.gestionar-tecnicos-container {
-  display: flex;
-  min-height: 100vh;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: #f5f5f5;
+.technician-details-container {
+  padding: 2rem;
+  max-width: 600px;
+  margin: 0 auto;
 }
 
-/* Sidebar Styles */
-.sidebar {
-  width: 280px;
-  background-color: #1e4a5f;
-  color: #fff;
-  display: flex;
-  flex-direction: column;
-  padding: 30px 0;
-  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+.page-title {
+  font-size: 2.5rem;
+  font-weight: 600;
+  color: #1e4a5f;
+  margin: 0 0 2rem 0;
+  text-align: center;
 }
 
-.profile-section {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 40px;
-  padding: 0 20px;
+.form-container {
+  background-color: #fff;
+  border-radius: 16px;
+  padding: 2.5rem;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
 }
 
-.profile-image {
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 4px solid rgba(255, 255, 255, 0.2);
-}
-
-.sidebar-nav {
-  flex: 1;
+.technician-form {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 0 20px;
+  gap: 1.5rem;
 }
 
-.nav-item {
+.form-group {
   display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px 16px;
-  color: rgba(255, 255, 255, 0.8);
-  text-decoration: none;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.form-group input {
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  border: 1px solid #ddd;
   border-radius: 8px;
-  font-size: 15px;
+  background-color: #f9f9f9;
   transition: all 0.3s;
 }
 
-.nav-item:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  color: #fff;
+.form-group input:focus {
+  outline: none;
+  border-color: #ff9800;
+  background-color: #fff;
+  box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.1);
 }
 
-.nav-item.active {
-  background-color: rgba(255, 152, 0, 0.2);
-  color: #ffa726;
-  font-weight: 600;
+.form-group input::placeholder {
+  color: #999;
 }
 
-.nav-item svg {
-  flex-shrink: 0;
+.error {
+  color: #d32f2f;
+  font-size: 0.875rem;
 }
 
-.btn-cerrar-sesion {
-  margin: 20px 20px 0;
-  padding: 14px 24px;
-  background-color: #ff9800;
-  color: #fff;
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 2rem;
+}
+
+.btn-cancelar,
+.btn-agregar {
+  padding: 0.75rem 1.5rem;
   border: none;
   border-radius: 8px;
-  font-size: 15px;
+  font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: all 0.3s;
 }
 
-.btn-cerrar-sesion:hover {
-  background-color: #f57c00;
+.btn-cancelar {
+  background-color: #f5f5f5;
+  color: #666;
 }
 
-/* Main Content Styles */
-.main-content {
-  flex: 1;
-  padding: 40px 60px;
-  overflow-y: auto;
-}
-
-.content-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 40px;
-  padding-bottom: 20px;
-  border-bottom: 3px solid #1e4a5f;
-}
-
-.content-header h1 {
-  font-size: 36px;
-  font-weight: 600;
-  color: #1e4a5f;
-  margin: 0;
+.btn-cancelar:hover {
+  background-color: #e0e0e0;
 }
 
 .btn-agregar {
-  padding: 12px 28px;
-  background-color: #ff9800;
-  color: #fff;
-  border: none;
-  border-radius: 8px;
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s;
-  box-shadow: 0 2px 8px rgba(255, 152, 0, 0.3);
-}
-
-.btn-agregar:hover {
-  background-color: #f57c00;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(255, 152, 0, 0.4);
-}
-
-/* Técnicos Lista */
-.tecnicos-lista {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
-.tecnico-card {
-  background-color: #fff;
-  border-radius: 12px;
-  padding: 28px 32px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  transition: box-shadow 0.3s;
-}
-
-.tecnico-card:hover {
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
-}
-
-.tecnico-info h3 {
-  font-size: 20px;
-  font-weight: 600;
-  color: #1a1a1a;
-  margin: 0 0 20px 0;
-}
-
-.horarios {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.horario-item {
-  display: flex;
-  gap: 40px;
-  font-size: 15px;
-}
-
-.dia {
-  color: #333;
-  font-weight: 500;
-  min-width: 80px;
-}
-
-.horas {
-  color: #666;
-  font-family: 'Courier New', monospace;
-}
-
-.tecnico-acciones {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  min-width: 140px;
-}
-
-.btn-editar,
-.btn-eliminar {
-  padding: 10px 24px;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s;
-  width: 100%;
-}
-
-.btn-editar {
   background-color: #ff9800;
   color: #fff;
 }
 
-.btn-editar:hover {
+.btn-agregar:hover:not(:disabled) {
   background-color: #f57c00;
   transform: translateY(-1px);
 }
 
-.btn-eliminar {
-  background-color: #fff;
-  color: #ff9800;
-  border: 2px solid #ff9800;
+.btn-agregar:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+  transform: none;
 }
 
-.btn-eliminar:hover {
-  background-color: #fff3e0;
-}
-
-/* Responsive Design */
-@media (max-width: 1024px) {
-  .sidebar {
-    width: 240px;
-  }
-
-  .main-content {
-    padding: 30px 40px;
-  }
-
-  .content-header h1 {
-    font-size: 30px;
-  }
-}
-
+/* Responsive */
 @media (max-width: 768px) {
-  .gestionar-tecnicos-container {
+  .technician-details-container {
+    padding: 1rem;
+  }
+
+  .form-container {
+    padding: 1.5rem;
+  }
+
+  .form-actions {
     flex-direction: column;
   }
 
-  .sidebar {
-    width: 100%;
-    padding: 20px 0;
-  }
-
-  .sidebar-nav {
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-
-  .nav-item {
-    flex: 0 0 auto;
-  }
-
-  .main-content {
-    padding: 24px;
-  }
-
-  .content-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 16px;
-  }
-
+  .btn-cancelar,
   .btn-agregar {
     width: 100%;
-  }
-
-  .tecnico-card {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 20px;
-  }
-
-  .tecnico-acciones {
-    width: 100%;
-  }
-
-  .horario-item {
-    gap: 20px;
-  }
-
-  .dia {
-    min-width: 70px;
   }
 }
 </style>

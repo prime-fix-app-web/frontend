@@ -1,5 +1,6 @@
 import {createRouter, createWebHistory} from "vue-router";
 import iamRoutes from "@/iam/presentation/iam-routes.js";
+import autoRepairRegisterRoutes from "@/autorepair-registration/auto-repair-routes.js";
 
 
 
@@ -12,12 +13,18 @@ const pageNotFound = () => import("./shared/presentation/views/page-not-found.vu
 
 const routes = [
 
+    {
+        path: '/autoRepairs',
+        name: 'autoRepairs',
+        children: autoRepairRegisterRoutes,
 
+    },
     {
         path: '/iam',
         name: 'iam',
         children: iamRoutes,
     },
+
     {
         path: '/layout-owner',
         name: 'layout-owner',
@@ -30,9 +37,16 @@ const routes = [
                 meta: { title: 'Home Owner' }
             },
             {
+                path: '/autoRepairs',
+                name: 'autoRepairs',
+                children: autoRepairRegisterRoutes,
+
+            },
+            {
                 path: '',
                 redirect: '/layout-owner/home-owner'
-            }
+            },
+
         ]
     },
     {
@@ -46,16 +60,18 @@ const routes = [
                 component: homeWorkshop,
                 meta: { title: 'Home Workshop' }
             },
+
             {
                 path: '',
                 redirect: '/layout-workshop/home-workshop'
-            }
+            },
+
         ]
     },
     {
         path: '/',
-        //redirect: '/iam/login'
-        redirect: '/technicians'
+        redirect: '/iam/login'
+
     },
     {
         path: '/:pathMatch(.*)*',
@@ -78,45 +94,4 @@ router.beforeEach((to, from, next) => {
 })
 
 export default router;
-import { createRouter, createWebHistory } from 'vue-router';
-import AutoRepairRegisterForm from './autorepair-registration/presentation/views/auto-repair-register-form.vue';
 
-const routes = [
-  {
-    path: '/',
-    name: 'AutoRepairRegisterForm',
-    component: AutoRepairRegisterForm
-  }
-];
-
-const router = createRouter({
-  history: createWebHistory(),
-  routes
-});
-
-export default router;
-
-
-/*import { createRouter, createWebHistory } from 'vue-router';
-import AutoRepairRegisterForm from './autorepair-registration/presentation/views/auto-repair-register-form.vue';
-import Techniques from './autorepair-registration/presentation/views/technician-details.vue';
-const routes = [
-    {
-        path: '/technician-details',
-        name: 'TechnicianDetails',
-        component: () => import('@/autorepair-registration/presentation/views/technician-details.vue')
-    },
-    {
-        path: '/technicians',
-        component: () => import('./autorepair-registration/presentation/views/technician-list.vue'), // Este componente
-        name: 'technicians'
-    }
-];
-
-
-const router = createRouter({
-    history: createWebHistory(),
-    routes
-});
-
-export default router;*/

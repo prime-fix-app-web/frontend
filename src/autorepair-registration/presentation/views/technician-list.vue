@@ -1,10 +1,12 @@
 <script setup>
-import { ref, onMounted, inject } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAutoRepairRegisterStore } from '@/autorepair-registration/application/auto-repair.store.js'
+import LayoutOwner from "@/shared/presentation/components/layout-owner.vue"
 
 // Router y Stores
 const router = useRouter()
-const autoRepairStore = inject('autoRepairRegisterStore')
+const autoRepairStore = useAutoRepairRegisterStore()
 
 // State
 const technicians = ref([])
@@ -94,228 +96,152 @@ function updateSchedule(index, field, value) {
 </script>
 
 <template>
-  <div class="gestionar-tecnicos-container">
-    <!-- Sidebar -->
-    <aside class="sidebar">
-      <div class="profile-section">
-        <img
-            src="/assets/images/profile-placeholder.jpg"
-            alt="Perfil"
-            class="profile-image"
-        />
-      </div>
 
-      <nav class="sidebar-nav">
-        <RouterLink to="/perfil" class="nav-item">Perfil</RouterLink>
-        <RouterLink to="/menu-inicial" class="nav-item">Menú inicial</RouterLink>
-        <RouterLink to="/taller" class="nav-item">Taller</RouterLink>
-        <RouterLink to="/solicitudes" class="nav-item">Solicitudes</RouterLink>
-        <RouterLink to="/technicians" class="nav-item active">Gestionar técnicos</RouterLink>
-        <RouterLink to="/estado-coches" class="nav-item">Estado de coches</RouterLink>
-        <RouterLink to="/configuracion" class="nav-item">Configuración</RouterLink>
-      </nav>
-
-      <button class="btn-cerrar-sesion">Cerrar sesión</button>
-    </aside>
-
-    <!-- Main Content -->
-    <main class="main-content">
+  <div class="technician-list-container">
+    <div class="content-header">
       <h1 class="page-title">Gestionar técnicos</h1>
+      <button class="btn-agregar" @click="createNew">Agregar Técnico</button>
+    </div>
 
-      <!-- Estado de carga -->
-      <div v-if="loading" class="loading-state">
-        <div class="spinner"></div>
-        <p>Cargando técnicos...</p>
-      </div>
+    <!-- Estado de carga -->
+    <div v-if="loading" class="loading-state">
+      <div class="spinner"></div>
+      <p>Cargando técnicos...</p>
+    </div>
 
-      <!-- Error -->
-      <div v-else-if="error" class="error-state">
-        <p>{{ error }}</p>
-        <button class="btn-retry" @click="loadTechnicians">Reintentar</button>
-      </div>
+    <!-- Error -->
+    <div v-else-if="error" class="error-state">
+      <p>{{ error }}</p>
+      <button class="btn-retry" @click="loadTechnicians">Reintentar</button>
+    </div>
 
-      <!-- Formulario -->
-      <div v-else class="form-container">
-        <form class="technician-form" @submit.prevent="submit">
-          <div class="form-group">
-            <label for="nombre-tecnico">Nombre de técnico</label>
-            <input
-                type="text"
-                id="nombre-tecnico"
-                placeholder="Jesús Grimaldo"
-                v-model="name"
-                name="name"
-                required
-            />
+    <!-- Lista de técnicos -->
+    <div v-else class="tecnicos-lista">
+      <div v-for="tech in technicians" :key="tech.id_technician" class="tecnico-card">
+        <div class="tecnico-info">
+          <h3>{{ tech.name }}</h3>
+          <div class="tecnico-details">
+            <p><strong>Edad:</strong> {{ tech.age }} años</p>
+            <p><strong>Taller:</strong> {{ getAutoRepairName(tech.id_auto_repair) }}</p>
+            <p><strong>ID Usuario:</strong> {{ tech.id_user_account }}</p>
           </div>
+        </div>
+        <div class="tecnico-acciones">
+          <button class="btn-editar" @click="editTechnician(tech.id_technician)">
+            Editar
+          </button>
+          <button class="btn-eliminar" @click="deleteTechnician(tech)">
+            Eliminar
+          </button>
+        </div>
+      </div>
+    </div>
 
-          <div class="horarios-section">
-            <h3>Horarios de atención</h3>
+    <!-- Formulario de agregar (opcional, puedes moverlo a otra página) -->
+    <div class="form-container">
+      <h3>Agregar Nuevo Técnico</h3>
+      <form class="technician-form" @submit.prevent="submit">
+        <div class="form-group">
+          <label for="nombre-tecnico">Nombre de técnico</label>
+          <input
+              type="text"
+              id="nombre-tecnico"
+              placeholder="Jesús Grimaldo"
+              v-model="name"
+              required
+          />
+        </div>
 
-            <div class="horarios-grid">
-              <div class="horario-header">
-                <span class="header-dia">Día</span>
-                <span class="header-hora">Hora de inicio</span>
-                <span class="header-hora">Hora de fin</span>
-              </div>
-
-              <div
-                  class="horario-row"
-                  v-for="(schedule, i) in schedules"
-                  :key="i"
-              >
-                <select
-                    class="select-dia"
-                    v-model="schedule.day"
-                    :name="'dia' + i"
-                >
-                  <option value="Lunes">Lunes</option>
-                  <option value="Martes">Martes</option>
-                  <option value="Miércoles">Miércoles</option>
-                  <option value="Jueves">Jueves</option>
-                  <option value="Viernes">Viernes</option>
-                  <option value="Sábado">Sábado</option>
-                  <option value="Domingo">Domingo</option>
-                </select>
-
-                <input
-                    type="time"
-                    class="input-hora"
-                    v-model="schedule.start"
-                    :name="'inicio' + i"
-                />
-
-                <input
-                    type="time"
-                    class="input-hora"
-                    v-model="schedule.end"
-                    :name="'fin' + i"
-                />
-              </div>
+        <div class="horarios-section">
+          <h4>Horarios de atención</h4>
+          <div class="horarios-grid">
+            <div class="horario-header">
+              <span class="header-dia">Día</span>
+              <span class="header-hora">Hora de inicio</span>
+              <span class="header-hora">Hora de fin</span>
             </div>
 
-            <button type="button" class="btn-anadir-dia" @click="addScheduleDay">
-              Añadir otro día
-            </button>
+            <div
+                class="horario-row"
+                v-for="(schedule, i) in schedules"
+                :key="i"
+            >
+              <select class="select-dia" v-model="schedule.day">
+                <option value="Lunes">Lunes</option>
+                <option value="Martes">Martes</option>
+                <option value="Miércoles">Miércoles</option>
+                <option value="Jueves">Jueves</option>
+                <option value="Viernes">Viernes</option>
+                <option value="Sábado">Sábado</option>
+                <option value="Domingo">Domingo</option>
+              </select>
+
+              <input type="time" class="input-hora" v-model="schedule.start" />
+              <input type="time" class="input-hora" v-model="schedule.end" />
+            </div>
           </div>
 
-          <button type="submit" class="btn-agregar">Agregar</button>
-        </form>
-      </div>
-    </main>
+          <button type="button" class="btn-anadir-dia" @click="addScheduleDay">
+            Añadir otro día
+          </button>
+        </div>
+
+        <button type="submit" class="btn-agregar-form">Agregar</button>
+      </form>
+    </div>
   </div>
+
 </template>
 
-<style scoped>  .gestionar-tecnicos-container {
-  display: flex;
-  min-height: 100vh;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  background-color: #f5f5f5;
+<style scoped>
+.technician-list-container {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
-/* Sidebar Styles */
-.sidebar {
-  width: 280px;
-  background-color: #1e4a5f;
-  color: #fff;
+.content-header {
   display: flex;
-  flex-direction: column;
-  padding: 30px 0;
-  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
-}
-
-.profile-section {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 40px;
-  padding: 0 20px;
-}
-
-.profile-image {
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 4px solid rgba(255, 255, 255, 0.2);
-}
-
-.sidebar-nav {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 0 20px;
-}
-
-.nav-item {
-  display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 12px;
-  padding: 14px 16px;
-  color: rgba(255, 255, 255, 0.8);
-  text-decoration: none;
-  border-radius: 8px;
-  font-size: 15px;
-  transition: all 0.3s;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 3px solid #1e4a5f;
 }
 
-.nav-item:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  color: #fff;
-}
-
-.nav-item.active {
-  background-color: rgba(255, 152, 0, 0.2);
-  color: #ffa726;
+.page-title {
+  font-size: 2.5rem;
   font-weight: 600;
+  color: #1e4a5f;
+  margin: 0;
 }
 
-.nav-item svg {
-  flex-shrink: 0;
-}
-
-.btn-cerrar-sesion {
-  margin: 20px 20px 0;
-  padding: 14px 24px;
+.btn-agregar {
+  padding: 0.75rem 1.5rem;
   background-color: #ff9800;
   color: #fff;
   border: none;
   border-radius: 8px;
-  font-size: 15px;
+  font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: all 0.3s;
 }
 
-.btn-cerrar-sesion:hover {
+.btn-agregar:hover {
   background-color: #f57c00;
+  transform: translateY(-2px);
 }
 
-/* Main Content Styles */
-.main-content {
-  flex: 1;
-  padding: 40px 60px;
-  overflow-y: auto;
-}
-
-.page-title {
-  font-size: 36px;
-  font-weight: 600;
-  color: #1e4a5f;
-  margin: 0 0 40px 0;
-  padding-bottom: 20px;
-  border-bottom: 3px solid #1e4a5f;
-}
-
-/* Loading and Error States */
+/* Estados de carga y error */
 .loading-state,
 .error-state {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 60px 20px;
-  gap: 20px;
+  padding: 3rem;
+  gap: 1rem;
 }
 
 .spinner {
@@ -334,52 +260,134 @@ function updateSchedule(index, field, value) {
 
 .error-state p {
   color: #d32f2f;
-  font-size: 16px;
+  font-size: 1rem;
 }
 
 .btn-retry {
-  padding: 10px 24px;
+  padding: 0.5rem 1rem;
   background-color: #ff9800;
   color: #fff;
   border: none;
-  border-radius: 8px;
+  border-radius: 6px;
   cursor: pointer;
-  font-size: 14px;
-  font-weight: 600;
 }
 
-/* Form Container */
-.form-container {
-  max-width: 800px;
+/* Lista de técnicos */
+.tecnicos-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.tecnico-card {
   background-color: #fff;
-  border-radius: 16px;
-  padding: 40px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: box-shadow 0.3s;
+}
+
+.tecnico-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+.tecnico-info h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 0.5rem 0;
+}
+
+.tecnico-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.tecnico-details p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.tecnico-acciones {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn-editar,
+.btn-eliminar {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-editar {
+  background-color: #ff9800;
+  color: #fff;
+}
+
+.btn-editar:hover {
+  background-color: #f57c00;
+}
+
+.btn-eliminar {
+  background-color: #fff;
+  color: #ff9800;
+  border: 2px solid #ff9800;
+}
+
+.btn-eliminar:hover {
+  background-color: #fff3e0;
+}
+
+/* Formulario */
+.form-container {
+  background-color: #fff;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin-top: 2rem;
+}
+
+.form-container h3 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1e4a5f;
+  margin: 0 0 1.5rem 0;
 }
 
 .technician-form {
   display: flex;
   flex-direction: column;
-  gap: 32px;
+  gap: 1.5rem;
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 0.5rem;
 }
 
 .form-group label {
-  font-size: 15px;
+  font-size: 0.875rem;
   font-weight: 600;
   color: #333;
 }
 
 .form-group input {
-  padding: 12px 16px;
-  font-size: 15px;
+  padding: 0.75rem;
+  font-size: 1rem;
   border: 1px solid #ddd;
-  border-radius: 8px;
+  border-radius: 6px;
   background-color: #f9f9f9;
   transition: all 0.3s;
 }
@@ -391,82 +399,63 @@ function updateSchedule(index, field, value) {
   box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.1);
 }
 
-.form-group input::placeholder {
-  color: #999;
-}
-
-/* Horarios Section */
-.horarios-section {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.horarios-section h3 {
-  font-size: 16px;
+/* Horarios */
+.horarios-section h4 {
+  font-size: 1.125rem;
   font-weight: 600;
   color: #333;
-  margin: 0;
+  margin: 0 0 1rem 0;
 }
 
 .horarios-grid {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 0.75rem;
 }
 
 .horario-header {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
-  gap: 12px;
-  padding: 0 4px;
-}
-
-.horario-header span {
-  font-size: 14px;
+  gap: 0.75rem;
+  padding: 0 0.25rem;
   font-weight: 600;
   color: #666;
+  font-size: 0.875rem;
 }
 
 .horario-row {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
-  gap: 12px;
+  gap: 0.75rem;
   align-items: center;
 }
 
 .select-dia,
 .input-hora {
-  padding: 10px 14px;
-  font-size: 14px;
+  padding: 0.5rem;
+  font-size: 0.875rem;
   border: 1px solid #ddd;
-  border-radius: 8px;
+  border-radius: 6px;
   background-color: #fff;
   transition: all 0.3s;
-  cursor: pointer;
 }
 
 .select-dia:focus,
 .input-hora:focus {
   outline: none;
   border-color: #ff9800;
-  box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.1);
-}
-
-.input-hora {
-  font-family: 'Courier New', monospace;
+  box-shadow: 0 0 0 2px rgba(255, 152, 0, 0.1);
 }
 
 .btn-anadir-dia {
-  padding: 10px 20px;
+  padding: 0.5rem 1rem;
   background-color: #fff;
   color: #ff9800;
   border: 2px solid #ff9800;
-  border-radius: 8px;
-  font-size: 14px;
+  border-radius: 6px;
+  font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s;
   align-self: flex-start;
 }
 
@@ -474,76 +463,47 @@ function updateSchedule(index, field, value) {
   background-color: #fff3e0;
 }
 
-.btn-agregar {
-  padding: 14px 32px;
+.btn-agregar-form {
+  padding: 0.75rem 1.5rem;
   background-color: #ff9800;
   color: #fff;
   border: none;
-  border-radius: 8px;
-  font-size: 16px;
+  border-radius: 6px;
+  font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s;
-  box-shadow: 0 2px 8px rgba(255, 152, 0, 0.3);
-  align-self: center;
-  min-width: 200px;
+  align-self: flex-start;
 }
 
-.btn-agregar:hover {
+.btn-agregar-form:hover {
   background-color: #f57c00;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(255, 152, 0, 0.4);
 }
 
-.btn-agregar:active {
-  transform: translateY(0);
-}
-
-/* Responsive Design */
-@media (max-width: 1024px) {
-  .sidebar {
-    width: 240px;
-  }
-
-  .main-content {
-    padding: 30px 40px;
-  }
-
-  .page-title {
-    font-size: 30px;
-  }
-
-  .form-container {
-    padding: 30px;
-  }
-}
-
+/* Responsive */
 @media (max-width: 768px) {
-  .gestionar-tecnicos-container {
+  .technician-list-container {
+    padding: 1rem;
+  }
+
+  .content-header {
     flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
   }
 
-  .sidebar {
+  .tecnico-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .tecnico-acciones {
     width: 100%;
-    padding: 20px 0;
   }
 
-  .sidebar-nav {
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-
-  .nav-item {
-    flex: 0 0 auto;
-  }
-
-  .main-content {
-    padding: 24px;
-  }
-
-  .form-container {
-    padding: 24px;
+  .btn-editar,
+  .btn-eliminar {
+    flex: 1;
   }
 
   .horario-header {
@@ -552,18 +512,10 @@ function updateSchedule(index, field, value) {
 
   .horario-row {
     grid-template-columns: 1fr;
-    gap: 8px;
-    padding: 16px;
+    gap: 0.5rem;
+    padding: 1rem;
     background-color: #f9f9f9;
-    border-radius: 8px;
+    border-radius: 6px;
   }
-
-  .select-dia::before {
-    content: 'Día: ';
-    font-weight: 600;
-  }
-
-  .btn-agregar {
-    width: 100%;
-  }
-}</style>
+}
+</style>

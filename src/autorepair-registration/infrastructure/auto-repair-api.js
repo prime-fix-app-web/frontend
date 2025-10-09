@@ -1,59 +1,59 @@
 import {BaseApi} from "@/shared/infrastructure/http/base-api.js";
 import {BaseEndpoint} from "@/shared/infrastructure/http/base-endpoint.js";
 
-const autoRepairRegisterEndpointPath = import.meta.env.VITE_AUTOREPAIRS_ENDPOINT_PATH;
-const technicianRegisterEndpointPath = import.meta.env.VITE_TECHNICIAN_ENDPOINT_PATH;
+const autoRepairsRegisterEndpointPath = import.meta.env.VITE_AUTOREPAIRS_ENDPOINT_PATH;
+const techniciansRegisterEndpointPath = import.meta.env.VITE_TECHNICIANS_ENDPOINT_PATH;
 
 export class AutorepairApi extends BaseApi {
-    #technicianRegisterEndpoint;
-    #autoRepairRegisterEndpoint;
+    #techniciansRegisterEndpoint;
+    #autoRepairsRegisterEndpoint;
 
     constructor() {
         super();
 
-        this.#autoRepairRegisterEndpoint = new BaseEndpoint(this, autoRepairRegisterEndpointPath);
-        this.#technicianRegisterEndpoint = new BaseEndpoint(this, technicianRegisterEndpointPath);
+        this.#autoRepairsRegisterEndpoint = new BaseEndpoint(this, autoRepairsRegisterEndpointPath);
+        this.#techniciansRegisterEndpoint = new BaseEndpoint(this, techniciansRegisterEndpointPath);
     }
 
     getAutoRepairRegisters() {
-        return this.#autoRepairRegisterEndpoint.getAll();
+        return this.#autoRepairsRegisterEndpoint.getAll();
     }
 
     getAutoRepairRegisterById(id) {
-        return this.#autoRepairRegisterEndpoint.getById(Number(id));
+        return this.#autoRepairsRegisterEndpoint.getById(Number(id));
     }
 
     createAutoRepairRegister(resource) {
-        return this.#autoRepairRegisterEndpoint.create(resource);
+        return this.#autoRepairsRegisterEndpoint.create(resource);
     }
 
     updateAutoRepairRegister(resource) {
-        return this.#autoRepairRegisterEndpoint.update(Number(resource.id), resource);
+        return this.#autoRepairsRegisterEndpoint.update(Number(resource.id), resource);
     }
 
     deleteAutoRepairRegister(id) {
-        return this.#autoRepairRegisterEndpoint.delete(Number(id));
+        return this.#autoRepairsRegisterEndpoint.delete(Number(id));
     }
 
     // ------------------ TechnicianRegister ------------------
 
     getTechnicians() {
-        return this.#technicianRegisterEndpoint.getAll();
+        return this.#techniciansRegisterEndpoint.getAll();
     }
 
     getTechnicianById(id) {
-        return this.#technicianRegisterEndpoint.getById(Number(id));
+        return this.#techniciansRegisterEndpoint.getById(Number(id));
     }
 
     createTechnician(resource) {
-        return this.#technicianRegisterEndpoint.create(resource);
+        return this.#techniciansRegisterEndpoint.create(resource);
     }
 
     updateTechnician(resource) {
-        return this.#technicianRegisterEndpoint.update(Number(resource.id), resource);
+        return this.#techniciansRegisterEndpoint.update(Number(resource.id), resource);
     }
 
     deleteTechnician(id) {
-        return this.#technicianRegisterEndpoint.delete(Number(id));
+        return this.#techniciansRegisterEndpoint.delete(Number(id));
     }
 }

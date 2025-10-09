@@ -13,34 +13,40 @@ const autoRepairRegisterRoutes = [
     {
         path: '/technicians',
         component: TechnicianList,
-        name: 'technicians'
+        name: 'technicians',
+        meta: { layout: 'owner' }
     },
     {
         path: '/technicians/new',
         component: TechnicianDetails,
-        name: 'technician-new'
+        name: 'technician-new',
+        meta: { layout: 'owner' }
     },
     {
         path: '/technicians/edit/:id',
         component: TechnicianDetails,
-        name: 'technician-edit'
+        name: 'technician-edit',
+        meta: { layout: 'owner' }
     },
 
     // Auto repair registration routes
     {
         path: '/auto-repairs',
         component: AutoRepairRegisterForm,
-        name: 'auto-repairs'
+        name: 'auto-repairs',
+        meta: { layout: 'auto-repairs' }
     },
     {
         path: '/auto-repairs/new',
         component: AutoRepairRegisterForm,
-        name: 'auto-repair-new'
+        name: 'auto-repair-new',
+        meta: { layout: 'auto-repairs' }
     },
     {
         path: '/auto-repairs/edit/:id',
         component: AutoRepairRegisterForm,
-        name: 'auto-repair-edit'
+        name: 'auto-repair-edit',
+        meta: { layout: 'auto-repairs' }
     }
 ]
 
