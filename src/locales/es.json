@@ -39,7 +39,8 @@
     "noAccount": "¿Todavía no tienes una cuenta?",
     "signIn": "Iniciar sesión",
     "signUp": "Regístrate",
-    "loading": "Iniciando sesión..."
+    "loading": "Iniciando sesión...",
+    "invalidCredentials": "Usuario o contraseña incorrectos. Por favor, intenta de nuevo."
   },
   "register-owner": {
     "title": "Crea tu cuenta, gestiona las visitas",

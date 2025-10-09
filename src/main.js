@@ -8,15 +8,29 @@ import PrimeVue from "primevue/config";
 import {ConfirmationService, DialogService, SelectButton, ToastService} from "primevue";
 import router from "./router.js";
 import pinia from "./pinia.js";
+import {setupAuthInterceptor} from "@/shared/infrastructure/http/interceptors/auth.interceptor.js";
+import useIamStore from "@/iam/application/iam.store.js";
 
+const app = createApp(App);
 
-createApp(App)
-    .use(i18n)
+app.use(i18n)
     .use(PrimeVue, {theme: { preset: Material}, ripple: true})
     .use(ConfirmationService)
     .use(DialogService)
     .use(ToastService)
     .component('pv-select-button', SelectButton)
     .use(router)
-    .use(pinia)
-    .mount('#app')
+    .use(pinia);
+
+// Load IAM session from storage if available
+const iamStore = useIamStore();
+iamStore.loadSessionFromStorage();
+
+// Setup auth interceptor with the function to get the access token from the store
+setupAuthInterceptor({
+    apiKey: 'simulated-api-key',
+    BaseUrl: import.meta.env.VITE_API_BASE_URL,
+    getAccessToken: () => iamStore.getAccessToken()
+});
+
+app.mount('#app');
