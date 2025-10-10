@@ -1,10 +1,10 @@
 import {BaseApi} from "@/shared/infrastructure/http/base-api.js";
 import {BaseEndpoint} from "@/shared/infrastructure/http/base-endpoint.js";
 
-const locationsEndpointPath = import.meta.env.VITE_LOCATIONS_ENDPOINT_PATH;
-const paymentsEndpointPath = import.meta.env.VITE_PAYMENTS_ENDPOINT_PATH;
-const usersEndpointPath = import.meta.env.VITE_USERS_ENDPOINT_PATH;
-const userAccountsEndpointPath = import.meta.env.VITE_USER_ACCOUNTS_ENDPOINT_PATH;
+const locationsEndpointPath = import.meta.env.VITE_LOCATIONS_ENDPOINT_PATH || '/api/v1/locations';
+const paymentsEndpointPath = import.meta.env.VITE_PAYMENTS_ENDPOINT_PATH || '/api/v1/payments';
+const usersEndpointPath = import.meta.env.VITE_USERS_ENDPOINT_PATH || '/api/v1/users';
+const userAccountsEndpointPath = import.meta.env.VITE_USER_ACCOUNTS_ENDPOINT_PATH || '/api/v1/user_accounts';
 
 /**
  * @class

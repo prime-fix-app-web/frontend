@@ -15,4 +15,20 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url))
     },
   },
+  css: {
+    postcss: { plugins: [] }
+  },
+  server: {
+    proxy: {
+      '/api/v1': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/v1/, '')
+      },
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      }
+    }
+  }
 })

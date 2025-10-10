@@ -3,11 +3,14 @@ import {useI18n} from "vue-i18n";
 import {computed, onMounted, ref} from "vue";
 import {useRouter} from "vue-router";
 import useIamStore from "@/iam/application/iam.store.js";
+import { storeToRefs } from 'pinia';
 
 const { t } = useI18n();
 const router = useRouter();
 const store = useIamStore();
-const {userAccounts, userAccountsLoaded, usersLoaded, errors, fetchUserAccounts, fetchUsers, login} = store;
+// Extrae refs reactivas del store
+const { userAccounts, userAccountsLoaded, usersLoaded, errors } = storeToRefs(store);
+const { fetchUserAccounts, fetchUsers, login } = store;
 
 /**
  * Login form data
@@ -41,10 +44,13 @@ const loginError = ref('');
  * On component mount, fetch user accounts and users if not already loaded
  */
 onMounted(() => {
-  if (!userAccountsLoaded) fetchUserAccounts();
-  if (!usersLoaded) fetchUsers();
-  console.log(userAccounts);
+  if (!userAccountsLoaded.value) fetchUserAccounts();
+  if (!usersLoaded.value) fetchUsers();
+  console.log(userAccounts.value);
 });
+
+// Indica si los datos necesarios para validar el login ya están listos
+const isDataReady = computed(() => userAccountsLoaded.value && usersLoaded.value);
 
 /**
  * Validate email format
@@ -82,7 +88,8 @@ function validatePassword(password) {
  * @type {ComputedRef<unknown>} - true if the form is valid, false otherwise
  */
 const isFormValid = computed(() => {
-  return form.value.email &&
+  return isDataReady.value &&
+         form.value.email &&
          form.value.password &&
          form.value.password.length >= 6 &&
          /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.value.email);
@@ -99,6 +106,8 @@ function togglePasswordVisibility() {
  * Handle form submission
  */
 function onSubmit() {
+  if (!isDataReady.value) return; // Evita intentar loguear sin datos cargados
+
   // Reset errors
   errorsForm.value = { email: null, password: null };
   loginError.value = '';
@@ -114,7 +123,7 @@ function onSubmit() {
   }
 
   isSubmitting.value = true;
-  login(form.value.email, form.value.password)
+  login(form.value.email.trim(), form.value.password)
     .then((userAccount) => {
       console.log('Login successful', userAccount);
 
@@ -208,15 +217,16 @@ function navigateToUserRole() {
           </div>
         </div>
 
-        <!-- Submit Button -->
         <button
             type="submit"
             class="submit-button"
             :disabled="isSubmitting || !isFormValid"
             :class="{ loading: isSubmitting }"
         >
-          <div v-if="isSubmitting" class="spinner"></div>
-          <div>{{ isSubmitting ? $t('login.loading') : $t('login.signIn') }}</div>
+          <div v-if="isSubmitting || !isDataReady" class="spinner"></div>
+          <div>
+            {{ !isDataReady ? 'Cargando…' : (isSubmitting ? $t('login.loading') : $t('login.signIn')) }}
+          </div>
         </button>
 
         <!-- Error message for invalid credentials -->

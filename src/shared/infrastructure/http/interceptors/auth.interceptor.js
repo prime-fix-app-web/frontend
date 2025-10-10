@@ -9,7 +9,9 @@ import axios from "axios";
  */
 export function setupAuthInterceptor({ apiKey, BaseUrl, getAccessToken }) {
     axios.interceptors.request.use((config) => {
-        if (config.url.startsWith(BaseUrl)) {
+        const url = config.url || '';
+        const applies = BaseUrl ? url.startsWith(BaseUrl) : url.startsWith('/api');
+        if (applies) {
             config.headers['apiKey'] = apiKey;
 
             const accessToken = getAccessToken();

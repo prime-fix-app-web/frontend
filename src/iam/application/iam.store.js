@@ -234,11 +234,12 @@ const useIamStore = defineStore('iam', () => {
     function fetchUsers() {
         iamApi.getUsers().then(response => {
             users.value = UserAssembler.toEntitiesFromResponse(response);
-            usersLoaded.value = true;
-            console.log(usersLoaded.value);
-            console.log(users.value);
+            console.log('Users loaded:', users.value.length);
         }).catch(error => {
             errors.value.push(error);
+            console.error('fetchUsers error', error);
+        }).finally(() => {
+            usersLoaded.value = true;
         });
     }
 
@@ -249,11 +250,12 @@ const useIamStore = defineStore('iam', () => {
     function fetchUserAccounts() {
         iamApi.getUserAccounts().then(response => {
             userAccounts.value = UserAccountAssembler.toEntitiesFromResponse(response);
-            userAccountsLoaded.value = true;
-            console.log(userAccountsLoaded.value);
-            console.log(userAccounts.value);
+            console.log('UserAccounts loaded:', userAccounts.value.length);
         }).catch(error => {
             errors.value.push(error);
+            console.error('fetchUserAccounts error', error);
+        }).finally(() => {
+            userAccountsLoaded.value = true;
         });
     }
 

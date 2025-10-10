@@ -51,9 +51,15 @@ const router = useRouter()
 const route = useRoute()
 const { t } = useI18n({ useScope: 'global' })
 
+// Rutas alias para marcar activo el Dashboard cuando se esté en Buscar Taller
+const activeAliases: Record<string, string[]> = {
+  '/layout-owner/home-owner': ['/layout-owner/search-workshop']
+}
 
 function isActive(path: string) {
-  return route.path === path || route.path.startsWith(path + '/')
+  if (route.path === path || route.path.startsWith(path + '/')) return true
+  const aliases = activeAliases[path] || []
+  return aliases.some(a => route.path === a || route.path.startsWith(a + '/'))
 }
 
 
