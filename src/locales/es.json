@@ -186,7 +186,9 @@
     "december": "Diciembre",
     "visa": "Visa",
     "mastercard": "MasterCard",
-    "amex": "American Express"
+    "amex": "American Express",
+    "successMessage": "¡Pago exitoso! Redirigiendo...",
+    "failureMessage": "El pago ha fallado. Por favor, verifica tus datos e inténtalo de nuevo."
   },
   "side-bar-owner": {
     "profile": "Perfil",

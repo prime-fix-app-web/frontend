@@ -119,10 +119,34 @@ const useIamStore = defineStore('iam', () => {
      */
     const roleId = computed(() => sessionUserAccount.value ? sessionUserAccount.value.id_role : null);
 
+    /**
+     * Registration location during the registration flow.
+     * @type {import('vue').Ref<Location|null>}
+     */
     const registerLocation = ref(null);
+
+    /**
+     * Registration payment during the registration flow.
+     * @type {import('vue').Ref<Payment|null>}
+     */
     const registerPayment = ref(null);
+
+    /**
+     * Registration user during the registration flow.
+     * @type {import('vue').Ref<User|null>}
+     */
     const registerUser = ref(null);
+
+    /**
+     * Registration user account during the registration flow.
+     * @type {import('vue').Ref<UserAccount|null>}
+     */
     const registerUserAccount = ref(null);
+
+    /**
+     * Registration membership type during the registration flow.
+     * @type {import('vue').Ref<string|null>}
+     */
     const registerMemberShipType = ref(null);
 
     /**
@@ -208,6 +232,10 @@ const useIamStore = defineStore('iam', () => {
     }
 
 
+    /**
+     * Starts the registration flow for a given role.
+     * @param role - The role for the new user ('owner' or 'workshop').
+     */
     function startRegistrationFlow(role) {
         registerLocation.value = null;
         registerPayment.value = null;
@@ -216,6 +244,18 @@ const useIamStore = defineStore('iam', () => {
         registerMemberShipType.value = role;
     }
 
+    /**
+     * Saves the registration data for an owner.
+     * @param fullName - Full name of the owner
+     * @param username - Username for the account
+     * @param dni - DNI number
+     * @param phone_number - Phone number
+     * @param department - Department
+     * @param district - District
+     * @param address - Address
+     * @param email - Email address
+     * @param password - Password
+     */
     function saveRegisterOwner({ fullName, username, dni, phone_number, department,
                                district, address, email, password }) {
         const newLocation = new Location({
@@ -249,6 +289,18 @@ const useIamStore = defineStore('iam', () => {
         registerUserAccount.value = newUserAccount;
     }
 
+    /**
+     * Saves the registration data for a workshop.
+     * @param workshopName - Name of the workshop
+     * @param username - Username for the account
+     * @param ruc - RUC number
+     * @param phone_number - Phone number
+     * @param department - Department
+     * @param district - District
+     * @param address - Address
+     * @param email - Email address
+     * @param password - Password
+     */
     function saveRegisterWorkshop({ workshopName, username, ruc, phone_number, department, district, address, email, password }) {
         const newLocation = new Location({
             id_location: 'L0' + (locationsCount.value + 1).toString(),
@@ -282,6 +334,10 @@ const useIamStore = defineStore('iam', () => {
     }
 
 
+    /**
+     * Selects a membership plan and updates the registration data accordingly.
+     * @param plan - The selected plan ('3m', '12m', or '1m')
+     */
     function selectPlan(plan) {
         const membershipId = plan === '3m' ? 'M001' : plan === '12m' ? 'M002' : 'M003';
 
@@ -293,6 +349,15 @@ const useIamStore = defineStore('iam', () => {
         }
     }
 
+    /**
+     * Finalizes the registration process by creating all necessary entities.
+     * @param card_number - Card number
+     * @param month - Expiration month
+     * @param year - Expiration year
+     * @param cvv - CVV code
+     * @param card_type - Type of card (e.g., 'Visa', 'MasterCard')
+     * @returns {Promise<void>} - Resolves when registration is complete, rejects on error.
+     */
     async function finishRegister({ card_number, month, year, cvv, card_type }) {
         const role = registerMemberShipType.value;
         const user = registerUser.value;
@@ -345,6 +410,10 @@ const useIamStore = defineStore('iam', () => {
         }
     }
 
+    /**
+     * Resets the registration flow data.
+     * @returns {void}
+     */
     function resetRegistrationFlow() {
         registerLocation.value = null;
         registerPayment.value = null;

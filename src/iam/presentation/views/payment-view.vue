@@ -8,8 +8,12 @@ const router = useRouter();
 const { t } = useI18n();
 const store = useIamStore();
 
-const { registerUserAccount, finishRegister, resetRegistrationFlow } = store;
+const { registerUserAccount, finishRegister, resetRegistrationFlow,
+  fetchUserAccounts, fetchPayments, fetchLocations, fetchUsers} = store;
 
+/**
+ * Months for the expiration date dropdown
+ */
 const months = [
   { value: 1, name: t('payment.january') },
   { value: 2, name: t('payment.february') },
@@ -28,7 +32,10 @@ const months = [
 const years = Array.from({ length: 10 }, (_, i) => new Date().getFullYear() + i);
 const documentTypes = ['DNI', 'Pasaporte', 'Carné de Extranjería'];
 
-// Dynamic plan and amount based on store data
+/**
+ * Determine the selected plan based on the user's membership
+ * @type {ComputedRef<string>}
+ */
 const planSelected = computed(() => {
 
   if (!registerUserAccount) {
@@ -49,6 +56,10 @@ const planSelected = computed(() => {
   }
 });
 
+/**
+ * Determine the amount to be paid based on the selected membership
+ * @type {ComputedRef<string>}
+ */
 const amountSelected = computed(() => {
   if (!registerUserAccount) {
     console.log('❌ No userAccount or membership found, using default amount');
@@ -70,6 +81,9 @@ const amountSelected = computed(() => {
   }
 });
 
+/**
+  * Form state and validation
+  */
 const form = ref({
   card_number: '',
   month: 1,
@@ -79,10 +93,23 @@ const form = ref({
   document_number: ''
 });
 
+/**
+ * Error state
+ * @type {Ref<UnwrapRef<Object>, UnwrapRef<Object> | Object>}
+ */
 const errors = ref({});
+
+/**
+ * Processing state to prevent multiple submissions
+ * @type {Ref<UnwrapRef<boolean>, UnwrapRef<boolean> | boolean>}
+ */
 const isProcessing = ref(false);
 
 
+/**
+ * Validate the form fields
+ * @returns {boolean} - True if the form is valid, false otherwise
+ */
 function validateForm() {
   const e = {};
   if (!form.value.card_number) e.card_number = t('payment.cardNumberRequired');
@@ -96,15 +123,40 @@ function validateForm() {
   return Object.keys(e).length === 0;
 }
 
-function onSubmit() {
+/**
+ * Handle form submission
+ * @async - This function is asynchronous
+ * @returns {Promise<void>} - A promise that resolves when the submission is complete
+ */
+async function onSubmit() {
   if (!validateForm() || isProcessing.value) return;
   isProcessing.value = true;
   const formData = form.value;
-  finishRegister(formData);
-  resetRegistrationFlow();
-  goToLogin();
+
+  try {
+    await finishRegister(formData);
+    console.log(t('payment.successMessage'));
+
+    /**
+     * Fetch necessary data after registration to ensure the store is up-to-date
+     */
+    await fetchUserAccounts();
+    await fetchUsers();
+    await fetchLocations();
+    await fetchPayments();
+
+    goToLogin();
+  } catch (error) {
+    console.error(t('payment.failureMessage'), error);
+    isProcessing.value = false;
+  } finally {
+    resetRegistrationFlow();
+  }
 }
 
+/**
+ * Navigate to the login page
+ */
 function goToLogin() {
   router.push('/iam/login');
 }
