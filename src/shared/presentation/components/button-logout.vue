@@ -1,10 +1,16 @@
 <script setup>
 import {useI18n} from "vue-i18n";
+import {useRouter} from "vue-router";
+import useIamStore from "@/iam/application/iam.store.js";
 
 const { t } = useI18n();
+const router = useRouter();
+const store = useIamStore();
 
 const onLogout = () => {
   console.log("Logout");
+  store.logout();
+  router.push('/iam/login');
 };
 </script>
 
