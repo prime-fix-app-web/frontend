@@ -12,7 +12,8 @@ const props = defineProps({
 
 // Router y Store
 const router = useRouter()
-const store = inject('autoRepairRegisterStore')
+import { useAutoRepairRegisterStore } from '@/autorepair-registration/application/auto-repair.store.js'
+const store = useAutoRepairRegisterStore()
 
 // Estado reactivo del formulario
 const form = ref({
@@ -92,11 +93,10 @@ function onSubmit() {
   isSubmitting.value = true
 
   const id_auto_repair = props.autoRepair?.id_auto_repair ??
-      'AR' + Math.floor(Math.random() * 10000).toString().padStart(4, '0')
+      'AR' + (Math.floor(Math.random() * 10000) + 6).toString().padStart(3, '0')
 
   const register = {
-    id_auto_repair,
-    RUC: form.value.RUC,
+    id_auto_repair: id_auto_repair,
     contact_email: form.value.contact_email,
     technicians_count: form.value.technicians_count,
     id_location: form.value.id_location
@@ -111,7 +111,7 @@ function onSubmit() {
       alert('Registro de taller creado correctamente.')
     }
 
-    router.push('/auto-repair-register/auto-repairs')
+    router.push('/auto-repairs')
   } catch (error) {
     console.error('Error al enviar el formulario:', error)
     alert('Error al enviar el formulario. Intenta nuevamente.')

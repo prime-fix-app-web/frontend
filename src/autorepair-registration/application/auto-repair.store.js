@@ -27,118 +27,156 @@ export const useAutoRepairRegisterStore = defineStore('autoRepairRegister', () =
 
     // ======= AUTO REPAIR REGISTER METHODS ======= //
 
-    function fetchAutoRepairRegisters() {
+    async function fetchAutoRepairRegisters() {
         loading.value = true;
-        autorepairApi.getAutoRepairRegisters().then(response => {
+        errors.value = [];
+        try {
+            const response = await autorepairApi.getAutoRepairRegisters();
             autoRepairRegisters.value = AutoRepairRegisterAssembler.toEntitiesFromResponse(response);
             autoRepairRegistersLoaded.value = true;
+        } catch (error) {
+            errors.value.push(error.message);
+        } finally {
             loading.value = false;
-        }).catch(error => {
-            errors.value.push(error);
-            loading.value = false;
-        });
+        }
     }
 
     function getAutoRepairRegisterById(id) {
         return autoRepairRegisters.value.find(register => register.id === String(id));
     }
 
-    function addAutoRepairRegister(register) {
+    async function addAutoRepairRegister(register) {
         loading.value = true;
-        autorepairApi.createAutoRepairRegister(register).then(response => {
-            const resource = response.data;
-            const newRegister = AutoRepairRegisterAssembler.toEntityFromResource(resource);
+        errors.value = [];
+        try {
+            const resource = AutoRepairRegisterAssembler.toResourceFromEntity(register);
+            const response = await autorepairApi.createAutoRepairRegister(resource);
+            const newRegister = AutoRepairRegisterAssembler.toEntityFromResource(response.data);
             autoRepairRegisters.value.push(newRegister);
+            return newRegister;
+        } catch (error) {
+            errors.value.push(error.message);
+            throw error;
+        } finally {
             loading.value = false;
-        }).catch(error => {
-            errors.value.push(error);
-            loading.value = false;
-        });
+        }
     }
 
-    function updateAutoRepairRegister(register) {
+    async function updateAutoRepairRegister(register) {
         loading.value = true;
-        autorepairApi.updateAutoRepairRegister(register).then(response => {
-            const resource = response.data;
-            const updatedRegister = AutoRepairRegisterAssembler.toEntityFromResource(resource);
+        errors.value = [];
+        try {
+            const resource = AutoRepairRegisterAssembler.toResourceFromEntity(register);
+            const response = await autorepairApi.updateAutoRepairRegister(resource);
+            const updatedRegister = AutoRepairRegisterAssembler.toEntityFromResource(response.data);
+
             const index = autoRepairRegisters.value.findIndex(reg => reg.id === updatedRegister.id);
-            if (index !== -1) autoRepairRegisters.value[index] = updatedRegister;
+            if (index !== -1) {
+                autoRepairRegisters.value[index] = updatedRegister;
+            }
+            return updatedRegister;
+        } catch (error) {
+            errors.value.push(error.message);
+            throw error;
+        } finally {
             loading.value = false;
-        }).catch(error => {
-            errors.value.push(error);
-            loading.value = false;
-        });
+        }
     }
 
-    function deleteAutoRepairRegister(register) {
+    async function deleteAutoRepairRegister(id) {
         loading.value = true;
-        autorepairApi.deleteAutoRepairRegister(register.id).then(() => {
-            const index = autoRepairRegisters.value.findIndex(reg => reg.id === register.id);
-            if (index !== -1) autoRepairRegisters.value.splice(index, 1);
+        errors.value = [];
+        try {
+            await autorepairApi.deleteAutoRepairRegister(id);
+            const index = autoRepairRegisters.value.findIndex(reg => reg.id === id);
+            if (index !== -1) {
+                autoRepairRegisters.value.splice(index, 1);
+            }
+        } catch (error) {
+            errors.value.push(error.message);
+            throw error;
+        } finally {
             loading.value = false;
-        }).catch(error => {
-            errors.value.push(error);
-            loading.value = false;
-        });
+        }
     }
 
     // ======= TECHNICIAN REGISTER METHODS ======= //
 
-    function fetchTechnicians() {
+    async function fetchTechnicians() {
         loading.value = true;
-        autorepairApi.getTechnicians().then(response => {
+        errors.value = [];
+        try {
+            const response = await autorepairApi.getTechnicians();
             technicians.value = TechnicianRegisterAssembler.toEntitiesFromResponse(response);
             techniciansLoaded.value = true;
+        } catch (error) {
+            errors.value.push(error.message);
+        } finally {
             loading.value = false;
-        }).catch(error => {
-            errors.value.push(error);
-            loading.value = false;
-        });
+        }
     }
 
     function getTechnicianById(id) {
         return technicians.value.find(technician => technician.id === String(id));
     }
 
-    function addTechnician(technician) {
+    async function addTechnician(technician) {
         loading.value = true;
-        autorepairApi.createTechnician(technician).then(response => {
-            const resource = response.data;
-            const newTechnician = TechnicianRegisterAssembler.toEntityFromResource(resource);
+        errors.value = [];
+        try {
+            const resource = TechnicianRegisterAssembler.toResourceFromEntity(technician);
+            const response = await autorepairApi.createTechnician(resource);
+            const newTechnician = TechnicianRegisterAssembler.toEntityFromResource(response.data);
             technicians.value.push(newTechnician);
+            return newTechnician;
+        } catch (error) {
+            errors.value.push(error.message);
+            throw error;
+        } finally {
             loading.value = false;
-        }).catch(error => {
-            errors.value.push(error);
-            loading.value = false;
-        });
+        }
     }
 
-    function updateTechnician(technician) {
+    async function updateTechnician(technician) {
         loading.value = true;
-        autorepairApi.updateTechnician(technician).then(response => {
-            const resource = response.data;
-            const updatedTechnician = TechnicianRegisterAssembler.toEntityFromResource(resource);
+        errors.value = [];
+        try {
+            const resource = TechnicianRegisterAssembler.toResourceFromEntity(technician);
+            const response = await autorepairApi.updateTechnician(resource);
+            const updatedTechnician = TechnicianRegisterAssembler.toEntityFromResource(response.data);
+
             const index = technicians.value.findIndex(tech => tech.id === updatedTechnician.id);
-            if (index !== -1) technicians.value[index] = updatedTechnician;
+            if (index !== -1) {
+                technicians.value[index] = updatedTechnician;
+            }
+            return updatedTechnician;
+        } catch (error) {
+            errors.value.push(error.message);
+            throw error;
+        } finally {
             loading.value = false;
-        }).catch(error => {
-            errors.value.push(error);
-            loading.value = false;
-        });
+        }
     }
 
-    function deleteTechnician(technician) {
+    async function deleteTechnician(teach) {
         loading.value = true;
-        autorepairApi.deleteTechnician(technician.id).then(() => {
-            const index = technicians.value.findIndex(tech => tech.id === technician.id);
-            if (index !== -1) technicians.value.splice(index, 1);
+        errors.value = [];
+        try {
+            await autorepairApi.deleteTechnician(tech.id);
+            const index = technicians.value.findIndex(tech => tech.id === id);
+            if (index !== -1) {
+                technicians.value.splice(index, 1);
+            }
+        } catch (error) {
+            errors.value.push(error.message);
+            throw error;
+        } finally {
             loading.value = false;
-        }).catch(error => {
-            errors.value.push(error);
-            loading.value = false;
-        });
+        }
     }
-
+    function clearErrors() {
+        errors.value = [];
+    }
     return {
         // State
         autoRepairRegisters,
@@ -164,7 +202,9 @@ export const useAutoRepairRegisterStore = defineStore('autoRepairRegister', () =
         getTechnicianById,
         addTechnician,
         updateTechnician,
-        deleteTechnician
+        deleteTechnician,
+        clearErrors
+
     };
 });
 

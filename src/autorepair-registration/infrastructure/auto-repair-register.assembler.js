@@ -13,8 +13,17 @@ export class AutoRepairRegisterAssembler {
             console.error(`${response.status}, ${response.statusText}`);
             return [];
         }
-        let resources = response.data instanceof Array ? response.data : response.data['auto repairs'];
+        let resources = response.data instanceof Array ? response.data : response.data;
 
         return resources.map(resource => this.toEntityFromResource(resource));
+    }
+    static toResourceFromEntity(entity) {
+        return {
+            id_auto_repair: entity.id_auto_repair,
+            ruc: entity.RUC,
+            contact_email: entity.contact_email,
+            technicians_count: entity.technicians_count,
+            id_location: entity.id_location
+        };
     }
 }

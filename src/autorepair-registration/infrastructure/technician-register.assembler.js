@@ -14,8 +14,20 @@ export class TechnicianRegisterAssembler {
             console.error(`${response.status}, ${response.statusText}`);
             return [];
         }
-        let resources = response.data instanceof Array ? response.data : response.data['technicians'];
+        let resources = response.data instanceof Array ? response.data : response.data;
+
 
         return resources.map(resource => this.toEntityFromResource(resource));
+    }
+
+    static toResourceFromEntity(entity) {
+        return {
+            id_user_account: entity.id_user_account,
+            username: entity.username,
+            email: entity.email,
+            id_role: entity.id_role
+
+        };
+
     }
 }

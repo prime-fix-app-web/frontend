@@ -2,7 +2,7 @@ import {BaseApi} from "@/shared/infrastructure/http/base-api.js";
 import {BaseEndpoint} from "@/shared/infrastructure/http/base-endpoint.js";
 
 const autoRepairsRegisterEndpointPath = import.meta.env.VITE_AUTOREPAIRS_ENDPOINT_PATH;
-const techniciansRegisterEndpointPath = import.meta.env.VITE_TECHNICIANS_ENDPOINT_PATH;
+const techniciansRegisterEndpointPath = import.meta.env.VITE_USER_ACCOUNTS_ENDPOINT_PATH;
 
 export class AutorepairApi extends BaseApi {
     #techniciansRegisterEndpoint;
@@ -20,7 +20,7 @@ export class AutorepairApi extends BaseApi {
     }
 
     getAutoRepairRegisterById(id) {
-        return this.#autoRepairsRegisterEndpoint.getById(Number(id));
+        return this.#autoRepairsRegisterEndpoint.getById(id);
     }
 
     createAutoRepairRegister(resource) {
@@ -28,11 +28,11 @@ export class AutorepairApi extends BaseApi {
     }
 
     updateAutoRepairRegister(resource) {
-        return this.#autoRepairsRegisterEndpoint.update(Number(resource.id), resource);
-    }
+        return this.#autoRepairsRegisterEndpoint.update(resource.id_auto_repair, resource);}
+
 
     deleteAutoRepairRegister(id) {
-        return this.#autoRepairsRegisterEndpoint.delete(Number(id));
+        return this.#autoRepairsRegisterEndpoint.delete(id);
     }
 
     // ------------------ TechnicianRegister ------------------
@@ -42,7 +42,7 @@ export class AutorepairApi extends BaseApi {
     }
 
     getTechnicianById(id) {
-        return this.#techniciansRegisterEndpoint.getById(Number(id));
+        return this.#techniciansRegisterEndpoint.getById(id);
     }
 
     createTechnician(resource) {
@@ -50,10 +50,10 @@ export class AutorepairApi extends BaseApi {
     }
 
     updateTechnician(resource) {
-        return this.#techniciansRegisterEndpoint.update(Number(resource.id), resource);
+        return this.#techniciansRegisterEndpoint.update(resource.id_user_account, resource);
     }
 
-    deleteTechnician(id) {
-        return this.#techniciansRegisterEndpoint.delete(Number(id));
+        deleteTechnician(id) {
+        return this.#techniciansRegisterEndpoint.delete(id);
     }
 }

@@ -18,25 +18,20 @@ const autoRepairStore = useAutoRepairRegisterStore();
 
 // Reactive form state
 const form = ref({
-  name: '',
-  age: 0,
   id_user_account: '',
-  id_auto_repair: ''
+  username: '',
+  email: '',
+  id_role: ''
 })
 
 // UI state
 const isSubmitting = ref(false)
+// CORREGIDO: campos de errorsForm
 const errorsForm = ref({
-  name: null,
-  age: null,
+  username: null,
+  email: null,
   id_user_account: null,
-  id_auto_repair: null
-})
-
-// Computed property for selected auto-repair
-const selectedAutoRepair = computed(() => {
-  const ar = autoRepairStore.getAutoRepairRegisterById(form.value.id_auto_repair)
-  return ar?.RUC ?? ''
+  id_role: null
 })
 
 // Watch for prop changes to populate form
@@ -44,81 +39,84 @@ watch(
     () => props.technician,
     (newValue) => {
       if (newValue) {
-        form.value.name = newValue.name ?? ''
-        form.value.age = newValue.age ?? 0
         form.value.id_user_account = newValue.id_user_account ?? ''
-        form.value.id_auto_repair = newValue.id_auto_repair ?? ''
+        form.value.username = newValue.username ?? ''
+        form.value.email = newValue.email ?? ''
+        form.value.id_role = newValue.id_role ?? ''
       }
     },
     { immediate: true }
 )
 
 // Validaciones simples
-function validateName(name) {
-  if (!name) return { required: true }
-  if (name.length < 2) return { minLength: true }
+function validateUsername(username) {
+  if (!username) return { required: true }
+  if (username.length < 2) return { minLength: true }
   return null
 }
-function validateAge(age) {
-  if (!age || age <= 0) return { required: true }
-  if (age < 18 || age > 100) return { invalid: true }
+
+function validateEmail(email) {
+  if (!email) return { required: true }
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!emailRegex.test(email)) return { invalid: true }
   return null
 }
+
 function validateUserAccount(account) {
   if (!account) return { required: true }
   return null
 }
-function validateAutoRepair(repair) {
-  if (!repair) return { required: true }
+
+function validateRole(role) {
+  if (!role) return { required: true }
   return null
 }
 
 // Validación global
 const isFormValid = computed(() => {
   return (
-      form.value.name.length >= 2 &&
-      form.value.age >= 18 &&
-      form.value.age <= 100 &&
+      form.value.username.length >= 2 &&
+      form.value.email &&
+      /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.value.email) &&
       form.value.id_user_account &&
-      form.value.id_auto_repair
+      form.value.id_role
   )
 })
 
 async function submit() {
   // Reset de errores
   errorsForm.value = {
-    name: null,
-    age: null,
+    username: null,
+    email: null,
     id_user_account: null,
-    id_auto_repair: null
+    id_role: null
   }
 
   // Validaciones
-  const nameError = validateName(form.value.name)
-  const ageError = validateAge(form.value.age)
+  const usernameError = validateUsername(form.value.username)
+  const emailError = validateEmail(form.value.email)
   const userError = validateUserAccount(form.value.id_user_account)
-  const repairError = validateAutoRepair(form.value.id_auto_repair)
+  const roleError = validateRole(form.value.id_role)
 
-  if (nameError || ageError || userError || repairError) {
-    errorsForm.value.name = nameError
-    errorsForm.value.age = ageError
+  if (usernameError || emailError || userError || roleError) {
+    errorsForm.value.username = usernameError
+    errorsForm.value.email = emailError
     errorsForm.value.id_user_account = userError
-    errorsForm.value.id_auto_repair = repairError
+    errorsForm.value.id_role = roleError
     return
   }
 
   isSubmitting.value = true
 
-  const id_technician =
-      props.technician?.id_technician ??
-      'TECH' + Math.floor(Math.random() * 10000).toString().padStart(4, '0')
+  const id_technician = props.technician?.id_technician ?? 'TECH' + Math.floor(Math.random() * 10000).toString().padStart(4, '0')
 
+  // CORREGIDO: objeto technician con campos correctos
   const technician = {
     id_technician,
-    name: form.value.name,
-    age: form.value.age,
-    id_user_account: form.value.id_user_account,
-    id_auto_repair: form.value.id_auto_repair
+    id_user_account: form.value.id_user_account,  // CORREGIDO
+    username: form.value.username,                // CORREGIDO
+    email: form.value.email,                      // CORREGIDO
+    id_role: form.value.id_role                   // CORREGIDO
   }
 
   try {
@@ -138,40 +136,12 @@ async function submit() {
   }
 }
 </script>
-
 <template>
-
   <div class="technician-details-container">
     <h1 class="page-title">{{ props.technician ? 'Editar' : 'Agregar' }} Técnico</h1>
 
     <div class="form-container">
       <form class="technician-form" @submit.prevent="submit">
-        <div class="form-group">
-          <label for="nombre-tecnico">Nombre del técnico *</label>
-          <input
-              type="text"
-              id="nombre-tecnico"
-              placeholder="Jesús Grimaldo"
-              v-model="form.name"
-              required
-          />
-          <small v-if="errorsForm.name?.required" class="error">El nombre es obligatorio.</small>
-          <small v-if="errorsForm.name?.minLength" class="error">Mínimo 2 caracteres.</small>
-        </div>
-
-        <div class="form-group">
-          <label for="edad">Edad *</label>
-          <input
-              type="number"
-              id="edad"
-              placeholder="25"
-              v-model.number="form.age"
-              required
-          />
-          <small v-if="errorsForm.age?.required" class="error">La edad es obligatoria.</small>
-          <small v-if="errorsForm.age?.invalid" class="error">Debe tener entre 18 y 100 años.</small>
-        </div>
-
         <div class="form-group">
           <label for="id-usuario">ID de Usuario *</label>
           <input
@@ -187,15 +157,43 @@ async function submit() {
         </div>
 
         <div class="form-group">
-          <label for="id-taller">ID del Taller *</label>
+          <label for="username">Nombre de usuario *</label>
           <input
               type="text"
-              id="id-taller"
-              placeholder="AR001"
-              v-model="form.id_auto_repair"
+              id="username"
+              placeholder="jgrimaldo"
+              v-model="form.username"
               required
           />
-          <small v-if="selectedAutoRepair">Taller: {{ selectedAutoRepair }}</small>
+          <small v-if="errorsForm.username?.required" class="error">El nombre de usuario es obligatorio.</small>
+          <small v-if="errorsForm.username?.minLength" class="error">Mínimo 2 caracteres.</small>
+        </div>
+
+        <div class="form-group">
+          <label for="email">Email *</label>
+          <input
+              type="email"
+              id="email"
+              placeholder="tecnico@taller.com"
+              v-model="form.email"
+              required
+          />
+          <small v-if="errorsForm.email?.required" class="error">El email es obligatorio.</small>
+          <small v-if="errorsForm.email?.invalid" class="error">Formato de email inválido.</small>
+        </div>
+
+        <div class="form-group">
+          <label for="id-role">ID de Rol *</label>
+          <input
+              type="text"
+              id="id-role"
+              placeholder="ROLE_TECH"
+              v-model="form.id_role"
+              required
+          />
+          <small v-if="errorsForm.id_role?.required" class="error">
+            Campo obligatorio.
+          </small>
         </div>
 
         <div class="form-actions">
@@ -209,8 +207,6 @@ async function submit() {
       </form>
     </div>
   </div>
-
-
 </template>
 
 <style scoped>

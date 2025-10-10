@@ -44,14 +44,15 @@ async function loadTechnicians() {
 }
 
 function deleteTechnician(tech) {
-  if (!confirm(`¿Seguro que deseas eliminar al técnico ${tech.name}?`)) return
+  if (!confirm(`¿Seguro que deseas eliminar al técnico ${tech.username}?`)) return
 
-  autoRepairStore.deleteTechnician(tech.id_technician)
-      .then(() => {
-        technicians.value = technicians.value.filter(t => t.id_technician !== tech.id_technician)
-        alert('Técnico eliminado correctamente.')
-      })
+  console.log('🔍 Técnico completo:', tech) // Para debug
+
+  // CAMBIAR: tech.id_technician → tech.id
+  autoRepairStore.deleteTechnician(tech.id_user_account)
+  technicians.value = technicians.value.filter(t => t.id_user_account !== tech.id_user_account)
       .catch(err => {
+        console.error('❌ Error:', err)
         alert('No se pudo eliminar el técnico: ' + err.message)
       })
 }
@@ -60,13 +61,13 @@ function getAutoRepairName(id_auto_repair) {
   const ar = autoRepairStore.autoRepairRegisters.find(repair =>
       repair.id_auto_repair === id_auto_repair
   )
-  return ar?.RUC ?? 'Desconocido'
+  return ar?.ruc ?? 'Desconocido'
 }
 
-function editTechnician(id) {
-  router.push('/technicians/edit/' + id)
+function editTechnician(tech) {
+  // USAR id_user_account para editar también
+  router.push('/technicians/edit/' + tech.id_user_account)
 }
-
 function submit() {
   if (!name.value) {
     alert('Por favor ingresa el nombre del técnico.')
@@ -93,6 +94,15 @@ function removeScheduleDay(index) {
 function updateSchedule(index, field, value) {
   schedules.value[index][field] = value
 }
+function getRoleDisplay(roleId) {
+  const roles = {
+    'R001': 'Administrador',
+    'R002': 'Técnico',
+    'R003': 'Usuario',
+    'R004': 'Cliente'
+  }
+  return roles[roleId] || roleId
+}
 </script>
 
 <template>
@@ -117,17 +127,17 @@ function updateSchedule(index, field, value) {
 
     <!-- Lista de técnicos -->
     <div v-else class="tecnicos-lista">
-      <div v-for="tech in technicians" :key="tech.id_technician" class="tecnico-card">
+      <div v-for="tech in technicians" :key="tech.id_user_account" class="tecnico-card">
         <div class="tecnico-info">
-          <h3>{{ tech.name }}</h3>
+          <h3>{{ tech.username }}</h3>
           <div class="tecnico-details">
-            <p><strong>Edad:</strong> {{ tech.age }} años</p>
-            <p><strong>Taller:</strong> {{ getAutoRepairName(tech.id_auto_repair) }}</p>
+            <p><strong>Email:</strong> {{ tech.email }}</p>
+            <p><strong>Rol:</strong> {{ getRoleDisplay(tech.id_role) }}</p>
             <p><strong>ID Usuario:</strong> {{ tech.id_user_account }}</p>
           </div>
         </div>
         <div class="tecnico-acciones">
-          <button class="btn-editar" @click="editTechnician(tech.id_technician)">
+          <button class="btn-editar" @click="editTechnician(tech)">
             Editar
           </button>
           <button class="btn-eliminar" @click="deleteTechnician(tech)">
