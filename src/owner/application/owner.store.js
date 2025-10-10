@@ -63,17 +63,19 @@ const useOwnerStore = defineStore('owner', () => {
   const fetchVisits = async () => {
     try {
       const resp = await ownerApi.getVisits()
-      // json-server devuelve directamente el array, lo guardamos crudo
+      // json-server returns arrays directly; keep as-is
       visits.value = Array.isArray(resp.data) ? resp.data : (resp.data['visits'] || [])
     } catch (e) { console.error(e) }
   }
 
-  // Map de promedios por id de taller
+  // Average stars grouped by workshop id
   const avgRatingMap = computed(() => {
     const map = new Map()
     if (!ratings.value.length) return map
     const grouped = ratings.value.reduce((acc, r) => {
-      const key = r.autoRepairId
+      // primary key to group by: prefer explicit relation; fallback to own id
+      const key = r.autoRepairId || r.id
+      if (!key) return acc
       if (!acc[key]) acc[key] = []
       acc[key].push(r.stars)
       return acc
@@ -87,10 +89,26 @@ const useOwnerStore = defineStore('owner', () => {
 
   const filteredAutoRepairs = computed(() => {
     if (!selectedDepartment.value || !selectedDistrict.value) return []
-    const matchingLocationIds = (iam.locations || [])
-      .filter(l => l.department === selectedDepartment.value && l.district === selectedDistrict.value)
-      .map(l => l.id)
-    return autoRepairs.value.filter(ar => matchingLocationIds.includes(ar.locationId))
+    const depN = String(selectedDepartment.value).trim().toLowerCase()
+    const distN = String(selectedDistrict.value).trim().toLowerCase()
+    const locs = (iam.locations || []).filter(l =>
+      String(l.department || '').trim().toLowerCase() === depN &&
+      String(l.district || '').trim().toLowerCase() === distN
+    )
+    const codeIds = new Set(locs.map(l => String(l.id || '').trim()).filter(Boolean))
+    const pkIds = new Set(locs.map(l => String(l.pk || '').trim()).filter(Boolean))
+    // Fallback: some backends share the same id between auto_repairs and locations
+    const sharedIds = new Set([
+      ...codeIds,
+      ...pkIds,
+    ])
+    if (codeIds.size === 0 && pkIds.size === 0) return []
+    return autoRepairs.value.filter(ar => {
+      const lid = String(ar.locationId || '').trim()
+      const lpk = String(ar.locationPk || '').trim()
+      const aid = String(ar.id || '').trim()
+      return (lid && codeIds.has(lid)) || (lpk && pkIds.has(lpk)) || (aid && sharedIds.has(aid))
+    })
   })
 
   function ensureLookupsLoaded() {
@@ -98,15 +116,19 @@ const useOwnerStore = defineStore('owner', () => {
   }
 
   function preselectDefaults() {
-    if (departments.value.includes('Lima')) selectedDepartment.value = 'Lima'
+    if (departments.value.map(d => d.toLowerCase()).includes('lima')) selectedDepartment.value = 'Lima'
     if (!selectedDepartment.value && departments.value.length) selectedDepartment.value = departments.value[0]
     if (selectedDepartment.value && districts.value.length) {
-      selectedDistrict.value = districts.value.includes('San Miguel') ? 'San Miguel' : districts.value[0]
+      const hasSanMiguel = districts.value.some(d => String(d).toLowerCase() === 'san miguel')
+      selectedDistrict.value = hasSanMiguel ? districts.value.find(d => String(d).toLowerCase() === 'san miguel') : districts.value[0]
     }
   }
 
-  function getLocationInfo(locationId) {
-    const loc = iam.getLocationById(locationId)
+  function getLocationInfo(locationIdOrPk) {
+    const key = String(locationIdOrPk)
+    const locs = iam.locations || []
+    let loc = locs.find(l => String(l.id) === key)
+    if (!loc) loc = locs.find(l => String(l.pk) === key)
     if (!loc) return null
     return { address: loc.address, district: loc.district, department: loc.department }
   }
@@ -127,7 +149,7 @@ const useOwnerStore = defineStore('owner', () => {
       failure,
       time_visit: timeVisit,
       id_auto_repair: autoRepairId,
-      // id_service no lo manejamos en este flujo
+      // id_service is not part of this flow
       status: 'En espera',
       id_vehicle: vehicleId,
     }
