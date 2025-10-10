@@ -15,7 +15,7 @@ export class Payment {
      * @param {string} [params.id_user_account=''] - The identifier for the user account.
      */
     constructor({ id_payment = '', card_number = '', card_type= '', month = null, year= null, cvv = null, id_user_account=''}) {
-        this.id_payment = id_payment;
+        this.id = id_payment;
         this.card_number = card_number;
         this.card_type=card_type;
         this.month = month;

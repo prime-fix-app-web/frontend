@@ -13,7 +13,7 @@ export class Rating {
      * @param {string} [params.id_user_account=null] - The unique identifier for the user account.
      */
     constructor({ id_rating = '', star_rating = null, comment= '', id_auto_repair = '', id_user_account= ''}) {
-        this.id_rating = id_rating;
+        this.id = id_rating;
         this.star_rating = star_rating;
         this.comment = comment;
         this.id_auto_repair = id_auto_repair;

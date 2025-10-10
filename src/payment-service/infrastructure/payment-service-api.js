@@ -4,6 +4,7 @@ import {BaseEndpoint} from "@/shared/infrastructure/http/base-endpoint.js";
 const paymentsEndpointPath = import.meta.env.VITE_PAYMENTS_ENDPOINT_PATH;
 const visitsEndpointPath = import.meta.env.VITE_VISITS_ENDPOINT_PATH;
 const ratingsEndpointPath = import.meta.env.VITE_RATINGS_ENDPOINT_PATH;
+const vehiclesEndpointPath = import.meta.env.VITE_VEHICLES_ENDPOINT_PATH;
 
 /**
  * PaymentServiceApi class to handle API operations for Payment-Service context.
@@ -31,6 +32,11 @@ export class PaymentServiceApi extends BaseApi {
      * @private
      */
     #ratingsEndpoint;
+    /**
+     * @type {BaseEndpoint}
+     * @private
+     */
+    #vehiclesEndpoint;
 
     /**
      * Initializes endpoints for payments, visits and ratings.
@@ -40,6 +46,23 @@ export class PaymentServiceApi extends BaseApi {
         this.#paymentsEndpoint = new BaseEndpoint(this, paymentsEndpointPath);
         this.#visitsEndpoint = new BaseEndpoint(this, visitsEndpointPath);
         this.#ratingsEndpoint = new BaseEndpoint(this, ratingsEndpointPath);
+        this.#vehiclesEndpoint = new BaseEndpoint(this, vehiclesEndpointPath);
+    }
+    /**
+     * Fetches all vehicles.
+     * @returns {Promise<import('axios').AxiosResponse>} Promise resolving to the vehicles' response.
+     */
+    getVehicles() {
+        return this.#vehiclesEndpoint.getAll();
+    }
+
+    /**
+     * Fetches a payment by its ID.
+     * @param {string} id - The ID of the payment.
+     * @returns {Promise<import('axios').AxiosResponse>} Promise resolving to the payment response.
+     */
+    getVehicleById(id) {
+        return this.#vehiclesEndpoint.getById(id);
     }
 
     /**

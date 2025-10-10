@@ -15,7 +15,7 @@ export class Visit {
      * @param {string} [params.id_vehicle=null] - The identifier for the visit.
      */
     constructor({ id_visit = '', failure = '', time_visit= '', id_auto_repair = '', id_service= '', status = '', id_vehicle=''}) {
-        this.id_visit = id_visit;
+        this.id = id_visit;
         this.failure = failure;
         this.time_visit = time_visit;
         this.id_auto_repair = id_auto_repair;

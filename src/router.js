@@ -1,6 +1,7 @@
 import {createRouter, createWebHistory} from "vue-router";
 import iamRoutes from "@/iam/presentation/iam-routes.js";
 import {authGuard} from "@/shared/infrastructure/guards/auth.guard.js";
+import paymentServiceRoutes from "@/payment-service/presentation/payment-service-routes.js";
 
 const layoutOwner = () => import("./shared/presentation/components/layout-owner.vue");
 const layoutWorkshop = () => import("./shared/presentation/components/layout-workshop.vue");
@@ -26,6 +27,11 @@ const routes = [
                 name: 'home-owner',
                 component: homeOwner,
                 meta: { title: 'Home Owner' }
+            },
+            {
+                path: 'payment-service',
+                name: 'payment-service',
+                children: paymentServiceRoutes,
             }
         ]
     },
@@ -53,7 +59,8 @@ const routes = [
         name: 'not-found',
         component: pageNotFound,
         meta: { title: 'Not Found' }
-    }
+    },
+
 ];
 
 const router = createRouter({
