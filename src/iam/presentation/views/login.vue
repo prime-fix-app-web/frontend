@@ -201,7 +201,7 @@ function navigateToUserRole() {
                 :aria-label="isPasswordVisible ? 'Ocultar contraseña' : 'Mostrar contraseña'"
             >
               <svg class="icon">
-                <use :href="isPasswordVisible ? 'assets/icons/sprite.symbol.svg#eye-off' : 'assets/icons/sprite.symbol.svg#eye'"></use>
+                <use :href="isPasswordVisible ? '/assets/icons/sprite.symbol.svg#eye-off' : '/assets/icons/sprite.symbol.svg#eye'"></use>
               </svg>
             </button>
           </div>
