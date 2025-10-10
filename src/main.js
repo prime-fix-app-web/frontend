@@ -11,7 +11,7 @@ import {
     CascadeSelect,
     ConfirmationService, DatePicker,
     DialogService,
-    Dropdown, FloatLabel,
+    Dropdown, FloatLabel,Select,
     SelectButton, Textarea,
     ToastService
 } from "primevue";
@@ -31,6 +31,7 @@ app.use(i18n)
     .component('pv-button', Button)
     .component('pv-cascade', CascadeSelect)
     .component('pv-textarea', Textarea)
+    .component('pv-select', Select)
     .component('pv-floatlabel', FloatLabel)
     .component('pv-datepicker', DatePicker)
     .use(router)

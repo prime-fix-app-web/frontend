@@ -22,7 +22,7 @@ export class VehicleAssembler {
      * @param {import('axios').AxiosResponse} response - The API response containing tutorial data.
      * @returns {Vehicle[]} Array of Vehicle entities.
      */
-    static toEntitiesFromResource(response) {
+    static toEntitiesFromResponse(response) {
         if (response.status !== 200) {
             return [];
         }

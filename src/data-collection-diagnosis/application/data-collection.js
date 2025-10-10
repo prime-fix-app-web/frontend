@@ -40,8 +40,6 @@ const useDataCollection = defineStore('useDataCollection', ()=>{
         dataApi.getVisits().then(response =>{
             visits.value = VisitAssembler.toEntitiesFromResponse(response);
             visitsLoaded.value = true;
-            console.log(visitsLoaded.value);
-            console.log(visits.value);
         }).catch(error => {
             errors.value.push(error);
         });
@@ -49,9 +47,8 @@ const useDataCollection = defineStore('useDataCollection', ()=>{
 
     function fetchServices(){
         dataApi.getServices().then(response =>{
+            services.value=ServiceAssembler.toEntitiesFromResponse(response);
             servicesLoaded.value = true;
-            console.log(servicesLoaded.value);
-            console.log(services.value);
         }).catch(error => {
             errors.value.push(error);
         })
@@ -59,9 +56,8 @@ const useDataCollection = defineStore('useDataCollection', ()=>{
 
     function fetchAutoRepairs(){
         dataApi.getAutoRepairs().then(response =>{
+            autoRepairs.value=AutoRepairAssembler.toEntitiesFromResponse(response);
             autoRepairsLoaded.value = true;
-            console.log(autoRepairsLoaded.value);
-            console.log(autoRepairs.value);
         }).catch(error => {
             errors.value.push(error);
         })
@@ -69,9 +65,8 @@ const useDataCollection = defineStore('useDataCollection', ()=>{
 
     function fetchVehicles(){
         dataApi.getVehicles().then(response =>{
+            vehicles.value=VehicleAssembler.toEntitiesFromResponse(response);
             vehiclesLoaded.value = true;
-            console.log(vehiclesLoaded.value);
-            console.log(vehicles.value);
         }).catch(error => {
             errors.value.push(error);
         })
@@ -80,7 +75,6 @@ const useDataCollection = defineStore('useDataCollection', ()=>{
     function getVisitsById(id){
         return visits.value.find((visit) => visit.id_visit === id);
     }
-
     function addVisit(visit){
         dataApi.createVisit(visit).then(response =>{
             const resource = response.data;
@@ -102,17 +96,20 @@ const useDataCollection = defineStore('useDataCollection', ()=>{
         })
     }
 
-    function deleteVisit(visit){
-        dataApi.deleteVisit(visit.id_visit).then(response =>{
-            const index = visits.value.findIndex((visit) => visit.id_visit === visit.id_visit);
-            if(index!==-1) visits.value[index] = updateVisit;
-        }).catch(error => {
-            errors.value.push(error);
-        })
+    function deleteVisit(id_visit){
+        if (!id_visit) return;
+        dataApi.deleteVisit(id_visit)
+            .then(() => {
+                const index = visits.value.findIndex(v => v.id_visit === id_visit);
+                if (index !== -1) visits.value.splice(index, 1);
+            })
+            .catch(error => errors.value.push(error));
     }
 
+
+
     function getServicesById(id){
-        return services.value.find((services) => services.id_services === id);
+        return services.value.find((services) => services.id_service === id);
     }
 
     function getAutoRepairsById(id){
@@ -141,13 +138,14 @@ const useDataCollection = defineStore('useDataCollection', ()=>{
         fetchServices,
         fetchAutoRepairs,
         fetchVehicles,
-        getVisitsById,
         addVisit,
         updateVisit,
         deleteVisit,
+        getVisitsById,
         getServicesById,
         getAutoRepairsById,
-        getVehiclesById,
+        getVehiclesById
+
     };
 })
 

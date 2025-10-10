@@ -15,7 +15,7 @@ const menuItems = [
     label: 'side-bar-owner.dashboard'
   },
   {
-    route: '/visit/new',
+    route: '/visit/auto_list',
     icon: 'car-suv',
     label: 'side-bar-owner.vehicles'
   },

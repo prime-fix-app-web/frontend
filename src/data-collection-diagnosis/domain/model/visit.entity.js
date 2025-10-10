@@ -20,6 +20,7 @@ export class Visit {
         this.failure = failure;
         this.id_vehicle = id_vehicle;
         this.id_auto_repair = id_auto_repair;
+        this.time_visit = time_visit;
         this.id_service = id_service;
         this.status = status;
 

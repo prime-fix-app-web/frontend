@@ -7,6 +7,10 @@ const vehiclesEndpointPath = import.meta.env.VITE_VEHICLES_ENDPOINT_PATH;
 const autoRepairsEndpointPath = import.meta.env.VITE_AUTOREPAIRS_ENDPOINT_PATH;
 const serviceEndpointPath = import.meta.env.VITE_SERVICES_ENDPOINT_PATH;
 
+const visitsQueryParamKey = import.meta.env.VITE_VISIT_QUERY_PARAM_KEY;
+const vehiclesQueryParamKey= import.meta.env.VITE_VEHICLE_QUERY_PARAM_KEY;
+const autoRepairsQueryParamKey = import.meta.env.VITE_AUTOREPAIR_QUERY_PARAM_KEY;
+const serviceQueryParamKey = import.meta.env.VITE_SERVICE_QUERY_PARAM_KEY;
 
 
 /**
@@ -45,10 +49,22 @@ export class DataApi extends BaseApi{
      */
     constructor(){
         super();
-        this.#visitsEndpoint = new BaseEndpoint(this,visitsEndpointPath);
-        this.#vehiclesEndpoint=new BaseEndpoint(this,vehiclesEndpointPath);
-        this.#autoRepairEndpoint=new BaseEndpoint(this,autoRepairsEndpointPath);
-        this.#serviceEndpoint = new BaseEndpoint(this,serviceEndpointPath);
+        this.#visitsEndpoint = new BaseEndpoint(this,visitsEndpointPath,{
+            usePathParams:import.meta.env.VITE_USE_PATH_PARAMS,
+            idQueryParamKey:visitsQueryParamKey,
+        });
+        this.#vehiclesEndpoint=new BaseEndpoint(this,vehiclesEndpointPath,{
+            usePathParams:import.meta.env.VITE_USE_PATH_PARAMS,
+            idQueryParamKey:vehiclesQueryParamKey,
+        });
+        this.#autoRepairEndpoint=new BaseEndpoint(this,autoRepairsEndpointPath,{
+            usePathParams:import.meta.env.VITE_USE_PATH_PARAMS,
+            idQueryParamKey:autoRepairsQueryParamKey,
+        });
+        this.#serviceEndpoint = new BaseEndpoint(this,serviceEndpointPath,{
+            usePathParams:import.meta.env.VITE_USE_PATH_PARAMS,
+            idQueryParamKey:serviceQueryParamKey,
+        });
     }
 
     /**

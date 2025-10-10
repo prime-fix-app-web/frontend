@@ -1,36 +1,63 @@
 <script setup>
+import { useI18n } from "vue-i18n";
+import useDataCollection from "@/data-collection-diagnosis/application/data-collection.js";
+import { ref, onMounted } from "vue";
+import { useRouter } from "vue-router";
 
-import {useI18n} from "vue-i18n";
+const { t } = useI18n();
+const router = useRouter();
+const store = useDataCollection();
+const { visits, fetchVisit, deleteVisit } = store;
+
+const visitsList = ref([]);
+
+onMounted(async () => {
+  if (!visits.length) await fetchVisit();
+  visitsList.value = store.visits;
+});
+
+const handleDelete = (visit) => {
+  confirm.require({
+    message: t('visit_list.confirm_delete', { vehicle: visit.vehicle_model }),
+    header: t('visit_list.delete_header'),
+    icon: 'pi pi-exclamation-triangle',
+    accept: () => {
+      visitsList.value = visitsList.value.filter(v => v.id_visit !== visit.id_visit);
+    },
+  });
+};
 
 
-const {t} = useI18n();
 
+const handleEdit = (id) => {
+  router.push({ name: 'data-collection-visit-form', params: { id } });
+};
 </script>
 
 <template>
   <div class="vehicles-container">
     <div class="cards-container">
-      <h2 class="title">{{t('visit_list.title')}}</h2>
+      <h2 class="title">{{ t('visit_list.title') }}</h2>
 
-      <div class="vehicle-card">
+      <div class="vehicle-card" v-for="visit in visitsList" :key="visit.id">
         <pv-card>
           <template #content>
             <div class="card-content">
               <div class="card-info">
-                <h3 class="visit-title">{{t('visit_list.vehicle_model')}} Rav4</h3>
-                <p class="visit-feature"><b>{{t('visit_list.vehicle_brand')}}</b> Toyota</p>
-                <p class="visit-feature"><b>{{t('visit_list.service')}}</b> Cambio de aceite</p>
-                <p class="visit-feature"><b>{{t('visit_list.failure')}}</b> Problema Uno</p>
-                <p class="visit-feature"><b>{{t('visit_list.date')}}</b> 2025-10-10</p>
-                <p class="visit-feature"><b>{{t('visit_list.status')}}</b> Pendiente</p>
+                <h3 class="visit-title">{{ t('visit_list.vehicle_model') }} {{ visit.vehicle_model }}</h3>
+                <p class="visit-feature"><b>{{ t('visit_list.vehicle_brand') }}</b> {{ visit.vehicle_brand }}</p>
+                <p class="visit-feature"><b>{{ t('visit_list.service') }}</b> {{ visit.service_name }}</p>
+                <p class="visit-feature"><b>{{ t('visit_list.failure') }}</b> {{ visit.failure }}</p>
+                <p class="visit-feature"><b>{{ t('visit_list.date') }}</b> {{ visit.time_visit }}</p>
+                <p class="visit-feature"><b>{{ t('visit_list.status') }}</b> {{ visit.status }}</p>
                 <p class="visit-contact">
-                  <b>{{t('visit_list.contact')}}</b>
-                  <a href="mailto:info@tallercentral.pe" class="email-text">info@tallercentral.pe</a>
+                  <b>{{ t('visit_list.contact') }}</b>
+                  <a :href="'mailto:' + visit.contact_email" class="email-text">{{ visit.contact_email }}</a>
                 </p>
               </div>
               <div class="card-buttons">
-                <pv-button class="edit-button">{{t('visit_list.edit')}}</pv-button>
-                <pv-button class="delete-button">{{t('visit_list.delete')}}</pv-button>
+                <pv-button class="delete-button" @click="handleDelete(visit)">{{ t('visit_list.delete') }}</pv-button>
+                <pv-button class="delete-button" @click="store.deleteVisit(visit.id_visit)">{{ t('visit_list.delete') }}</pv-button>
               </div>
             </div>
           </template>
@@ -38,7 +65,6 @@ const {t} = useI18n();
       </div>
     </div>
   </div>
-
 </template>
 
 <style scoped>
