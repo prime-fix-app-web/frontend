@@ -111,7 +111,8 @@ function go(path: string) {
   height: 100vh;
   padding: 1.5rem 0;
   flex-shrink: 0;
-  overflow-y: auto;
+  /* Evitar scroll interno innecesario */
+  overflow: hidden;
 }
 
 .user-profile {
@@ -138,7 +139,8 @@ function go(path: string) {
 
 .sidebar-nav {
   flex: 1;
-  overflow-y: auto;
+  /* Quitar scroll de la sección de navegación */
+  overflow: visible;
 }
 
 .sidebar-nav ul {
@@ -181,7 +183,8 @@ function go(path: string) {
 
 .sidebar-footer {
   padding: 1rem 1.5rem;
-  margin-bottom: 230px;
+  /* Empujar al fondo sin crear espacio extra que provoque scroll */
+  margin-top: auto;
 }
 
 /* Responsive Design */
