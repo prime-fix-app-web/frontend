@@ -7,9 +7,18 @@ import useIamStore from "@/iam/application/iam.store.js";
 const { t } = useI18n();
 const router = useRouter();
 const store = useIamStore();
+
+const { startRegistrationFlow, saveRegisterOwner } = store;
+
+/**
+ * Password visibility toggle
+ * @type {Ref<UnwrapRef<boolean>, UnwrapRef<boolean> | boolean>} - true if password is visible, false otherwise
+ */
 const isPasswordVisible = ref(false);
 
-// Track which fields have been touched (user has interacted with them)
+/**
+  * Track touched fields for validation
+  */
 const touchedFields = ref({
   fullName: false,
   username: false,
@@ -22,7 +31,9 @@ const touchedFields = ref({
   password: false,
 });
 
-// Form state
+/**
+ * Registration form data
+ */
 const registerForm = ref({
   fullName: '',
   username: '',
@@ -35,7 +46,11 @@ const registerForm = ref({
   password: '',
 });
 
-// Validation helpers
+/**
+ * Validate email format
+ * @param email - Email string
+ * @returns {boolean} - True if valid, false otherwise
+ */
 const isValidEmail = (email) => {
   if (!email) return false;
   const trimmedEmail = email.trim();
@@ -43,24 +58,39 @@ const isValidEmail = (email) => {
   return emailRegex.test(trimmedEmail);
 };
 
+/**
+ * Validate DNI (Peruvian format: 8 digits)
+ * @param dni - DNI string
+ * @returns {boolean} - True if valid, false otherwise
+ */
 const isValidDni = (dni) => {
   if (!dni) return false;
   const trimmedDni = dni.trim();
   return /^\d{8}$/.test(trimmedDni);
 };
 
+/**
+ * Validate phone number (Peruvian format: 9 digits)
+ * @param phone - Phone number string
+ * @returns {boolean} - True if valid, false otherwise
+ */
 const isValidPhone = (phone) => {
   if (!phone) return false;
   const trimmedPhone = phone.trim();
   return /^\d{9}$/.test(trimmedPhone);
 };
 
-// Mark field as touched when user interacts with it
+/**
+ * Mark a field as touched
+ * @param fieldName - Name of the field
+ */
 const markAsTouched = (fieldName) => {
   touchedFields.value[fieldName] = true;
 };
 
-// Computed errors - show errors only for touched fields
+/**
+ * Form error messages
+ */
 const formErrors = computed(() => {
   const trimmedEmail = registerForm.value.email.trim();
   const trimmedDni = registerForm.value.dni.trim();
@@ -107,19 +137,30 @@ const isFormValid = computed(() => {
   );
 });
 
-// Methods
+/**
+ * Toggle password visibility
+ */
 function togglePasswordVisibility() {
   isPasswordVisible.value = !isPasswordVisible.value;
 }
 
+/**
+ * Navigate to login page
+ */
 function navigateToLogin() {
   router.push('/iam/login');
 }
 
+/**
+ * Navigate to plan owner page
+ */
 function navigateToPlanOwner() {
   router.push('/iam/plan-owner');
 }
 
+/**
+ * Handle form submission
+ */
 function onSubmit() {
   // Mark all fields as touched to show all errors
   Object.keys(touchedFields.value).forEach(key => {
@@ -145,8 +186,8 @@ function onSubmit() {
   };
 
   console.log('✓ Register owner data:', cleanedData);
-  store.startRegistrationFlow('Vehicle Owner');
-  store.saveRegisterOwner(cleanedData);
+  startRegistrationFlow('Vehicle Owner');
+  saveRegisterOwner(cleanedData);
   navigateToPlanOwner();
 }
 </script>

@@ -14,6 +14,23 @@ export class UserAssembler {
     }
 
     /**
+     * Converts a User entity to a resource object for API requests.
+     * Excludes the id field for create operations.
+     * @param {User} entity - The User entity to convert.
+     * @returns {Object} - The resource object for the API.
+     */
+    static toResourceFromEntity(entity) {
+        return {
+            id_user: entity.id,
+            name: entity.name,
+            last_name: entity.last_name,
+            dni: entity.dni,
+            phone_number: entity.phone_number,
+            id_location: entity.id_location
+        };
+    }
+
+    /**
      * Converts an array of resource objects to an array of User entities.
      * @param response - The API response containing user data
      * @returns {User[]} - An array of User entities.

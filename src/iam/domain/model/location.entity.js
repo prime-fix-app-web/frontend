@@ -12,9 +12,12 @@ export class Location {
      * @param {string} [params.department=''] - The department of the location.
      */
     constructor({ id_location = '', address = '', district = '', department = '' }) {
-        this.id = id_location;
+        this.id_location = id_location;
         this.address = address;
         this.district = district;
         this.department = department;
     }
+
+    get id() { return this.id_location; }
+    set id(value) { this.id_location = value; }
 }

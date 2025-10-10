@@ -14,6 +14,24 @@ export class UserAccountAssembler {
     }
 
     /**
+     * Converts a UserAccount entity to a resource object for API requests.
+     * Excludes the id field for create operations.
+     * @param {UserAccount} entity - The UserAccount entity to convert.
+     * @returns {Object} - The resource object for the API.
+     */
+    static toResourceFromEntity(entity) {
+        return {
+            id_user_account: entity.id,
+            username: entity.username,
+            email: entity.email,
+            id_user: entity.id_user,
+            id_role: entity.id_role,
+            id_membership: entity.id_membership,
+            password: entity.password
+        };
+    }
+
+    /**
      * Converts an API response to an array of UserAccount entities.
      * @param response - The API response object.
      * @returns {UserAccount[]} - An array of UserAccount entities.

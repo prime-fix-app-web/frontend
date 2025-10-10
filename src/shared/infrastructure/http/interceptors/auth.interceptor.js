@@ -31,8 +31,7 @@ export function setupAuthInterceptor({ apiKey, BaseUrl, axiosInstance = null }) 
             config.headers = config.headers || {};
             config.headers['apikey'] = apiKey;
             config.headers['Authorization'] = `Bearer ${apiKey}`;
-            config.headers['Content-Type'] = config.headers['Content-Type'] || 'application/json';
-            config.headers['Prefer'] = 'return=representation';
+            config.headers['Content-Type'] = 'application/json';
         } else {
             console.log(`Auth interceptor NOT applied to ${instanceType}:`, config.url);
         }

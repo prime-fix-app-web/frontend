@@ -7,7 +7,9 @@ import useIamStore from "@/iam/application/iam.store.js";
 const { t } = useI18n();
 const router = useRouter();
 const store = useIamStore();
-const {userAccounts, userAccountsLoaded, usersLoaded, errors, fetchUserAccounts, fetchUsers, login} = store;
+const {userAccounts, userAccountsLoaded, usersLoaded, locationsLoaded, paymentsLoaded,
+  errors, fetchLocations, fetchPayments, fetchUserAccounts,
+  fetchUsers, login} = store;
 
 /**
  * Login form data
@@ -41,9 +43,10 @@ const loginError = ref('');
  * On component mount, fetch user accounts and users if not already loaded
  */
 onMounted(() => {
-  if (!userAccountsLoaded) fetchUserAccounts();
-  if (!usersLoaded) fetchUsers();
-  console.log(userAccounts);
+  if(!userAccountsLoaded) fetchUserAccounts();
+  if(!usersLoaded) fetchUsers();
+  if(!locationsLoaded) fetchLocations();
+  if(!paymentsLoaded) fetchPayments();
 });
 
 /**
