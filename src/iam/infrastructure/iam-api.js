@@ -6,6 +6,12 @@ const paymentsEndpointPath = import.meta.env.VITE_PAYMENTS_ENDPOINT_PATH;
 const usersEndpointPath = import.meta.env.VITE_USERS_ENDPOINT_PATH;
 const userAccountsEndpointPath = import.meta.env.VITE_USER_ACCOUNTS_ENDPOINT_PATH;
 
+// Query param keys from environment
+const locationQueryParamKey = import.meta.env.VITE_LOCATION_QUERY_PARAM_KEY;
+const paymentQueryParamKey = import.meta.env.VITE_PAYMENT_QUERY_PARAM_KEY;
+const userQueryParamKey = import.meta.env.VITE_USER_QUERY_PARAM_KEY;
+const userAccountQueryParamKey = import.meta.env.VITE_USER_ACCOUNT_QUERY_PARAM_KEY;
+
 /**
  * @class
  * @extends BaseApi
@@ -41,10 +47,22 @@ export class IamApi extends BaseApi {
      */
     constructor() {
         super();
-        this.#locationsEndpoint = new BaseEndpoint(this, locationsEndpointPath)
-        this.#paymentsEndpoint = new BaseEndpoint(this, paymentsEndpointPath)
-        this.#usersEndpoint = new BaseEndpoint(this, usersEndpointPath)
-        this.#userAccountsEndpoint = new BaseEndpoint(this, userAccountsEndpointPath)
+        this.#locationsEndpoint = new BaseEndpoint(this, locationsEndpointPath, {
+            usePathParams: import.meta.env.VITE_USE_PATH_PARAMS,
+            idQueryParamKey: locationQueryParamKey
+        });
+        this.#paymentsEndpoint = new BaseEndpoint(this, paymentsEndpointPath, {
+            usePathParams: import.meta.env.VITE_USE_PATH_PARAMS,
+            idQueryParamKey: paymentQueryParamKey
+        });
+        this.#usersEndpoint = new BaseEndpoint(this, usersEndpointPath, {
+            usePathParams: import.meta.env.VITE_USE_PATH_PARAMS,
+            idQueryParamKey: userQueryParamKey
+        });
+        this.#userAccountsEndpoint = new BaseEndpoint(this, userAccountsEndpointPath, {
+            usePathParams: import.meta.env.VITE_USE_PATH_PARAMS,
+            idQueryParamKey: userAccountQueryParamKey
+        });
     }
 
     /**

@@ -20,29 +20,26 @@ function selectRole(role: string) {
 const formInvalid = computed(() => !form.role)
 const roleInvalid = computed(() => !form.role && touched.value)
 
-async function onSubmit() {
+function onSubmit() {
   touched.value = true
   if (formInvalid.value || submitting.value) return
 
   submitting.value = true
   const target =
       form.role === 'Vehicle Owner'
-          ? '/register-owner'
-          : '/register-workshop'
+          ? '/iam/register-owner'
+          : '/iam/register-workshop'
 
-  try {
-    await router.push(target)
-  } finally {
-    submitting.value = false
-  }
+  router.push(target)
+  submitting.value = false
 }
 </script>
 
 <template>
   <section class="role-container">
     <div class="role-card">
-      <h1 class="title">{{ $t('user-role.role-question') }}</h1>
-      <p class="subtitle">{{ $t('user-role.option') }}</p>
+      <h1 class="title">{{ t('user-role.role-question') }}</h1>
+      <p class="subtitle">{{ t('user-role.option') }}</p>
 
       <form @submit.prevent="onSubmit" class="role-form" novalidate>
         <div
@@ -55,7 +52,7 @@ async function onSubmit() {
         >
           <div class="option-content">
             <div class="radio-indicator"></div>
-            <span class="option-label">{{ $t('user-role.role-owner') }}</span>
+            <span class="option-label">{{ t('user-role.role-owner') }}</span>
           </div>
         </div>
 
@@ -69,17 +66,17 @@ async function onSubmit() {
         >
           <div class="option-content">
             <div class="radio-indicator"></div>
-            <span class="option-label">{{ $t('user-role.role-workshop') }}</span>
+            <span class="option-label">{{ t('user-role.role-workshop') }}</span>
           </div>
         </div>
 
         <div v-if="roleInvalid" class="error">
-          {{ $t('user-role.not-touched-option') }}
+          {{ t('user-role.not-touched-option') }}
         </div>
 
         <button class="submit" type="submit" :disabled="formInvalid || submitting">
-          <span v-if="submitting">{{ $t('user-role.redirecting') }}</span>
-          <span v-else>{{ $t('user-role.continue') }}</span>
+          <span v-if="submitting">{{ t('user-role.redirecting') }}</span>
+          <span v-else>{{ t('user-role.continue') }}</span>
         </button>
       </form>
     </div>

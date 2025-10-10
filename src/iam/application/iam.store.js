@@ -5,6 +5,10 @@ import {LocationAssembler} from "@/iam/infrastructure/location.assembler.js";
 import {PaymentAssembler} from "@/iam/infrastructure/payment.assembler.js";
 import {UserAccountAssembler} from "@/iam/infrastructure/user-account.assembler.js";
 import {UserAssembler} from "@/iam/infrastructure/user.assembler.js";
+import {Location} from "@/iam/domain/model/location.entity.js";
+import {User} from "@/iam/domain/model/user.entity.js";
+import {UserAccount} from "@/iam/domain/model/user-account.entity.js";
+import {Payment} from "@/iam/domain/model/payment.entity.js";
 
 /**
  * Singleton instance of IamApi to be used across the store.
@@ -111,9 +115,15 @@ const useIamStore = defineStore('iam', () => {
     const isAuthenticated = computed(() => !!sessionUserAccount.value);
     /**
      * The role ID of the currently authenticated user.
-     * @type {import('vue').ComputedRef<number|null>}
+     * @type {import('vue').ComputedRef<string|null>}
      */
     const roleId = computed(() => sessionUserAccount.value ? sessionUserAccount.value.id_role : null);
+
+    const registerLocation = ref(null);
+    const registerPayment = ref(null);
+    const registerUser = ref(null);
+    const registerUserAccount = ref(null);
+    const registerMemberShipType = ref(null);
 
     /**
      * Load session from localStorage if available.
@@ -195,6 +205,135 @@ const useIamStore = defineStore('iam', () => {
      */
     function getAccessToken() {
         return isAuthenticated.value ? 'simulated-token-' + sessionUserAccount.value?.id : null;
+    }
+
+
+    function startRegistrationFlow(role) {
+        registerLocation.value = null;
+        registerPayment.value = null;
+        registerUser.value = null;
+        registerUserAccount.value = null;
+        registerMemberShipType.value = role;
+    }
+
+    function saveRegisterOwner({ fullName, username, dni, phone_number, department,
+                               district, address, email, password }) {
+
+        const newLocation = new Location({
+            id: 'L0' + (locations.value.length + 1),
+            department: department,
+            district: district,
+            address: address
+        });
+
+        const newUser = new User({
+            id: 'U0' + (users.value.length + 1),
+            name: fullName.split(' ')[0] || '',
+            last_name: fullName.split(' ').slice(1).join(' '),
+            dni: dni,
+            phone_number: phone_number,
+            id_location: newLocation.id
+        });
+
+        const newUserAccount = new UserAccount({
+           id: 'UA' + (userAccounts.value.length + 1),
+           username: username.trim(),
+            email: email.trim(),
+            id_user: newUser.id,
+            id_role: 'R001',
+            id_membership: '', // No membership at registration
+            password: password.trim(),
+        });
+
+        registerLocation.value = newLocation;
+        registerUser.value = newUser;
+        registerUserAccount.value = newUserAccount;
+    }
+
+    function saveRegisterWorkshop({ name_workshop, username, ruc, phone_number, department, distric, address, email, password }) {
+
+        const newLocation = new Location({
+            id: 'L0' + (locations.value.length + 1),
+            department: department,
+            district: distric,
+            address: address
+        });
+
+        const newUser = new User({
+            id: 'U0' + (users.value.length + 1),
+            name: name_workshop,
+            last_name: '',
+            dni: ruc,
+            phone_number: phone_number,
+            id_location: newLocation.id
+        });
+
+        const newUserAccount = new UserAccount({
+            id: 'UA' + (userAccounts.value.length + 1),
+            username: username.trim(),
+            email: email.trim(),
+            id_user: newUser.id,
+            id_role: 'R002',
+            id_membership: '', // No membership at registration
+            password: password.trim(),
+        });
+
+        registerLocation.value = newLocation;
+        registerUser.value = newUser;
+        registerUserAccount.value = newUserAccount;
+    }
+
+
+    function selectPlan(plan) {
+        const membershipId = plan === '3m' ? 'M001' : plan === '12m' ? 'M002' : 'M003';
+
+        const userAccountNoMembership = registerUserAccount.value;
+
+        if (userAccountNoMembership) {
+            userAccountNoMembership.id_membership = membershipId;
+            registerUserAccount(userAccountNoMembership);
+        }
+    }
+
+    function finishRegister({ card_number, month, year, cvv, card_type }) {
+        const role = registerMemberShipType.value;
+        const user = registerUser.value;
+        const userAccount = registerUserAccount.value;
+        const location = registerLocation.value;
+        const membershipId = userAccount.id_membership;
+
+        if(!role || !user || !userAccount || !location || !membershipId) {
+            errors.value.push(new Error('Incomplete registration data'));
+        }
+
+        const newPayment = new Payment({
+            id: 'PY0' + (payments.value.length + 1),
+            card_number: card_number,
+            card_type: card_type,
+            month: month,
+            year: year,
+            cvv: cvv,
+            id_user_account: userAccount.id,
+        });
+
+        console.log(location);
+        console.log(user);
+        console.log(userAccount);
+        console.log(newPayment);
+
+        addLocation(location);
+        addUser(user);
+        addUserAccount(userAccount);
+        addPayment(newPayment);
+    }
+
+    function resetRegistrationFlow() {
+        registerLocation.value = null;
+        registerPayment.value = null;
+        registerUser.value = null;
+        registerUserAccount.value = null;
+        registerMemberShipType.value = null;
+        errors.value = [];
     }
 
     /**
@@ -471,6 +610,7 @@ const useIamStore = defineStore('iam', () => {
         })
     }
 
+
     return {
         locations,
         payments,
@@ -489,11 +629,22 @@ const useIamStore = defineStore('iam', () => {
         sessionUser,
         isAuthenticated,
         roleId,
+        registerLocation,
+        registerPayment,
+        registerUser,
+        registerUserAccount,
+        registerMemberShipType,
         loadSessionFromStorage,
         login,
         logout,
         clearSession,
         getAccessToken,
+        startRegistrationFlow,
+        saveRegisterOwner,
+        saveRegisterWorkshop,
+        selectPlan,
+        finishRegister,
+        resetRegistrationFlow,
         fetchLocations,
         fetchPayments,
         fetchUsers,
