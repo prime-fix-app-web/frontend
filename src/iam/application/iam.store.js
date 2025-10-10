@@ -218,16 +218,15 @@ const useIamStore = defineStore('iam', () => {
 
     function saveRegisterOwner({ fullName, username, dni, phone_number, department,
                                district, address, email, password }) {
-
         const newLocation = new Location({
-            id: 'L0' + (locations.value.length + 1),
+            id_location: 'L0' + (locationsCount.value + 1).toString(),
             department: department,
             district: district,
             address: address
         });
 
         const newUser = new User({
-            id: 'U0' + (users.value.length + 1),
+            id_user: 'U0' + (usersCount.value + 1).toString(),
             name: fullName.split(' ')[0] || '',
             last_name: fullName.split(' ').slice(1).join(' '),
             dni: dni,
@@ -236,7 +235,7 @@ const useIamStore = defineStore('iam', () => {
         });
 
         const newUserAccount = new UserAccount({
-           id: 'UA' + (userAccounts.value.length + 1),
+           id_user_account: 'UA' + (userAccountsCount.value + 1).toString(),
            username: username.trim(),
             email: email.trim(),
             id_user: newUser.id,
@@ -250,18 +249,17 @@ const useIamStore = defineStore('iam', () => {
         registerUserAccount.value = newUserAccount;
     }
 
-    function saveRegisterWorkshop({ name_workshop, username, ruc, phone_number, department, distric, address, email, password }) {
-
+    function saveRegisterWorkshop({ workshopName, username, ruc, phone_number, department, district, address, email, password }) {
         const newLocation = new Location({
-            id: 'L0' + (locations.value.length + 1),
+            id_location: 'L0' + (locationsCount.value + 1).toString(),
             department: department,
-            district: distric,
+            district: district,
             address: address
         });
 
         const newUser = new User({
-            id: 'U0' + (users.value.length + 1),
-            name: name_workshop,
+            id_user: 'U0' + (usersCount.value + 1).toString(),
+            name: workshopName,
             last_name: '',
             dni: ruc,
             phone_number: phone_number,
@@ -269,10 +267,10 @@ const useIamStore = defineStore('iam', () => {
         });
 
         const newUserAccount = new UserAccount({
-            id: 'UA' + (userAccounts.value.length + 1),
+            id_user_account: 'UA' + (userAccountsCount.value + 1).toString(),
             username: username.trim(),
             email: email.trim(),
-            id_user: newUser.id,
+            id_user: newUser.id_user,
             id_role: 'R002',
             id_membership: '', // No membership at registration
             password: password.trim(),
@@ -288,14 +286,14 @@ const useIamStore = defineStore('iam', () => {
         const membershipId = plan === '3m' ? 'M001' : plan === '12m' ? 'M002' : 'M003';
 
         const userAccountNoMembership = registerUserAccount.value;
-
         if (userAccountNoMembership) {
+            registerMemberShipType.value = membershipId;
             userAccountNoMembership.id_membership = membershipId;
-            registerUserAccount(userAccountNoMembership);
+            registerUserAccount.value = userAccountNoMembership;
         }
     }
 
-    function finishRegister({ card_number, month, year, cvv, card_type }) {
+    async function finishRegister({ card_number, month, year, cvv, card_type }) {
         const role = registerMemberShipType.value;
         const user = registerUser.value;
         const userAccount = registerUserAccount.value;
@@ -304,27 +302,47 @@ const useIamStore = defineStore('iam', () => {
 
         if(!role || !user || !userAccount || !location || !membershipId) {
             errors.value.push(new Error('Incomplete registration data'));
+            return;
         }
 
-        const newPayment = new Payment({
-            id: 'PY0' + (payments.value.length + 1),
-            card_number: card_number,
-            card_type: card_type,
-            month: month,
-            year: year,
-            cvv: cvv,
-            id_user_account: userAccount.id,
-        });
+        console.log('🚀 Starting registration process...');
+        console.log('Location:', location);
+        console.log('User:', user);
+        console.log('UserAccount:', userAccount);
 
-        console.log(location);
-        console.log(user);
-        console.log(userAccount);
-        console.log(newPayment);
+        try {
+            // 1. Create location first and WAIT for the response
+            console.log('📍 Creating location...');
+            const createdLocation = await addLocation(location);
+            console.log('✅ Location created: ', createdLocation);
 
-        addLocation(location);
-        addUser(user);
-        addUserAccount(userAccount);
-        addPayment(newPayment);
+            const createdUser = await addUser(user);
+            console.log('✅ User created ', createdUser);
+
+
+            const createdUserAccount = await addUserAccount(userAccount);
+            console.log('✅ User account created:', createdUserAccount);
+
+            const newPayment = new Payment({
+                id_payment: 'PY0' + (paymentsCount.value + 1).toString(),
+                card_number: card_number,
+                card_type: card_type,
+                month: month,
+                year: year,
+                cvv: cvv,
+                id_user_account: userAccount.id,
+            });
+
+            const createdPayment = await addPayment(newPayment);
+            console.log('✅ Payment created:', createdPayment);
+
+            console.log('Registration process completed successfully');
+
+        } catch (error) {
+            console.error('❌ Registration failed:', error);
+            console.error('Error details:', error.response?.data || error.message);
+            errors.value.push(error);
+        }
     }
 
     function resetRegistrationFlow() {
@@ -408,16 +426,21 @@ const useIamStore = defineStore('iam', () => {
     /**
      * Adds a new location.
      * @param location - The location to add.
-     * @returns {void}
+     * @returns {Promise} - Promise that resolves with the created location
      */
     function addLocation(location) {
-        iamApi.createLocation(location).then(response => {
-            const resource = response.data;
-            const newLocation = LocationAssembler.toEntityFromResource(resource);
-            locations.value.push(newLocation);
-        }).catch(error => {
-            errors.value.push(error);
-        })
+        return new Promise((resolve, reject) => {
+            const resource = LocationAssembler.toResourceFromEntity(location);
+            iamApi.createLocation(resource).then(response => {
+                const responseData = response.data;
+                const newLocation = LocationAssembler.toEntityFromResource(responseData);
+                locations.value.push(newLocation);
+                resolve(newLocation);
+            }).catch(error => {
+                errors.value.push(error);
+                reject(error);
+            });
+        });
     }
 
     /**
@@ -462,16 +485,21 @@ const useIamStore = defineStore('iam', () => {
     /**
      * Adds a new payment.
      * @param payment - The payment to add.
-     * @return {void}
+     * @return {Promise} - Promise that resolves with the created payment
      */
     function addPayment(payment) {
-        iamApi.createPayment(payment).then(response => {
-            const resource = response.data;
-            const newPayment = PaymentAssembler.toEntityFromResource(resource);
-            payments.value.push(newPayment);
-        }).catch(error => {
-            errors.value.push(error);
-        })
+        return new Promise((resolve, reject) => {
+            const resource = PaymentAssembler.toResourceFromEntity(payment);
+            iamApi.createPayment(resource).then(response => {
+                const responseData = response.data;
+                const newPayment = PaymentAssembler.toEntityFromResource(responseData);
+                payments.value.push(newPayment);
+                resolve(newPayment);
+            }).catch(error => {
+                errors.value.push(error);
+                reject(error);
+            });
+        });
     }
 
     /**
@@ -516,16 +544,21 @@ const useIamStore = defineStore('iam', () => {
     /**
      * Adds a new user.
      * @param user - The user to add.
-     * @returns {void}
+     * @returns {Promise} - Promise that resolves with the created user
      */
     function addUser(user) {
-        iamApi.createUser(user).then(response => {
-            const resource = response.data;
-            const newUser = UserAssembler.toEntityFromResource(resource);
-            users.value.push(newUser);
-        }).catch(error => {
-            errors.value.push(error);
-        })
+        return new Promise((resolve, reject) => {
+            const resource = UserAssembler.toResourceFromEntity(user);
+            iamApi.createUser(resource).then(response => {
+                const responseData = response.data;
+                const newUser = UserAssembler.toEntityFromResource(responseData);
+                users.value.push(newUser);
+                resolve(newUser);
+            }).catch(error => {
+                errors.value.push(error);
+                reject(error);
+            });
+        });
     }
 
     /**
@@ -568,16 +601,21 @@ const useIamStore = defineStore('iam', () => {
     /**
      * Adds a new user account.
      * @param userAccount - The user account to add.
-     * @return {void}
+     * @return {Promise} - Promise that resolves with the created user account
      */
     function addUserAccount(userAccount) {
-        iamApi.createUserAccount(userAccount).then(response => {
-            const resource = response.data;
-            const newUserAccount = UserAccountAssembler.toEntityFromResource(resource);
-            userAccounts.value.push(newUserAccount);
-        }).catch(error => {
-            errors.value.push(error);
-        })
+        return new Promise((resolve, reject) => {
+            const resource = UserAccountAssembler.toResourceFromEntity(userAccount);
+            iamApi.createUserAccount(resource).then(response => {
+                const responseData = response.data;
+                const newUserAccount = UserAccountAssembler.toEntityFromResource(responseData);
+                userAccounts.value.push(newUserAccount);
+                resolve(newUserAccount);
+            }).catch(error => {
+                errors.value.push(error);
+                reject(error);
+            });
+        });
     }
 
     /**
@@ -669,3 +707,4 @@ const useIamStore = defineStore('iam', () => {
 })
 
 export default useIamStore;
+

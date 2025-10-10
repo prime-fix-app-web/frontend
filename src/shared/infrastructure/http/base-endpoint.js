@@ -27,6 +27,7 @@ export class BaseEndpoint {
      */
     getAll() {
         let url = this.endpointPath;
+        // When using query params (Supabase style), add select=*
         if (this.config.usePathParams === 'true') {
             url += '?select=*';
         }
@@ -40,10 +41,10 @@ export class BaseEndpoint {
      */
     getById(id) {
         let url = this.endpointPath;
-        if (this.config.usePathParams === 'false') {
-            url += `/${id}`;
-        } else {
+        if (this.config.usePathParams === 'true') {
             url += `?${this.#idQueryParamKey}=eq.${id}`;
+        } else {
+            url += `/${id}`;
         }
         return this.http.get(url);
     }
@@ -55,8 +56,7 @@ export class BaseEndpoint {
      */
     create(resource) {
         const url = this.endpointPath;
-        const headers = { Prefer: 'return=representation' };
-        return this.http.post(this.endpointPath, resource, { headers });
+        return this.http.post(url, resource);
     }
 
     /**
@@ -67,13 +67,14 @@ export class BaseEndpoint {
      */
     update(id, resource) {
         let url = this.endpointPath;
-        if (this.config.usePathParams === 'false') {
-            url += `/${id}`;
-            return this.http.put(url, resource);
-        } else {
+        // When using query params (Supabase style), use query string
+        if (this.config.usePathParams === 'true') {
             url += `?${this.#idQueryParamKey}=eq.${id}`;
-            return this.http.patch(url, resource);
+        } else {
+            // Traditional REST API style with path params
+            url += `/${id}`;
         }
+        return this.http.put(url, resource);
     }
 
     /**
@@ -83,11 +84,13 @@ export class BaseEndpoint {
      */
     delete(id) {
         let url = this.endpointPath;
+        // When using query params (Supabase style), use query string
         if (this.config.usePathParams === 'true') {
             url += `?${this.#idQueryParamKey}=eq.${id}`;
-            return this.http.delete(url);
+        } else {
+            // Traditional REST API style with path params
+            url += `/${id}`;
         }
-        url += `/${id}`;
         return this.http.delete(url);
     }
 }

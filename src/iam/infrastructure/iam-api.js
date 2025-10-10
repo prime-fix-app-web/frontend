@@ -39,6 +39,12 @@ export class IamApi extends BaseApi {
      * @private
      */
     #usersEndpoint;
+
+    /**
+     * The endpoint for user accounts.
+     * @type {BaseEndpoint}
+     * @private
+     */
     #userAccountsEndpoint;
 
     /**
