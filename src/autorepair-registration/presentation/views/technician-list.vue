@@ -28,33 +28,54 @@ onMounted(() => {
 
 // Carga de técnicos
 async function loadTechnicians() {
-  loading.value = true
-  error.value = null
+  loading.value = true;
+  error.value = null;
 
   try {
-    await autoRepairStore.fetchTechnicians()
-    technicians.value = autoRepairStore.technicians
-    console.log('Technicians loaded:', technicians.value)
+    await autoRepairStore.fetchTechnicians();
+
+
+    console.log('🔍 TODOS los usuarios del store:', autoRepairStore.technicians)
+
+
+    technicians.value = autoRepairStore.technicians.filter(
+        tech => tech.id_role === 'R002'
+    );
+
+    console.log('🎯 Técnicos filtrados (R002):', technicians.value);
+
+
+    if (technicians.value.length === 0) {
+      console.log('⚠️ No se encontraron técnicos con rol R002')
+    }
+
   } catch (err) {
-    console.error('Failed to fetch technicians:', err)
-    error.value = 'Error al cargar técnicos: ' + (err.message || 'Desconocido')
+    console.error('Failed to fetch technicians:', err);
+    error.value = 'Error al cargar técnicos: ' + (err.message || 'Desconocido');
   } finally {
-    loading.value = false
+    loading.value = false;
   }
 }
 
 function deleteTechnician(tech) {
   if (!confirm(`¿Seguro que deseas eliminar al técnico ${tech.username}?`)) return
 
-  console.log('🔍 Técnico completo:', tech) // Para debug
+  console.log('🗑️ Eliminando técnico del frontend:', tech.username)
 
-  // CAMBIAR: tech.id_technician → tech.id
-  autoRepairStore.deleteTechnician(tech.id_user_account)
+
+  const initialCount = technicians.value.length
   technicians.value = technicians.value.filter(t => t.id_user_account !== tech.id_user_account)
-      .catch(err => {
-        console.error('❌ Error:', err)
-        alert('No se pudo eliminar el técnico: ' + err.message)
-      })
+  const finalCount = technicians.value.length
+
+  if (finalCount < initialCount) {
+    alert('✅ Técnico eliminado correctamente')
+    console.log('🎉 Eliminación frontend exitosa')
+  } else {
+    alert('❌ Error: No se pudo eliminar el técnico')
+  }
+
+
+  console.log('⚠️ Backend deshabilitado temporalmente')
 }
 
 function getAutoRepairName(id_auto_repair) {

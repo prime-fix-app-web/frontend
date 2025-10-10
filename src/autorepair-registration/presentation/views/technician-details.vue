@@ -82,7 +82,6 @@ const isFormValid = computed(() => {
       form.value.id_role
   )
 })
-
 async function submit() {
   // Reset de errores
   errorsForm.value = {
@@ -108,28 +107,41 @@ async function submit() {
 
   isSubmitting.value = true
 
-  const id_technician = props.technician?.id_technician ?? 'TECH' + Math.floor(Math.random() * 10000).toString().padStart(4, '0')
-
-  // CORREGIDO: objeto technician con campos correctos
-  const technician = {
-    id_technician,
-    id_user_account: form.value.id_user_account,  // CORREGIDO
-    username: form.value.username,                // CORREGIDO
-    email: form.value.email,                      // CORREGIDO
-    id_role: form.value.id_role                   // CORREGIDO
-  }
-
   try {
-    if (props.technician) {
-      await autoRepairStore.updateTechnician(technician)
-      alert('Técnico actualizado correctamente.')
-    } else {
-      await autoRepairStore.addTechnician(technician)
-      alert('Técnico creado correctamente.')
+    const technicianData = {
+      username: form.value.username,
+      email: form.value.email,
+      id_role: form.value.id_role
     }
+
+    console.log('🔧 === MODO:', props.technician ? 'EDICIÓN' : 'CREACIÓN', '===')
+
+    if (props.technician) {
+      // ✅ MODO EDICIÓN - Usar el ID original
+      technicianData.id_user_account = props.technician.id_user_account
+      technicianData.id_technician = props.technician.id_technician
+
+      console.log('📝 Editando técnico existente:', props.technician)
+      console.log('🔄 Datos para edición:', technicianData)
+
+      await autoRepairStore.updateTechnician(technicianData)
+      alert('✅ Técnico actualizado correctamente.')
+    } else {
+      // ✅ MODO CREACIÓN - Generar nuevos IDs
+      technicianData.id_user_account = form.value.id_user_account
+      technicianData.id_technician = 'TECH' + Math.floor(Math.random() * 10000).toString().padStart(4, '0')
+
+      console.log('🆕 Creando nuevo técnico:', technicianData)
+      await autoRepairStore.addTechnician(technicianData)
+      alert('✅ Técnico creado correctamente.')
+    }
+
+    // Recargar la lista
+    await autoRepairStore.fetchTechnicians()
     router.push('/technicians')
+
   } catch (error) {
-    console.error('Error al procesar técnico:', error)
+    console.error('❌ Error al procesar técnico:', error)
     alert('Error: ' + (error.message || error))
   } finally {
     isSubmitting.value = false
@@ -187,7 +199,7 @@ async function submit() {
           <input
               type="text"
               id="id-role"
-              placeholder="ROLE_TECH"
+              placeholder="R002 --- NECESARIO PARA VALIDACION"
               v-model="form.id_role"
               required
           />

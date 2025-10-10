@@ -13,12 +13,7 @@ const pageNotFound = () => import("./shared/presentation/views/page-not-found.vu
 
 const routes = [
 
-    {
-        path: '/autoRepairs',
-        name: 'autoRepairs',
-        children: autoRepairRegisterRoutes,
 
-    },
     {
         path: '/iam',
         name: 'iam',
@@ -37,9 +32,10 @@ const routes = [
                 meta: { title: 'Home Owner' }
             },
             {
-                path: '/autoRepairs',
+                path: 'autoRepairs',
                 name: 'autoRepairs',
                 children: autoRepairRegisterRoutes,
+                props: true
 
             },
             {

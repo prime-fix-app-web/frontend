@@ -1,104 +1,26 @@
 import { defineStore } from "pinia";
 import { computed, ref } from "vue";
-import { AutoRepairRegisterAssembler } from "../infrastructure/auto-repair-register.assembler.js";
 import { TechnicianRegisterAssembler } from "../infrastructure/technician-register.assembler.js";
 import { AutorepairApi } from "../infrastructure/auto-repair-api.js";
 
 const autorepairApi = new AutorepairApi();
 
 export const useAutoRepairRegisterStore = defineStore('autoRepairRegister', () => {
-    // ------------------ State ------------------
-    const autoRepairRegisters = ref([]);
+
     const technicians = ref([]);
     const errors = ref([]);
     const loading = ref(false);
 
-    const autoRepairRegistersLoaded = ref(false);
+
     const techniciansLoaded = ref(false);
 
     // ------------------ Getters ------------------
-    const autoRepairRegistersCount = computed(() => {
-        return autoRepairRegistersLoaded.value ? autoRepairRegisters.value.length : 0;
-    });
+
 
     const techniciansCount = computed(() => {
         return techniciansLoaded.value ? technicians.value.length : 0;
     });
 
-    // ======= AUTO REPAIR REGISTER METHODS ======= //
-
-    async function fetchAutoRepairRegisters() {
-        loading.value = true;
-        errors.value = [];
-        try {
-            const response = await autorepairApi.getAutoRepairRegisters();
-            autoRepairRegisters.value = AutoRepairRegisterAssembler.toEntitiesFromResponse(response);
-            autoRepairRegistersLoaded.value = true;
-        } catch (error) {
-            errors.value.push(error.message);
-        } finally {
-            loading.value = false;
-        }
-    }
-
-    function getAutoRepairRegisterById(id) {
-        return autoRepairRegisters.value.find(register => register.id === String(id));
-    }
-
-    async function addAutoRepairRegister(register) {
-        loading.value = true;
-        errors.value = [];
-        try {
-            const resource = AutoRepairRegisterAssembler.toResourceFromEntity(register);
-            const response = await autorepairApi.createAutoRepairRegister(resource);
-            const newRegister = AutoRepairRegisterAssembler.toEntityFromResource(response.data);
-            autoRepairRegisters.value.push(newRegister);
-            return newRegister;
-        } catch (error) {
-            errors.value.push(error.message);
-            throw error;
-        } finally {
-            loading.value = false;
-        }
-    }
-
-    async function updateAutoRepairRegister(register) {
-        loading.value = true;
-        errors.value = [];
-        try {
-            const resource = AutoRepairRegisterAssembler.toResourceFromEntity(register);
-            const response = await autorepairApi.updateAutoRepairRegister(resource);
-            const updatedRegister = AutoRepairRegisterAssembler.toEntityFromResource(response.data);
-
-            const index = autoRepairRegisters.value.findIndex(reg => reg.id === updatedRegister.id);
-            if (index !== -1) {
-                autoRepairRegisters.value[index] = updatedRegister;
-            }
-            return updatedRegister;
-        } catch (error) {
-            errors.value.push(error.message);
-            throw error;
-        } finally {
-            loading.value = false;
-        }
-    }
-
-    async function deleteAutoRepairRegister(id) {
-        loading.value = true;
-        errors.value = [];
-        try {
-            await autorepairApi.deleteAutoRepairRegister(id);
-            const index = autoRepairRegisters.value.findIndex(reg => reg.id === id);
-            if (index !== -1) {
-                autoRepairRegisters.value.splice(index, 1);
-            }
-        } catch (error) {
-            errors.value.push(error.message);
-            throw error;
-        } finally {
-            loading.value = false;
-        }
-    }
 
     // ======= TECHNICIAN REGISTER METHODS ======= //
 
@@ -117,19 +39,36 @@ export const useAutoRepairRegisterStore = defineStore('autoRepairRegister', () =
     }
 
     function getTechnicianById(id) {
-        return technicians.value.find(technician => technician.id === String(id));
+        return technicians.value.find(technician => technician.id_user_account === String(id));
     }
 
     async function addTechnician(technician) {
+        console.log('🔍 === DEBUG ADD TECHNICIAN STORE ===')
+        console.log('📦 Técnico recibido:', technician)
+
         loading.value = true;
         errors.value = [];
         try {
+            console.log('🔄 Convirtiendo a resource...')
             const resource = TechnicianRegisterAssembler.toResourceFromEntity(technician);
+            console.log('📦 Resource convertido:', resource)
+
+            console.log('📡 Llamando a API createTechnician...')
             const response = await autorepairApi.createTechnician(resource);
+            console.log('✅ Respuesta API:', response)
+
+            // ✅ CORREGIDO - usa toEntityFromResource
             const newTechnician = TechnicianRegisterAssembler.toEntityFromResource(response.data);
+            console.log('🎉 Técnico creado:', newTechnician)
+
             technicians.value.push(newTechnician);
             return newTechnician;
         } catch (error) {
+            console.error('💥 ERROR EN STORE:')
+            console.error('   Mensaje:', error.message)
+            console.error('   Status:', error.response?.status)
+            console.error('   Data:', error.response?.data)
+            console.error('   URL:', error.config?.url)
             errors.value.push(error.message);
             throw error;
         } finally {
@@ -143,9 +82,9 @@ export const useAutoRepairRegisterStore = defineStore('autoRepairRegister', () =
         try {
             const resource = TechnicianRegisterAssembler.toResourceFromEntity(technician);
             const response = await autorepairApi.updateTechnician(resource);
-            const updatedTechnician = TechnicianRegisterAssembler.toEntityFromResource(response.data);
+            const updatedTechnician = TechnicianRegisterAssembler.toEntityFromResource(response.data); // ✅ CORREGIDO
 
-            const index = technicians.value.findIndex(tech => tech.id === updatedTechnician.id);
+            const index = technicians.value.findIndex(tech => tech.id_user_account === updatedTechnician.id_user_account);
             if (index !== -1) {
                 technicians.value[index] = updatedTechnician;
             }
@@ -158,12 +97,12 @@ export const useAutoRepairRegisterStore = defineStore('autoRepairRegister', () =
         }
     }
 
-    async function deleteTechnician(teach) {
+    async function deleteTechnician(id) {
         loading.value = true;
         errors.value = [];
         try {
-            await autorepairApi.deleteTechnician(tech.id);
-            const index = technicians.value.findIndex(tech => tech.id === id);
+            await autorepairApi.deleteTechnician(id);
+            const index = technicians.value.findIndex(tech => tech.id_user_account === id);
             if (index !== -1) {
                 technicians.value.splice(index, 1);
             }
@@ -179,23 +118,15 @@ export const useAutoRepairRegisterStore = defineStore('autoRepairRegister', () =
     }
     return {
         // State
-        autoRepairRegisters,
+
         technicians,
         errors,
         loading,
-        autoRepairRegistersLoaded,
         techniciansLoaded,
 
         // Getters
-        autoRepairRegistersCount,
         techniciansCount,
 
-        // Auto Repair Methods
-        fetchAutoRepairRegisters,
-        getAutoRepairRegisterById,
-        addAutoRepairRegister,
-        updateAutoRepairRegister,
-        deleteAutoRepairRegister,
 
         // Technician Methods
         fetchTechnicians,

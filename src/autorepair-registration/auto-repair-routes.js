@@ -5,8 +5,7 @@ const TechnicianList = () =>
     import('./presentation/views/technician-list.vue');
 const TechnicianDetails = () =>
     import('./presentation/views/technician-details.vue');
-const AutoRepairRegisterForm = () =>
-    import('./presentation/views/auto-repair-register-form.vue');
+
 
 const autoRepairRegisterRoutes = [
     // Technician routes
@@ -17,37 +16,21 @@ const autoRepairRegisterRoutes = [
         meta: { layout: 'owner' }
     },
     {
-        path: 'technicians/new',
+        path: '/technicians/new',
         component: TechnicianDetails,
         name: 'technician-new',
-        meta: { layout: 'owner' }
+        meta: { layout: 'owner' },
+        props: true
     },
     {
-        path: 'technicians/edit/:id',
+        path: '/technicians/edit/:id',
         component: TechnicianDetails,
         name: 'technician-edit',
-        meta: { layout: 'owner' }
+        meta: { layout: 'owner' },
+        props: true
     },
 
-    // Auto repair registration routes
-    {
-        path: 'auto-repairs',
-        component: AutoRepairRegisterForm,
-        name: 'auto-repairs',
-        meta: { layout: 'auto-repairs' }
-    },
-    {
-        path: 'auto-repairs/new',
-        component: AutoRepairRegisterForm,
-        name: 'auto-repair-new',
-        meta: { layout: 'auto-repairs' }
-    },
-    {
-        path: 'auto-repairs/edit/:id',
-        component: AutoRepairRegisterForm,
-        name: 'auto-repair-edit',
-        meta: { layout: 'auto-repairs' }
-    }
+
 ]
 
-export default autoRepairRegisterRoutes // ✅ Exporta la variable correcta
+export default autoRepairRegisterRoutes
