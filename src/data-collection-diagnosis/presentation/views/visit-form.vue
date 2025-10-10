@@ -19,19 +19,28 @@
   id_service: null,
   status: 'Pendiente'
 });
-
   const isEdit = computed(() => !!route.params.id);
+  const dialogVisible = ref(null);
+  const completedVisit = ref(false);
+  const editDialog = ref(false);
 
   onMounted(async () => {
-    await fetchVehicles();
-    await fetchServices();
-    await fetchAutoRepairs();
-    if (!visits.length) await fetchVisit();
+     fetchVehicles();
+     fetchServices();
+     fetchAutoRepairs();
+    if (!visits.length) fetchVisit();
 
     const repairId = route.query.repairId || null;
-
     if (isEdit.value) {
-      const visit = getVisitById(route.params.id);
+
+      let visit = getVisitById(route.params.id);
+
+      if (!visit && !visits.length) {
+
+        fetchVisit();
+        visit = getVisitById(route.params.id);
+      }
+
       if (visit) {
         form.value = {
           id_vehicle: visit.id_vehicle || null,
@@ -39,10 +48,8 @@
           time_visit: visit.time_visit ? new Date(visit.time_visit) : null,
           id_auto_repair: repairId || visit.id_auto_repair || null,
           id_service: visit.id_service || null,
-          status: visit.status || "Pendiente",
+          status: visit.status || "En Espera",
         };
-      } else {
-        router.push({ name: 'auto_list' });
       }
     } else {
       form.value = {
@@ -51,14 +58,15 @@
         time_visit: null,
         id_auto_repair: repairId,
         id_service: null,
-        status: "Pendiente",
-        };
-      }
+        status: "En Espera",
+      };
+    }
   });
 
   function getVisitById(id){
   return store.getVisitsById(id);
   }
+
   function saveVisit () {
     const visitData = {
       id_vehicle: form.value.id_vehicle,
@@ -72,28 +80,37 @@
     try {
       if (isEdit.value) {
         const visitId = route.params.id;
-        updateVisit(visitId, visitData);  // usa la versión corregida
+        updateVisit(visitId, visitData);
+        editDialog.value = true;
       } else {
         const newVisit = {
           id_visit: Math.floor(Math.random() * 1000000),
           ...visitData
         };
-       addVisit(newVisit);
+        addVisit(newVisit);
+        completedVisit.value = {...form.value};
+        editDialog.value = false;
       }
-
         store.fetchVisit();
-      navigateBack();
-
+        dialogVisible.value = true;
     } catch (error) {
       console.error("Error al guardar visita:", error);
     }
   }
-  const navigateBack = ()=> router.push({name:'auto_list'});
+
+  const isFormValid = computed(() => {
+    return form.value.id_vehicle &&
+        form.value.failure &&
+        form.value.time_visit &&
+        form.value.id_service;
+  });
+
+  const navigate = () => router.push({ name: 'auto_list' });
+
   const goBack = () => router.back();
 
+
 </script>
-
-
 
 <template>
   <header class="main-header">
@@ -153,15 +170,47 @@
         </div>
 
         <div class="button-container">
-          <pv-button type="submit" class="submit-button">Agregar</pv-button>
+          <pv-button type="submit" class="submit-button" :disabled="!isFormValid">{{t('buttons.add')}}</pv-button>
           <pv-button class="back-button" @click="goBack">{{t('visit-form.back')}}</pv-button>
         </div>
       </form>
     </div>
   </div>
+
+  <pv-dialog
+      v-model:visible="dialogVisible"
+      :header="editDialog ? t('edit-screen.title') : t('completed-screen.title')"
+      modal
+      maximizable
+      :style="{ width: '40rem' }"
+      @hide="navigate"
+  >
+    <div v-if="completedVisit">
+      <p class="success-message">{{ t('completed-screen.message') }}</p>
+      <p><strong>{{ t('completed-screen.date') }}:</strong> {{ completedVisit.time_visit }}</p>
+      <p><strong>{{ t('completed-screen.vehicle') }}:</strong> {{ store.getVehiclesById(completedVisit.id_vehicle)?.model }}</p>
+      <p><strong>{{ t('completed-screen.service') }}:</strong> {{ store.getServicesById(completedVisit.id_service)?.name }}</p>
+      <p><strong>{{ t('completed-screen.status') }}:</strong> {{ completedVisit.status }}</p>
+
+      <div class="button-container">
+        <pv-button class="back-button" @click="dialogVisible = false">{{ t('completed-screen.back') }}</pv-button>
+        <pv-button class="submit-button" @click="router.push({ name: 'list' })">{{ t('completed-screen.visit_Scheduled') }}</pv-button>
+      </div>
+    </div>
+  </pv-dialog>
+
+
 </template>
 
 <style scoped>
+
+
+.p-dialog.p-component{
+  background-color: #007bff ;
+}
+
+
+
 .workshop-form-container {
   max-width: 600px;
   margin: 0 auto;
@@ -178,21 +227,19 @@
   --p-inputtext-color: #000 !important;
 }
 
-.p-select-label,
-.p-dropdown-label {
+.p-select-label
+ {
   color: #000 !important;
   --p-select-color: #000 !important;
 }
 
-.p-dropdown,
-.p-dropdown-panel,
-.p-dropdown-item {
+
+.p-dropdown-panel {
   background-color: #fff !important;
   color: #000 !important;
   --p-dropdown-color: #000 !important;
 }
 
-.p-dropdown-item.p-highlight,
 .p-dropdown-item:hover {
   background-color: #fdb825 !important;
   color: #000 !important;

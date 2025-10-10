@@ -250,11 +250,14 @@
   },
   "visit-form": {
     "header": "Search Workshop",
+    "header-workshop": "Edit Status",
+    "title-update": "Update Visit Status",
     "title": "Schedule a Workshop Visit",
     "vehicle_model": "Vehicle Model",
     "failure": "Failure Description",
     "type_of_service": "Type of Service",
     "preferred_date": "Preferred Date",
+    "status": "Status",
     "select_model": "Select Model",
     "select_service": "Select Service",
     "failure_details":"Describe the vehicle failures",
@@ -289,5 +292,16 @@
     "title": "Search for Auto Repair Workshops",
     "search_visit": "Schedule a Visit",
     "technician": "Technicians:"
+  },
+  "edit-screen": {
+  "title": "The visit has been modified"
+  },
+  "update-state": {
+    "title": "List of Scheduled Visits"
+  },
+  "buttons":{
+    "add": "Add",
+    "update": "Update Status",
+    "update-visit": "Update Visit"
   }
 }

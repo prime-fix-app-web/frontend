@@ -250,6 +250,8 @@
   },
   "visit-form": {
     "header": "Buscar Taller",
+    "header-workshop": "Editar Estado",
+    "title-update": "Actualizar Estado de la Visita",
     "title": "Programación de Visita",
     "vehicle_model": "Modelo de Coche",
     "failure": "Fallas",
@@ -259,6 +261,7 @@
     "select_service": "Selecciona un servicio",
     "failure_details":"Describe las fallas del vehiculo",
     "back": "Volver",
+    "status": "Estado",
     "failure_message": "La descripcion de los fallos son necesarios",
     "date_message": "La fecha es necesaria"
   },
@@ -289,5 +292,16 @@
     "title": "Buscar Taller",
     "search_visit": "Agendar Visita",
     "technician": "Técnicos:"
+  },
+  "edit-screen": {
+    "title": "Visita Editada"
+  },
+  "update-state": {
+    "title": "Lista de Visitas Agendadas"
+  },
+  "buttons":{
+    "add": "Agrgar Visita",
+    "update": "Actualizar Estado",
+    "update-visit": "Actualizar Visita"
   }
 }

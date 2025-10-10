@@ -20,7 +20,7 @@ const menuItems = [
     label: 'side-bar-workshop.workshop'
   },
   {
-    route: '/layout-workshop/requests',
+    route: '/visit/list-workshop',
     icon: 'clipboard',
     label: 'side-bar-workshop.requests'
   },

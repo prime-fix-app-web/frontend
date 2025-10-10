@@ -11,9 +11,10 @@ import {
     CascadeSelect,
     ConfirmationService, DatePicker,
     DialogService,
-    Dropdown, FloatLabel,Select,
+    FloatLabel,Select,
     SelectButton, Textarea,
-    ToastService
+    ToastService,
+    Dialog
 } from "primevue";
 import router from "./router.js";
 import pinia from "./pinia.js";
@@ -32,6 +33,7 @@ app.use(i18n)
     .component('pv-cascade', CascadeSelect)
     .component('pv-textarea', Textarea)
     .component('pv-select', Select)
+    .component('pv-dialog', Dialog)
     .component('pv-floatlabel', FloatLabel)
     .component('pv-datepicker', DatePicker)
     .use(router)
