@@ -16,7 +16,7 @@ export class Payment {
      */
     constructor({ id_payment = '', card_number = null, card_type = '',
                     month = null, year = null, cvv = null, id_user_account = '' }) {
-        this.id = id_payment;
+        this.id_payment = id_payment;
         this.card_number = card_number;
         this.card_type = card_type;
         this.month = month;
@@ -24,4 +24,7 @@ export class Payment {
         this.cvv = cvv;
         this.id_user_account = id_user_account;
     }
+
+    get id() { return this.id_payment; }
+    set id(value) { this.id_payment = value; }
 }
