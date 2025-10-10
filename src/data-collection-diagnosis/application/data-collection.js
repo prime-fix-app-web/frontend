@@ -16,6 +16,7 @@ const useDataCollection = defineStore('useDataCollection', ()=>{
     const autoRepairs = ref([]);
 
     const errors = ref([]);
+    const loading = ref(false);
 
     const visitsLoaded = ref(false);
     const vehiclesLoaded = ref(false);
@@ -84,17 +85,28 @@ const useDataCollection = defineStore('useDataCollection', ()=>{
             errors.value.push(error);
         })
     }
-
-    function updateVisit(visit){
-        dataApi.updateVisit(visit).then(response =>{
-            const resource = response.data;
-            const updateVisit = VisitAssembler.toEntityFromResource(resource);
-            const index = visits.value.findIndex((visit) => visit.id_visit === updateVisit.id_visit);
-            if(index!==-1) visits.value[index] = updateVisit;
-        }).catch(error => {
+    const updateVisit = async (id, visitData) => {
+        loading.value = true;
+        errors.value = [];
+        try {
+            const visitId = Number(id);
+            const response = await dataApi.updateVisit(visitId, visitData);
+            const index = visits.value.findIndex(v => Number(v.id_visit) === visitId);
+            if (index !== -1) {
+                visits.value[index] = {
+                    ...visits.value[index],
+                    ...visitData,
+                    id_visit: visitId
+                };
+            }
+            loading.value = false;
+            return response;
+        } catch (error) {
             errors.value.push(error);
-        })
-    }
+            loading.value = false;
+            throw error;
+        }
+    };
 
     function deleteVisit(id_visit){
         if (!id_visit) return;
@@ -105,8 +117,6 @@ const useDataCollection = defineStore('useDataCollection', ()=>{
             })
             .catch(error => errors.value.push(error));
     }
-
-
 
     function getServicesById(id){
         return services.value.find((services) => services.id_service === id);

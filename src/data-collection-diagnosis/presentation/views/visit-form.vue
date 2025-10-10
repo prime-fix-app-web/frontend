@@ -12,7 +12,7 @@
   const {errors, visits, addVisit, updateVisit, deleteVisit, fetchVisit, fetchServices, fetchVehicles, fetchAutoRepairs} = store;
 
   const form = ref({
-  id_Vehicle: null,
+  id_vehicle: null,
   failure: '',
   time_visit: null,
   id_auto_repair: null,
@@ -23,78 +23,74 @@
   const isEdit = computed(() => !!route.params.id);
 
   onMounted(async () => {
-  await fetchVehicles();
-  await fetchServices();
-  await fetchAutoRepairs();
-  if (!visits.length) await fetchVisit();
+    await fetchVehicles();
+    await fetchServices();
+    await fetchAutoRepairs();
+    if (!visits.length) await fetchVisit();
 
-  const repairId = route.query.repairId || null;
+    const repairId = route.query.repairId || null;
 
-  if (isEdit.value) {
-  const visit = getVisitById(route.params.id);
-  if (visit) {
-  form.value = {
-  id_vehicle: visit.id_vehicle || null,
-  failure: visit.failure || '',
-  time_visit: visit.time_visit ? new Date(visit.time_visit) : null,
-  id_auto_repair: repairId || visit.id_auto_repair || null,
-  id_service: visit.id_service || null,
-  status: visit.status || "Pendiente",
-};
-} else {
-  router.push({ name: 'data-collection-visits' });
-}
-} else {
-  // Nueva visita
-  form.value = {
-  id_vehicle: null,
-  failure: '',
-  time_visit: null,
-  id_auto_repair: repairId,
-  id_service: null,
-  status: "Pendiente",
-};
-}
-});
-
+    if (isEdit.value) {
+      const visit = getVisitById(route.params.id);
+      if (visit) {
+        form.value = {
+          id_vehicle: visit.id_vehicle || null,
+          failure: visit.failure || '',
+          time_visit: visit.time_visit ? new Date(visit.time_visit) : null,
+          id_auto_repair: repairId || visit.id_auto_repair || null,
+          id_service: visit.id_service || null,
+          status: visit.status || "Pendiente",
+        };
+      } else {
+        router.push({ name: 'auto_list' });
+      }
+    } else {
+      form.value = {
+        id_vehicle: null,
+        failure: '',
+        time_visit: null,
+        id_auto_repair: repairId,
+        id_service: null,
+        status: "Pendiente",
+        };
+      }
+  });
 
   function getVisitById(id){
-  return store.getVisitById(id);
-}
+  return store.getVisitsById(id);
+  }
+  function saveVisit () {
+    const visitData = {
+      id_vehicle: form.value.id_vehicle,
+      failure: form.value.failure,
+      time_visit: form.value.time_visit ? form.value.time_visit.toISOString().split('T')[0] : null,
+      id_auto_repair: form.value.id_auto_repair,
+      id_service: form.value.id_service,
+      status: form.value.status,
+    };
 
-  function geVehicleById(id){
-  return store.getVehicleById(id);
-}
-  function getServiceById(id){
-  return store.getServiceById(id);
-}
-  function getAutoRepairById(id){
-  return store.getAutoRepairById(id);
-}
+    try {
+      if (isEdit.value) {
+        const visitId = route.params.id;
+        updateVisit(visitId, visitData);  // usa la versión corregida
+      } else {
+        const newVisit = {
+          id_visit: Math.floor(Math.random() * 1000000),
+          ...visitData
+        };
+       addVisit(newVisit);
+      }
 
-  const saveVisit = ()=>{
-  const visit = new Visit({
-    id_visit: isEdit.value ? route.params.id : Math.floor(Math.random() * 1000000),
-  id_vehicle: form.value.id_vehicle,
-  failure: form.value.failure,
-  time_visit: form.value.time_visit ? form.value.time_visit.toISOString().split('T')[0] : null,
-  id_auto_repair: form.value.id_auto_repair,
-  id_service: form.value.id_service,
-  status: form.value.status,
-});
+        store.fetchVisit();
+      navigateBack();
 
-  if(isEdit.value){
-  updateVisit(visit);
-} else {
-  addVisit(visit);
-}
-
-  navigateBack();
-  console.log("Visit a crear:", visit);
-};
-
+    } catch (error) {
+      console.error("Error al guardar visita:", error);
+    }
+  }
   const navigateBack = ()=> router.push({name:'auto_list'});
   const goBack = () => router.back();
+
 </script>
 
 
@@ -172,14 +168,12 @@
   padding: 20px;
 }
 
-/* === SELECT (pv-select) === */
 .p-select {
   background-color: #fff !important;
   box-shadow: none !important;
   color: #000 !important;
   border: 1px solid #ccc !important;
 
-  /* Sobrescribir variables internas de PrimeVue */
   --p-select-color: #000 !important;
   --p-inputtext-color: #000 !important;
 }
@@ -190,7 +184,6 @@
   --p-select-color: #000 !important;
 }
 
-/* Color de los ítems del dropdown */
 .p-dropdown,
 .p-dropdown-panel,
 .p-dropdown-item {
@@ -205,7 +198,6 @@
   color: #000 !important;
 }
 
-/* === TEXTAREA === */
 .p-textarea {
   background-color: #fff !important;
   box-shadow: none !important;
@@ -213,7 +205,6 @@
   border: 1px solid #ccc !important;
 }
 
-/* === DATEPICKER INPUT === */
 .custom-d input.p-inputtext {
   background-color: #ffffff !important;
   color: #000 !important;
@@ -222,12 +213,10 @@
   box-shadow: none !important;
 }
 
-/* === PLACEHOLDER === */
 ::placeholder {
   color: #555 !important;
 }
 
-/* === FORM TEXT COLORS === */
 .form-title {
   color: #1a4d6d;
   font-size: 32px;
@@ -242,7 +231,7 @@
   border-radius: 8px;
   padding: 30px;
   margin-top: 20px;
-  color: #000 !important; /* Todo el texto dentro negro */
+  color: #000 !important;
 }
 
 .section-title {
@@ -284,7 +273,6 @@
   margin-top: 30px;
 }
 
-/* === BUTTONS === */
 .submit-button {
   background-color: #fdb825 !important;
   color: #333 !important;
@@ -330,5 +318,4 @@
   height: 4px;
   background-color: var(--color-primary);
 }
-
 </style>

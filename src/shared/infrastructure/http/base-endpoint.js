@@ -67,15 +67,21 @@ export class BaseEndpoint {
      */
     update(id, resource) {
         let url = this.endpointPath;
-        // When using query params (Supabase style), use query string
-        if (this.config.usePathParams === 'true') {
-            url += `?${this.#idQueryParamKey}=eq.${id}`;
-        } else {
-            // Traditional REST API style with path params
-            url += `/${id}`;
-        }
-        return this.http.put(url, resource);
+        url += `?${this.#idQueryParamKey}=eq.${id}`;
+        const payload = { ...resource };
+        return this.http.patch(url, payload, {
+            headers: {
+                'Prefer': 'return=representation',
+                'Content-Type': 'application/json',
+                ...(this.config.apiKey && {
+                    'apikey': this.config.apiKey,
+                    'Authorization': `Bearer ${this.config.apiKey}`
+                })
+            }
+        });
     }
+
+
 
     /**
      * Deletes a resource by its ID.
@@ -84,7 +90,6 @@ export class BaseEndpoint {
      */
     delete(id) {
         let url = this.endpointPath;
-        // Siempre usar query param con Supabase
         url += `?${this.#idQueryParamKey}=eq.${id}`;
         return this.http.delete(url, {
             headers: {

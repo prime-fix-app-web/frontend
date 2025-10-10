@@ -113,8 +113,8 @@ export class DataApi extends BaseApi{
      * @param {Object} resource - The visit data to update (must include id).
      * @returns {Promise<import('axios').AxiosResponse>} Promise resolving to the updated visit response.
      */
-    updateVisit(resource){
-        return this.#visitsEndpoint.update(resource);
+    updateVisit(id, resource) {
+        return this.#visitsEndpoint.update(id, resource);
     }
     /**
      * Deletes a visit by its ID.
