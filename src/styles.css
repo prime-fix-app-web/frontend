@@ -16,6 +16,18 @@
     --font-bold: "ExoBold", sans-serif;
     --font-extrabold: "ExoExtraBold", sans-serif;
     --font-italic: "Exoitalic", sans-serif;
+
+    :root {
+        /* Color del fondo del input */
+        --p-inputtext-background: #ffffff; /* fondo blanco */
+        /* Color del texto */
+        --p-inputtext-color: #333333;
+        /* Borde del input */
+        --p-inputtext-border-color: #fdb825;
+        /* Radio del borde */
+        --p-inputtext-border-radius: 10px;
+    }
+
 }
 
 body {

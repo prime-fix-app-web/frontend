@@ -15,7 +15,7 @@ const menuItems = [
     label: 'side-bar-owner.dashboard'
   },
   {
-    route: '/layout-owner/vehicles',
+    route: '/visit/new',
     icon: 'car-suv',
     label: 'side-bar-owner.vehicles'
   },
@@ -30,7 +30,7 @@ const menuItems = [
     label: 'side-bar-owner.history'
   },
   {
-    route: '/layout-owner/maintenance-tracking/track-vehicle',
+    route: '/visit/list',
     icon: 'diamonds',
     label: 'side-bar-owner.track'
   },

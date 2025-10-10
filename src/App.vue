@@ -1,6 +1,7 @@
 <script setup>
 
 import LanguageSwitcher from "@/shared/presentation/components/language-switcher.vue";
+import LayoutOwner from "@/shared/presentation/components/layout-owner.vue";
 
 </script>
 
@@ -9,7 +10,7 @@ import LanguageSwitcher from "@/shared/presentation/components/language-switcher
     <div class="global-language-switcher">
       <language-switcher />
     </div>
-    <router-view />
+<layout-owner/>
   </div>
 </template>
 
