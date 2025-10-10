@@ -49,47 +49,51 @@ function proceedToPayment() {
 </script>
 
 <template>
-  <div class="p-5 flex justify-center">
-    <pv-card class="w-full max-w-md shadow-3 border-round-lg">
+  <div class="card-wrapper">
+    <pv-card class="custom-card">
       <template #title>
-        <div class="text-center text-xl font-bold text-primary">
+        <h2 class="card-title">
           Detalles del Pago
-        </div>
+        </h2>
       </template>
 
       <template #content>
         <div class="flex flex-column gap-3">
-          <div class="p-3 border-round surface-100">
-            <h3 class="text-lg font-semibold text-700 mb-2">🚗 Vehículo</h3>
+          <div class="card-section">
+            <h3 class="section-title">🚗 Vehículo</h3>
             <p><strong>Marca:</strong> {{ vehicle?.vehicle_brand || 'N/A' }}</p>
           </div>
 
-          <div class="p-3 border-round surface-100">
-            <h3 class="text-lg font-semibold text-700 mb-2">📋 Visita</h3>
+          <div class="card-section">
+            <h3 class="section-title">📋 Visita</h3>
             <p><strong>Placa:</strong> {{ vehicle?.vehicle_plate || 'N/A' }}</p>
             <p><strong>Falla:</strong> {{ visit?.failure || 'N/A' }}</p>
             <p><strong>Status:</strong> {{ visit?.status || 'N/A' }}</p>
           </div>
 
-          <div class="p-3 border-round surface-100">
-            <h3 class="text-lg font-semibold text-700 mb-2">💳 Método de Pago</h3>
+          <div class="card-section">
+            <h3 class="section-title">💳 Método de Pago</h3>
 
             <div class="flex flex-column gap-2">
-              <pv-radio-button
-                  inputId="efectivo"
-                  name="payment"
-                  value="Efectivo"
-                  v-model="paymentMethod"
-              />
-              <label for="efectivo">Efectivo</label>
+              <div class="flex align-items-center gap-2">
+                <pv-radio-button
+                    inputId="efectivo"
+                    name="payment"
+                    value="Efectivo"
+                    v-model="paymentMethod"
+                />
+                <label for="efectivo">Efectivo</label>
+              </div>
 
-              <pv-radio-button
-                  inputId="virtual"
-                  name="payment"
-                  value="Pago Virtual"
-                  v-model="paymentMethod"
-              />
-              <label for="virtual">Pago Virtual</label>
+              <div class="flex align-items-center gap-2">
+                <pv-radio-button
+                    inputId="virtual"
+                    name="payment"
+                    value="Pago Virtual"
+                    v-model="paymentMethod"
+                />
+                <label for="virtual">Pago Virtual</label>
+              </div>
             </div>
           </div>
         </div>
@@ -100,6 +104,7 @@ function proceedToPayment() {
           <pv-button
               label="Continuar"
               icon="pi pi-arrow-right"
+              class="accept-btn"
               :disabled="!paymentMethod"
               @click="proceedToPayment"
           />
@@ -110,7 +115,77 @@ function proceedToPayment() {
 </template>
 
 <style scoped>
-.text-primary {
-  color: var(--color-primary);
+.card-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: calc(100vh - 60px);
+  background-color: #f6f7f9;
+  padding: 2rem;
+}
+
+/* Carta con mismo estilo */
+:deep(.custom-card) {
+  background-color: var(--color-second-complementary) !important;
+  color: #000000;
+  border-radius: 16px !important;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08) !important;
+  padding: 2rem 2.5rem !important;
+  border: 1px solid rgba(0, 0, 0, 0.05) !important;
+  max-width: 500px !important;
+  transition: all 0.3s ease;
+  animation: fadeInUp 0.5s ease;
+}
+
+:deep(.custom-card:hover) {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Título principal */
+.card-title {
+  text-align: center;
+  color: #000000;
+  font-weight: 700;
+  font-size: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Secciones internas */
+.card-section {
+  padding: 1rem 1.25rem;
+}
+
+.section-title {
+  color: #004d5a;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+/* Botón principal */
+:deep(.accept-btn) {
+  background-color: var(--color-first-complementary) !important;
+  border: none !important;
+  color: #fff !important;
+  padding: 0.8rem 2rem !important;
+  font-weight: 600 !important;
+  border-radius: 25px !important;
+  transition: background 0.25s ease !important;
+}
+
+:deep(.accept-btn:hover) {
+  background-color: color-mix(in srgb, var(--color-first-complementary) 80%, #000 10%) !important;
+}
+
+/* Animación de entrada */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 </style>

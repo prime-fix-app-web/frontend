@@ -48,14 +48,14 @@ function goToPay() {
 </script>
 
 <template>
-  <div class="flex flex-column align-items-center justify-content-center h-screen bg-white">
+  <div class="payment-container">
     <!-- Subtítulo -->
-    <p class="text-600 mb-4 text-lg">Pago a realizar</p>
+    <p class="payment-title">Pago a realizar</p>
 
     <!-- Tarjeta -->
-    <pv-card class="w-full max-w-md shadow-3 border-round-lg surface-50 p-5 text-center">
+    <pv-card class="payment-card">
       <template #title>
-        Elegir método
+        <h2 class="payment-card-title">Elegir método</h2>
       </template>
 
       <template #content>
@@ -67,14 +67,15 @@ function goToPay() {
               optionLabel="label"
               optionValue="value"
               placeholder="Seleccione un método"
-              class="w-full"
+              class="payment-dropdown"
           />
         </div>
 
-        <div class="flex justify-content-center gap-3 mt-4">
-          <pv-button label="Volver" rounded severity="secondary" class="w-8rem" @click="goBack" />
-          <pv-button label="Añadir método" rounded severity="warning" class="w-10rem" @click="goToAddMethod" />
-          <pv-button label="Pagar" rounded severity="warning" class="w-8rem" @click="goToPay" />
+        <div class="payment-buttons">
+          <pv-button label="Volver" rounded severity="secondary" class="btn-secondary" @click="goBack" />
+          <!-- ><pv-button label="Añadir método" rounded severity="warning" class="btn-warning" @click="goToAddMethod" />
+          </-->
+          <pv-button label="Pagar" rounded severity="warning" class="btn-warning" @click="goToPay" />
         </div>
       </template>
     </pv-card>
@@ -82,10 +83,88 @@ function goToPay() {
 </template>
 
 <style scoped>
-.text-600 {
-  color: #475569;
+/* === Contenedor principal === */
+.payment-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background-color: white;
+  color: black;
 }
-.text-700 {
-  color: #334155;
+
+/* === Texto superior === */
+.payment-title {
+  margin-bottom: 1.5rem;
+  font-size: 1.125rem;
+  color: #374151;
+  font-weight: 500;
+}
+
+/* === Tarjeta === */
+.payment-card {
+  background-color: var(--color-second-complementary);
+  color: #090909;
+  border-radius: 1rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  padding: 2rem;
+  width: 100%;
+  max-width: 420px;
+  border: 1px solid #e5e7eb;
+  text-align: center;
+}
+
+.payment-card-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 1.5rem;
+}
+
+/* === Sección del dropdown === */
+:deep(.payment-dropdown-section) {
+  text-align: left;
+  margin-bottom: 1.5rem;
+}
+
+.payment-label {
+  display: block;
+  color: #374151;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.payment-dropdown {
+  width: 100%;
+  color: #090909;
+}
+
+/* === Botones === */
+.payment-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+/* === Estilos personalizados de botones === */
+:deep(.btn-secondary.p-button) {
+  background-color: var(--color-first-complementary) !important;
+  color: #111827 !important;
+  border: none !important;
+  width: 8rem;
+  transition: all 0.2s ease;
+}
+:deep(.btn-warning.p-button) {
+  background-color: var(--color-first-complementary) !important;
+  color: #000 !important;
+  border: none !important;
+}
+.btn-warning:nth-child(2) {
+  width: 10rem;
+}
+.btn-warning:hover {
+  filter: brightness(0.95);
 }
 </style>
