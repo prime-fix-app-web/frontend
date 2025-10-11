@@ -28,7 +28,7 @@ const displayError = ref('');
 
 /**
  * Operation loading state to manage loading indicators for actions
- * @type {Ref<UnwrapRef<boolean>, UnwrapRef<boolean> | boolean>}
+ * @type {import('vue').Ref<boolean>}
  */
 const operationLoading = ref(false); // Local loading state for operations
 

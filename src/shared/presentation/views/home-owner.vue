@@ -1,5 +1,9 @@
 <script setup>
-import { reactive, ref } from 'vue';
+import {onMounted, reactive, ref} from 'vue';
+import useTrackingStore from "@/maintenance-tracking/application/tracking.store.js";
+
+const trackingStore = useTrackingStore();
+const { fetchNotifications, notificationsLoaded } = trackingStore;
 
 const departments = [
   'Lima', 'Arequipa', 'Cusco', 'Trujillo', 'Piura', 'Chiclayo', 'Huancayo', 'Tacna'
@@ -25,6 +29,10 @@ function onSearch() {
   console.log('Búsqueda de taller:', { ...searchForm });
   // Add search logic here
 }
+
+onMounted(() => {
+  if (!notificationsLoaded) fetchNotifications();
+})
 
 </script>
 
