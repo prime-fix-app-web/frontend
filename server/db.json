@@ -465,6 +465,14 @@
       "id_auto_repair": "AR001",
       "status": "En espera",
       "id_vehicle": "RV002"
+    },
+    {
+      "id": "489e",
+      "failure": "Cambio de aceite",
+      "time_visit": "2025-10-09T13:00",
+      "id_auto_repair": "AR004",
+      "status": "En espera",
+      "id_vehicle": "RV002"
     }
   ],
   "services": [
