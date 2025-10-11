@@ -14,33 +14,65 @@ const {
   updateNotification,
 } = store;
 
-// Local reactive variables
+/**
+ * Initial loading state to manage the loading spinner visibility
+ * @type {import("vue").Ref<boolean>}
+ */
 const initialLoading = ref(true);
+
+/**
+ * Error message to display to the user
+ * @type {import("vue").Ref<string>}
+ */
 const displayError = ref('');
+
+/**
+ * Operation loading state to manage loading indicators for actions
+ * @type {Ref<UnwrapRef<boolean>, UnwrapRef<boolean> | boolean>}
+ */
 const operationLoading = ref(false); // Local loading state for operations
 
+/**
+ * Computed property to get the count of unread notifications
+ * @type {ComputedRef<number>}
+ */
 const unreadCount = computed(() =>
   notifications.filter(n => n.read === false).length
 );
 
-// Computed properties for filtering notifications
+/**
+ * Watch for errors in the store and update the displayError accordingly
+ */
 const unreadNotifications = computed(() => {
   return notifications.filter(n => n.read === false);
 });
 
+/**
+ * Computed property to get the list of read notifications
+ * @type {ComputedRef<Notification[]>}
+ */
 const readNotifications = computed(() => {
   return notifications.filter(n => n.read === true);
 });
 
+/**
+ * Computed property to determine if there are any notifications
+ * @type {ComputedRef<boolean>}
+ */
 const hasNotifications = computed(() =>
     notificationsCount > 0
 );
 
+/**
+ * Clear errors in the store
+ */
 const clearErrors = () => {
   store.errors = [];
 };
 
-// Lifecycle hook - load notifications when component mounts
+/**
+ * Watch for changes in the store errors and update the displayError
+ */
 onMounted(async () => {
   // Always show loading initially
   initialLoading.value = true;
@@ -51,14 +83,18 @@ onMounted(async () => {
     console.log('✅ Notifications loaded successfully');
   } catch (error) {
     console.error('❌ Failed to load notifications:', error);
-    displayError.value = 'Error al cargar las notificaciones';
+    displayError.value = 'Error to load notifications';
   } finally {
     // Hide initial loading regardless of success/failure
     initialLoading.value = false;
   }
 });
 
-// Function to mark a notification as read
+/**
+ * Function to mark a notification as read
+ * @param {Notification} notification - The notification to mark as read
+ * @returns {Promise<void>} - A promise that resolves when the operation is complete
+ */
 async function handleMarkAsRead(notification) {
   try {
     // Directly modify the notification and update via store
@@ -67,12 +103,16 @@ async function handleMarkAsRead(notification) {
   } catch (error) {
     // Revert on error
     notification.read = false;
-    displayError.value = 'Error al marcar como leída';
+    displayError.value = 'Error at marking as read';
     console.error('Failed to mark as read:', error);
   }
 }
 
-// Function to mark a notification as unread
+/**
+ * Function to mark a notification as unread
+ * @param notification - The notification to mark as unread
+ * @returns {Promise<void>} - A promise that resolves when the operation is complete
+ */
 async function handleMarkAsUnread(notification) {
   try {
     // Directly modify the notification and update via store
@@ -81,12 +121,15 @@ async function handleMarkAsUnread(notification) {
   } catch (error) {
     // Revert on error
     notification.read = true;
-    displayError.value = 'Error al marcar como no leída';
+    displayError.value = 'Error at marking as unread';
     console.error('Failed to mark as unread:', error);
   }
 }
 
-// Function to mark all notifications as read
+/**
+ * Function to mark all notifications as read
+ * @returns {Promise<void>} - A promise that resolves when the operation is complete
+ */
 async function handleMarkAllAsRead() {
   try {
     notifications.forEach(notification => {
@@ -98,11 +141,14 @@ async function handleMarkAllAsRead() {
 
   } catch (error) {
     console.error('Failed to mark as read:', error);
-    displayError.value = 'Error al marcar todas como leídas';
+    displayError.value = 'Error at marking all as read';
   }
 }
 
-// Function to retry loading notifications
+/**
+ * Function to handle retrying the fetch notifications operation
+ * @returns {Promise<void>} - A promise that resolves when the operation is complete
+ */
 async function handleRetry() {
   console.log('🔄 Retry button clicked');
   displayError.value = '';
@@ -113,15 +159,19 @@ async function handleRetry() {
     await fetchNotifications();
   } catch (error) {
     console.error('❌ Retry failed:', error);
-    displayError.value = 'Error al cargar las notificaciones';
+    displayError.value = 'Error to load notifications';
   } finally {
     initialLoading.value = false;
   }
 }
 
-// Function to format dates in a user-friendly way
+/**
+ * Format date to a human-readable relative time
+ * @param date - The date to format
+ * @returns {string} - Formatted date string
+ */
 function formatDate(date) {
-  if (!date) return 'Sin fecha';
+  if (!date) return t('notification-view.no-date');
 
   const now = new Date();
   const notificationDate = new Date(date);
@@ -130,10 +180,25 @@ function formatDate(date) {
   const diffInHours = Math.floor(diffInMinutes / 60);
   const diffInDays = Math.floor(diffInHours / 24);
 
-  if (diffInMinutes < 1) return 'Ahora';
-  if (diffInMinutes < 60) return `Hace ${diffInMinutes} min`;
-  if (diffInHours < 24) return `Hace ${diffInHours}h`;
-  if (diffInDays < 7) return `Hace ${diffInDays}d`;
+  if (t('notification-view.ago') === 'ago') {
+    // If translation is not set, default to English format
+    if (diffInMinutes < 1) return 'Just now';
+    if (diffInMinutes < 60) return `${diffInMinutes} min ago`;
+    if (diffInHours < 24) return `${diffInHours}h ago`;
+    if (diffInDays < 7) return `${diffInDays}d ago`;
+
+    return notificationDate.toLocaleDateString('en-US', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    });
+  } else {
+    // Spanish format
+    if (diffInMinutes < 1) return 'Justo ahora';
+    if (diffInMinutes < 60) return `${diffInMinutes} min ${$t('notification-view.ago')}`;
+    if (diffInHours < 24) return `${diffInHours}h ${$t('notification-view.ago')}`;
+    if (diffInDays < 7) return `${diffInDays}d ${$t('notification-view.ago')}`;
+  }
 
   return notificationDate.toLocaleDateString('es-ES', {
     day: '2-digit',
@@ -142,7 +207,9 @@ function formatDate(date) {
   });
 }
 
-// Function to dismiss error messages
+/**
+ * Dismiss the current error message
+ */
 function dismissError() {
   displayError.value = '';
   clearErrors();
@@ -154,14 +221,14 @@ function dismissError() {
     <div class="notification-content">
       <!-- Header -->
       <div class="notification-header">
-        <h1 class="notification-title">Notificaciones</h1>
+        <h1 class="notification-title">{{ t('notification-view.title') }}</h1>
         <button
             v-if="unreadCount > 0 && !initialLoading"
             class="mark-all-read-btn"
             @click="handleMarkAllAsRead"
             type="button"
         >
-          {{ 'Marcar todas como leídas' }}
+          {{ t('notification-view.markAllAsRead') }}
         </button>
       </div>
 
@@ -181,7 +248,7 @@ function dismissError() {
       <!-- Initial Loading State -->
       <div v-if="initialLoading" class="loading-state">
         <div class="spinner"></div>
-        <p>Cargando notificaciones...</p>
+        <p>{{ t('notification-view.loadingNotifications') }}</p>
       </div>
 
       <!-- Error State (only shown after initial load fails) -->
@@ -189,10 +256,10 @@ function dismissError() {
         <svg class="error-icon">
           <use href="/assets/icons/sprite.symbol.svg#bell"></use>
         </svg>
-        <p class="error-message">Error al cargar las notificaciones</p>
-        <p class="error-hint">Por favor, intenta recargar</p>
+        <p class="error-message">{{ t('notification-view.errorMessage') }}</p>
+        <p class="error-hint">{{ t('notification-view.errorRefresh') }}</p>
         <button class="retry-btn" @click="handleRetry" type="button">
-          Reintentar
+          {{ t('notification-view.retry') }}
         </button>
       </div>
 
@@ -201,7 +268,7 @@ function dismissError() {
         <!-- Unread Notifications Section -->
         <div v-if="unreadNotifications.length > 0" class="notifications-section">
           <h2 class="section-title">
-            Sin leer
+            {{ t('notification-view.nonRead') }}
             <span class="badge">{{ unreadCount }}</span>
           </h2>
           <div class="notifications-list">
@@ -222,7 +289,7 @@ function dismissError() {
                   <p class="notification-message">{{ notification.message }}</p>
                   <div class="notification-meta">
                     <span class="notification-time">{{ formatDate(notification.sent) }}</span>
-                    <span class="notification-vehicle">Vehículo: {{ notification.id_vehicle }}</span>
+                    <span class="notification-vehicle">{{ t('notification-view.vehicle') }} {{ notification.id_vehicle }}</span>
                   </div>
                 </div>
               </div>
@@ -232,7 +299,7 @@ function dismissError() {
 
         <!-- Read Notifications Section -->
         <div v-if="readNotifications.length > 0" class="notifications-section">
-          <h2 class="section-title">Leídas</h2>
+          <h2 class="section-title">{{ t('notification-view.read') }}</h2>
           <div class="notifications-list">
             <div
                 v-for="notification in readNotifications"
@@ -250,7 +317,7 @@ function dismissError() {
                   <p class="notification-message">{{ notification.message }}</p>
                   <div class="notification-meta">
                     <span class="notification-time">{{ formatDate(notification.sent) }}</span>
-                    <span class="notification-vehicle">Vehículo: {{ notification.id_vehicle }}</span>
+                    <span class="notification-vehicle">{{ t('notification-view.vehicle') }} {{ notification.id_vehicle }}</span>
                   </div>
                 </div>
               </div>
@@ -263,8 +330,8 @@ function dismissError() {
           <svg class="empty-icon">
             <use href="/assets/icons/sprite.symbol.svg#bell"></use>
           </svg>
-          <h3>No tienes notificaciones</h3>
-          <p>Cuando recibas actualizaciones sobre tus vehículos, aparecerán aquí</p>
+          <h3>{{ t('notification-view.noNotifications') }}</h3>
+          <p>{{ t('notification-view.noNotificationsMessage') }}</p>
         </div>
       </div>
     </div>

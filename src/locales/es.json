@@ -239,6 +239,22 @@
     "model": "Modelo",
     "year": "Año"
   },
+  "notification-view": {
+    "title": "Notificaciones",
+    "markAllAsRead": "Marcar todas como leídas",
+    "loadingNotifications": "Cargando notificaciones...",
+    "errorMessage": "Error al cargar las notificaciones",
+    "errorRefresh": "Por favor, intenta refrescar.",
+    "retry": "Reintentar",
+    "nonRead": "No leídas",
+    "read": "Leídas",
+    "allRead": "Todas leídas",
+    "noNotifications": "No hay notificaciones disponibles",
+    "noNotificationsMessage": "Cuando recibas notificaciones, aparecerán aquí.",
+    "vehicle": "Vehículo:",
+    "no-date": "No hay fecha disponible",
+    "ago": "hace"
+  },
   "state-error": {
     "title": "Error",
     "message": "Este coche no está siendo reparado"
