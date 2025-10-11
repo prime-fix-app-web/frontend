@@ -234,7 +234,10 @@
     "vehicleRequired": "You must select a vehicle",
     "select": "Select",
     "vehicle": "Vehicle",
-    "status": "Status"
+    "status": "Status",
+    "brand": "Brand",
+    "model": "Model",
+    "year": "Year"
   },
   "state-error": {
     "title": "Error",

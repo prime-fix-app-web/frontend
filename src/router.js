@@ -8,6 +8,9 @@ const homeOwner = () => import("./shared/presentation/views/home-owner.vue");
 const homeWorkshop = () => import("./shared/presentation/views/home-workshop.vue");
 const pageNotFound = () => import("./shared/presentation/views/page-not-found.vue");
 
+const trackVehicle = () => import("./maintenance-tracking/presentation/views/track-vehicle.vue");
+const notificationView = () => import("./maintenance-tracking/presentation/views/notification-view.vue");
+
 const routes = [
     {
         path: '/iam',
@@ -25,7 +28,19 @@ const routes = [
                 path: 'home-owner',
                 name: 'home-owner',
                 component: homeOwner,
-                meta: { title: 'Home Owner' }
+                meta: { title: 'Home Owner'}
+            },
+            {
+                path: 'track-vehicle',
+                name: 'track-vehicle',
+                component: trackVehicle,
+                meta: { title: 'Track Vehicle' }
+            },
+            {
+                path: 'notification-view',
+                name: 'notification-view',
+                component: notificationView,
+                meta: { title: 'Notifications' }
             }
         ]
     },

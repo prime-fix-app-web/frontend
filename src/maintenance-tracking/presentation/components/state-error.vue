@@ -1,11 +1,100 @@
 <script setup>
+import {useI18n} from "vue-i18n";
+const {t} = useI18n();
 
 </script>
 
 <template>
-
+  <div class="error-container">
+    <div class="error-icon">⚠️</div>
+    <h2 class="error-title">{{ t('state-error.title') }}</h2>
+    <p class="error-message">{{ t('state-error.message') }}</p>
+  </div>
 </template>
 
 <style scoped>
+.error-container {
+  background-color: var(--color-second-complementary);
+  border-radius: 12px;
+  padding: 3rem 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  width: 80%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  margin: 2rem auto;
+}
 
+.error-icon {
+  font-size: 64px;
+  margin-bottom: 1rem;
+  line-height: 1;
+}
+
+.error-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  font-family: var(--font-bold);
+  color: var(--color-dark);
+  margin: 0 0 0.75rem 0;
+}
+
+.error-message {
+  font-size: 1.25rem;
+  font-weight: 400;
+  font-family: var(--font-regular);
+  color: var(--color-primary);
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .error-container {
+    padding: 2.5rem 1.5rem;
+  }
+
+  .error-icon {
+    font-size: 56px;
+    margin-bottom: 0.875rem;
+  }
+
+  .error-title {
+    font-size: 2rem;
+    margin: 0 0 0.625rem 0;
+  }
+
+  .error-message {
+    font-size: 1.125rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .error-container {
+    padding: 2rem 1.25rem;
+  }
+
+  .error-icon {
+    font-size: 48px;
+    margin-bottom: 0.75rem;
+  }
+
+  .error-title {
+    font-size: 1.75rem;
+    margin: 0 0 0.5rem 0;
+  }
+
+  .error-message {
+    font-size: 1rem;
+    line-height: 1.5;
+  }
+}
+
+/* Focus and Accessibility */
+.error-container:focus-visible {
+  outline: 2px solid var(--color-first-complementary);
+  outline-offset: 2px;
+}
 </style>

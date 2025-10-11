@@ -234,7 +234,10 @@
     "vehicleRequired": "Debe seleccionar un vehículo",
     "select": "Seleccionar",
     "vehicle": "Vehículo",
-    "status": "Estado"
+    "status": "Estado",
+    "brand": "Marca",
+    "model": "Modelo",
+    "year": "Año"
   },
   "state-error": {
     "title": "Error",

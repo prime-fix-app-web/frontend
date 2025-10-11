@@ -5,7 +5,7 @@ import {NotificationAssembler} from "@/maintenance-tracking/infrastructure/notif
 
 const trackingApi = new TrackingApi();
 
-const trackingStore = defineStore('tracking', () => {
+const useTrackingStore = defineStore('tracking', () => {
 
     /**
      * List of notifications.
@@ -113,4 +113,6 @@ const trackingStore = defineStore('tracking', () => {
         updateNotification,
         deleteNotification
     }
-})
+});
+
+export default useTrackingStore;

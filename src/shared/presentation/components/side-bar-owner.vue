@@ -30,7 +30,7 @@ const menuItems = [
     label: 'side-bar-owner.history'
   },
   {
-    route: '/layout-owner/maintenance-tracking/track-vehicle',
+    route: '/layout-owner/track-vehicle',
     icon: 'diamonds',
     label: 'side-bar-owner.track'
   },
@@ -40,7 +40,7 @@ const menuItems = [
     label: 'side-bar-owner.settings'
   },
   {
-    "route": '/layout-owner/maintenance-tracking/notification-view',
+    "route": '/layout-owner/notification-view',
     "icon": 'bell',
     "label": 'side-bar-owner.notifications'
   }
