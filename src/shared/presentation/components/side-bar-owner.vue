@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script setup lang="js">
 import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import ButtonLogout from "@/shared/presentation/components/button-logout.vue";
@@ -30,7 +30,7 @@ const menuItems = [
     label: 'side-bar-owner.history'
   },
   {
-    route: '/layout-owner/maintenance-tracking/track-vehicle',
+    route: '/layout-owner/track-vehicle',
     icon: 'diamonds',
     label: 'side-bar-owner.track'
   },
@@ -40,7 +40,7 @@ const menuItems = [
     label: 'side-bar-owner.settings'
   },
   {
-    "route": '/layout-owner/maintenance-tracking/notification-view',
+    "route": '/layout-owner/notification-view',
     "icon": 'bell',
     "label": 'side-bar-owner.notifications'
   }
@@ -52,12 +52,12 @@ const route = useRoute()
 const { t } = useI18n({ useScope: 'global' })
 
 
-function isActive(path: string) {
+function isActive(path) {
   return route.path === path || route.path.startsWith(path + '/')
 }
 
 
-function go(path: string) {
+function go(path) {
   if (route.path !== path) router.push(path)
 }
 </script>

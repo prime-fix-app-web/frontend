@@ -234,7 +234,26 @@
     "vehicleRequired": "You must select a vehicle",
     "select": "Select",
     "vehicle": "Vehicle",
-    "status": "Status"
+    "status": "Status",
+    "brand": "Brand",
+    "model": "Model",
+    "year": "Year"
+  },
+  "notification-view": {
+    "title": "Notifications",
+    "markAllAsRead": "Mark all as read",
+    "loadingNotifications": "Loading notifications...",
+    "errorMessage": "Error loading notifications",
+    "errorRefresh": "Please try refresh.",
+    "retry": "Retry",
+    "nonRead": "Unread",
+    "read": "Read",
+    "allRead": "All read",
+    "noNotifications": "No notifications available",
+    "noNotificationsMessage": "When you receive notifications, they will appear here.",
+    "vehicle": "Vehicle:",
+    "no-date": "No date available",
+    "ago": "ago"
   },
   "state-error": {
     "title": "Error",

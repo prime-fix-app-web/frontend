@@ -7,6 +7,8 @@ const { t } = useI18n();
 const router = useRouter();
 const store = useIamStore();
 
+const { logout } = store;
+
 const onLogout = () => {
   console.log("Logout");
   store.logout();
