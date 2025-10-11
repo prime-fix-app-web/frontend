@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script setup lang="js">
 import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import ButtonLogout from "@/shared/presentation/components/button-logout.vue";
@@ -47,12 +47,12 @@ const route = useRoute()
 const { t } = useI18n({ useScope: 'global' })
 
 
-function isActive(path: string) {
+function isActive(path) {
   return route.path === path || route.path.startsWith(path + '/')
 }
 
 
-function go(path: string) {
+function go(path) {
   if (route.path !== path) router.push(path)
 }
 </script>
