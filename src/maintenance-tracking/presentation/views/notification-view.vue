@@ -12,7 +12,6 @@ const {
   notificationsCount,
   fetchNotifications,
   updateNotification,
-  clearErrors
 } = store;
 
 // Local reactive variables
@@ -37,32 +36,26 @@ const hasNotifications = computed(() =>
     notificationsCount > 0
 );
 
+const clearErrors = () => {
+  store.errors = [];
+};
+
 // Lifecycle hook - load notifications when component mounts
-onMounted(() => {
+onMounted(async () => {
   // Always show loading initially
   initialLoading.value = true;
 
-  // Fetch notifications using existing store function
-  fetchNotifications();
-
-  // Since fetchNotifications uses promises, we'll check after a reasonable delay
-  // and also set up a more robust check
-  setTimeout(() => {
-    if (notificationsLoaded || notifications.length > 0 || errors.length > 0) {
-      if (errors.length > 0) {
-        displayError.value = 'Error al cargar las notificaciones';
-      }
-      initialLoading.value = false;
-    } else {
-      // If still loading after 5 seconds, assume there's an issue
-      setTimeout(() => {
-        initialLoading.value = false;
-        if (!notificationsLoaded && notifications.length === 0) {
-          displayError.value = 'Error al cargar las notificaciones';
-        }
-      }, 5000);
-    }
-  }, 100);
+  try {
+    // Wait for fetchNotifications to complete
+    await fetchNotifications();
+    console.log('✅ Notifications loaded successfully');
+  } catch (error) {
+    console.error('❌ Failed to load notifications:', error);
+    displayError.value = 'Error al cargar las notificaciones';
+  } finally {
+    // Hide initial loading regardless of success/failure
+    initialLoading.value = false;
+  }
 });
 
 // Function to mark a notification as read
