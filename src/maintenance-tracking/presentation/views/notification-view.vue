@@ -2,6 +2,7 @@
 import {useI18n} from "vue-i18n";
 import {computed, onMounted, ref, watch} from "vue";
 import useTrackingStore from "@/maintenance-tracking/application/tracking.store.js";
+import {storeToRefs} from "pinia";
 
 const { t } = useI18n();
 const store = useTrackingStore();
@@ -10,15 +11,26 @@ const {
   notificationsLoaded,
   errors,
   notificationsCount,
+  loading,
+} = storeToRefs(store);
+
+const {
   fetchNotifications,
   updateNotification,
 } = store;
 
 /**
- * Initial loading state to manage the loading spinner visibility
+ * Flag to indicate if it's the first mount of the component
  * @type {import("vue").Ref<boolean>}
  */
-const initialLoading = ref(true);
+const firstMount = ref(false);
+
+
+/**
+ * Computed property to determine if the UI should show a loading state
+ * @type {import("vue").ComputedRef<boolean>}
+ */
+const uiLoading = computed(() => loading.value && firstMount.value);
 
 /**
  * Error message to display to the user
@@ -33,78 +45,73 @@ const displayError = ref('');
 const operationLoading = ref(false); // Local loading state for operations
 
 /**
- * Computed property to get the count of unread notifications
- * @type {ComputedRef<number>}
+ * Initial loading state to manage the first load of notifications
+ * @type {import('vue').Ref<number>}
  */
-const unreadCount = computed(() =>
-  notifications.filter(n => n.read === false).length
+const unreadCount = computed(() => unreadNotifications.value.length);
+
+/**
+ * Flag to indicate if the initial loading is in progress
+ * @type {import('vue').ComputedRef<Notification[]>} - Array of unread notifications
+ */
+const unreadNotifications = computed(() =>
+  (notifications.value || []).filter((n) => n.read === false)
 );
 
 /**
- * Watch for errors in the store and update the displayError accordingly
+ * Computed property to get read notifications
+ * @type {import('vue').ComputedRef<Notification[]>} - Array of read notifications
  */
-const unreadNotifications = computed(() => {
-  return notifications.filter(n => n.read === false);
-});
+const readNotifications = computed(() =>
+    (notifications.value || []).filter((n) => n.read === true)
+);
 
 /**
- * Computed property to get the list of read notifications
- * @type {ComputedRef<Notification[]>}
+ * Flag to indicate if the initial loading is in progress
+ * @type {import("vue").Ref<boolean>}
  */
-const readNotifications = computed(() => {
-  return notifications.filter(n => n.read === true);
-});
-
-/**
- * Computed property to determine if there are any notifications
- * @type {ComputedRef<boolean>}
- */
-const hasNotifications = computed(() =>
-    notificationsCount > 0
+const hasNotifications = computed(
+    () => (notificationsCount.value || 0) > 0
 );
 
 /**
  * Clear errors in the store
  */
 const clearErrors = () => {
-  store.errors = [];
+  errors.value = [];
 };
 
+
 /**
- * Watch for changes in the store errors and update the displayError
+ * Flag to indicate if the initial loading is in progress
  */
 onMounted(async () => {
-  // Always show loading initially
-  initialLoading.value = true;
-
   try {
-    // Wait for fetchNotifications to complete
     await fetchNotifications();
-    console.log('✅ Notifications loaded successfully');
   } catch (error) {
-    console.error('❌ Failed to load notifications:', error);
-    displayError.value = 'Error to load notifications';
+    console.error("❌ Failed to load notifications:", error);
+    displayError.value = "Error to load notifications";
   } finally {
-    // Hide initial loading regardless of success/failure
-    initialLoading.value = false;
+    firstMount.value = false;
   }
 });
 
 /**
- * Function to mark a notification as read
- * @param {Notification} notification - The notification to mark as read
+ * Watch for changes in errors from the store and update displayError accordingly
+ * @param notification - The notification to mark as read
  * @returns {Promise<void>} - A promise that resolves when the operation is complete
  */
 async function handleMarkAsRead(notification) {
   try {
-    // Directly modify the notification and update via store
+    operationLoading.value = true;
     notification.read = true;
     await updateNotification(notification);
   } catch (error) {
-    // Revert on error
     notification.read = false;
-    displayError.value = 'Error at marking as read';
-    console.error('Failed to mark as read:', error);
+    displayError.value = "Error at marking as read";
+    console.error("Failed to mark as read:", error);
+  } finally {
+    operationLoading.value = false;
   }
 }
 
@@ -115,14 +122,15 @@ async function handleMarkAsRead(notification) {
  */
 async function handleMarkAsUnread(notification) {
   try {
-    // Directly modify the notification and update via store
+    operationLoading.value = true;
     notification.read = false;
     await updateNotification(notification);
   } catch (error) {
-    // Revert on error
     notification.read = true;
-    displayError.value = 'Error at marking as unread';
-    console.error('Failed to mark as unread:', error);
+    displayError.value = "Error at marking as unread";
+    console.error("Failed to mark as unread:", error);
+  } finally {
+    operationLoading.value = false;
   }
 }
 
@@ -132,36 +140,37 @@ async function handleMarkAsUnread(notification) {
  */
 async function handleMarkAllAsRead() {
   try {
-    notifications.forEach(notification => {
-      if (!notification.read) {
-        notification.read = true;
-        updateNotification(notification);
+    operationLoading.value = true;
+    for (const n of notifications.value) {
+      if (!n.read) {
+        n.read = true;
+        await updateNotification(n);
       }
-    });
-
+    }
   } catch (error) {
-    console.error('Failed to mark as read:', error);
-    displayError.value = 'Error at marking all as read';
+    console.error("Failed to mark as read:", error);
+    displayError.value = "Error at marking all as read";
+  } finally {
+    operationLoading.value = false;
   }
 }
 
-/**
- * Function to handle retrying the fetch notifications operation
- * @returns {Promise<void>} - A promise that resolves when the operation is complete
- */
-async function handleRetry() {
-  console.log('🔄 Retry button clicked');
-  displayError.value = '';
+  /**
+   * Function to retry fetching notifications
+   * @returns {Promise<void>} - A promise that resolves when the operation is complete
+   */
+  async function handleRetry() {
+  displayError.value = "";
   clearErrors();
-  initialLoading.value = true;
+  firstMount.value = true;
 
   try {
     await fetchNotifications();
   } catch (error) {
-    console.error('❌ Retry failed:', error);
-    displayError.value = 'Error to load notifications';
+    console.error("❌ Retry failed:", error);
+    displayError.value = "Error to load notifications";
   } finally {
-    initialLoading.value = false;
+    firstMount.value = false;
   }
 }
 
@@ -211,7 +220,7 @@ function formatDate(date) {
  * Dismiss the current error message
  */
 function dismissError() {
-  displayError.value = '';
+  displayError.value = "";
   clearErrors();
 }
 </script>
@@ -223,9 +232,10 @@ function dismissError() {
       <div class="notification-header">
         <h1 class="notification-title">{{ t('notification-view.title') }}</h1>
         <button
-            v-if="unreadCount > 0 && !initialLoading"
+            v-if="unreadCount > 0 && !uiLoading"
             class="mark-all-read-btn"
             @click="handleMarkAllAsRead"
+            :disabled="operationLoading || loading"
             type="button"
         >
           {{ t('notification-view.markAllAsRead') }}
@@ -233,7 +243,7 @@ function dismissError() {
       </div>
 
       <!-- Error Display -->
-      <div v-if="displayError && !initialLoading" class="error-banner">
+      <div v-if="displayError" class="error-banner">
         <div class="error-content">
           <svg class="error-icon-small">
             <use href="/assets/icons/sprite.symbol.svg#alert"></use>
@@ -246,7 +256,7 @@ function dismissError() {
       </div>
 
       <!-- Initial Loading State -->
-      <div v-if="initialLoading" class="loading-state">
+      <div v-if="uiLoading" class="loading-state">
         <div class="spinner"></div>
         <p>{{ t('notification-view.loadingNotifications') }}</p>
       </div>

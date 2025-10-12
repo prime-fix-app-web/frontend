@@ -1,54 +1,45 @@
-import axios from "axios";
-
 /**
- * Sets up an Axios interceptor to add authentication headers to requests.
- * @param apiKey - The API key to include in the headers.
- * @param BaseUrl - The base URL to match for adding headers.
- * @param axiosInstance - Optional specific axios instance to apply interceptors to.
- * @returns {void}
+ * Auth Interceptor
+ * Sets up an Axios interceptor to automatically include authentication headers in requests.
+ * @param {Object} params - The parameters for setting up the interceptor.
+ * @param {string} params.apiKey - The API key to be used for authentication.
+ * @param {string} params.baseUrl - The base URL for the API (not used in this function but included for completeness).
+ * @param {import('axios').AxiosInstance} params.axiosInstance - The Axios instance to which the interceptor will be applied.
  */
-export function setupAuthInterceptor({ apiKey, BaseUrl, axiosInstance = null }) {
-    if (!apiKey || !BaseUrl) {
-        console.error('setupAuthInterceptor: Missing required parameters', { apiKey: !!apiKey, BaseUrl: !!BaseUrl });
+export function setupAuthInterceptor({ apiKey, baseUrl, axiosInstance = null }) {
+    if (!apiKey || !axiosInstance) {
+        console.error("setupAuthInterceptor: missing apiKey or axiosInstance");
         return;
     }
-
-    // Use the provided instance or the global axios
-    const targetAxios = axiosInstance || axios;
-    const instanceType = axiosInstance ? 'specific instance' : 'global axios';
-
-    // Request interceptor
-    targetAxios.interceptors.request.use((config) => {
-        // For specific instances, we don't need to check the URL since it's already scoped
-        const shouldApplyHeaders = axiosInstance ||
-            (config.url && (
-                config.url.startsWith(BaseUrl) ||
-                config.url.startsWith('/') ||
-                !config.url.startsWith('http')
-            ));
-
-        if (shouldApplyHeaders) {
+    /**
+     * Request Interceptor
+     */
+    axiosInstance.interceptors.request.use(
+        (config) => {
             config.headers = config.headers || {};
             config.headers['apikey'] = apiKey;
             config.headers['Authorization'] = `Bearer ${apiKey}`;
-            config.headers['Content-Type'] = 'application/json';
-        } else {
-            console.log(`Auth interceptor NOT applied to ${instanceType}:`, config.url);
-        }
+            if (!config.headers['Accept']) config.headers['Accept'] = 'application/json';
 
-        return config;
-    }, (error) => {
-        console.error(`Request interceptor error (${instanceType}):`, error);
-        return Promise.reject(error);
-    });
+            const m = (config.method || 'get').toLowerCase();
+            if (['post', 'put', 'patch'].includes(m) && !config.headers['Content-Type']) {
+                config.headers['Content-Type'] = 'application/json';
+            }
 
-    // Response interceptor to handle errors
-    targetAxios.interceptors.response.use(
-        (response) => {
-            return response;
+            if (!config.headers['Prefer']) {
+                config.headers['Prefer'] = 'return=representation';
+            }
+
+            return config;
         },
-        (error) => {
-            return Promise.reject(error);
-        }
+        (error) => Promise.reject(error)
+    );
+
+    /**
+     * Response Interceptor
+     */
+    axiosInstance.interceptors.response.use(
+        (response) => response,
+        (error) => Promise.reject(error)
     );
 }

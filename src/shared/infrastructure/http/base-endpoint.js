@@ -11,40 +11,41 @@ export class BaseEndpoint {
      * @param baseApi - The base API instance.
      * @param endpointPath - The specific endpoint path.
      * @param config - Configuration object for the endpoint.
-     * @param {string} config.usePathParams - Whether to use path params or query params.
+     * @param {boolean} config.useQueryParams - Whether to use path params or query params.
      * @param {string} config.idQueryParamKey - The query parameter key for ID operations.
      */
     constructor(baseApi, endpointPath, config = {}) {
         this.http = baseApi.http;
         this.endpointPath = endpointPath;
-        this.config = new BaseApiConfig(config);
+        this.useQueryParams = !!config.idQueryParamKey;
         this.#idQueryParamKey = config.idQueryParamKey || 'id';
     }
 
     /**
      * Fetches all resources from the endpoint.
-     * @returns {*} - The list of all resources.
+     * @returns {Promise<*>} - An array of all resources.
      */
-    getAll() {
+    async getAll() {
         let url = this.endpointPath;
-        // When using query params (Supabase style), add select=*
-        if (this.config.usePathParams === 'true') {
-            url += '?select=*';
+        if (!this.useQueryParams) {
+            url += (url.includes('?') ? '&' : '?') + 'select=*';
         }
         return this.http.get(url);
     }
 
     /**
      * Fetches a resource by its ID.
-     * @param id - The ID of the resource.
-     * @returns {*} - The fetched resource.
+     * @param id - The ID of the resource to fetch.
+     * @returns {Promise<*>} - The resource with the specified ID.
      */
-    getById(id) {
+    async getById(id) {
         let url = this.endpointPath;
-        if (this.config.usePathParams === 'true') {
-            url += `?${this.#idQueryParamKey}=eq.${id}`;
+        if (!this.useQueryParams) {
+            const key = encodeURIComponent(this.#idQueryParamKey);
+            const val = encodeURIComponent(id);
+            url += `${url.includes('?') ? '&' : '?'}${key}=eq.${val}`;
         } else {
-            url += `/${id}`;
+            url += `/${encodeURIComponent(id)}`;
         }
         return this.http.get(url);
     }
@@ -52,9 +53,9 @@ export class BaseEndpoint {
     /**
      * Creates a new resource.
      * @param resource - The resource data to create.
-     * @returns {*} - The created resource.
+     * @returns {Promise<*>} - The response from the create operation.
      */
-    create(resource) {
+    async create(resource) {
         const url = this.endpointPath;
         return this.http.post(url, resource);
     }
@@ -63,16 +64,17 @@ export class BaseEndpoint {
      * Updates an existing resource by its ID.
      * @param id - The ID of the resource to update.
      * @param resource - The updated resource data.
-     * @returns {*} - The response from the update operation.
+     * @returns {Promise<*>} - The response from the update operation.
      */
-    update(id, resource) {
+    async update(id, resource) {
         let url = this.endpointPath;
-        // When using query params (Supabase style), use query string
-        if (this.config.usePathParams === 'true') {
-            url += `?${this.#idQueryParamKey}=eq.${id}`;
+
+        if (!this.useQueryParams) {
+            const val = encodeURIComponent(id);
+            const key = encodeURIComponent(this.#idQueryParamKey);
+            url += `${url.includes('?') ? '&' : '?'}${key}=eq.${val}`;
         } else {
-            // Traditional REST API style with path params
-            url += `/${id}`;
+            url += `/${encodeURIComponent(id)}`;
         }
         return this.http.put(url, resource);
     }
@@ -80,16 +82,18 @@ export class BaseEndpoint {
     /**
      * Deletes a resource by its ID.
      * @param id - The ID of the resource to delete.
-     * @returns {*} - The response from the delete operation.
+     * @returns {Promise<*>} - The response from the delete operation.
      */
-    delete(id) {
+    async delete(id) {
         let url = this.endpointPath;
-        // When using query params (Supabase style), use query string
-        if (this.config.usePathParams === 'true') {
-            url += `?${this.#idQueryParamKey}=eq.${id}`;
+        // When using query params
+        if (!this.useQueryParams) {
+            const key = encodeURIComponent(this.#idQueryParamKey);
+            const val = encodeURIComponent(id);
+            url += `${url.includes('?') ? '&' : '?'}${key}=eq.${val}`;
         } else {
             // Traditional REST API style with path params
-            url += `/${id}`;
+            url += `/${encodeURIComponent(id)}`;
         }
         return this.http.delete(url);
     }

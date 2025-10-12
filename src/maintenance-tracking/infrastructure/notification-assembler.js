@@ -6,42 +6,58 @@ import { Notification } from "@/maintenance-tracking/domain/model/notification.e
  */
 export class NotificationAssembler {
 
+
+    /**
+     * Extracts notification resources from various input formats.
+     * @param input - The input which may contain notification data.
+     * @returns {*|*[]|(import('vue').Ref<Notification[]> & any[])} - An array of notification resources.
+     */
+    static #extractResources(input) {
+        const data = (input && typeof input === "object" && "data" in input) ? input.data : input;
+
+        if (Array.isArray(data)) return data;
+        if (data && Array.isArray(data.notifications)) return data.notifications;
+
+        return Array.isArray(data?.items) ? data.items : [];
+    }
+
     /**
      * Converts a resource object to a Notification entity.
      * @param resource - The resource object to convert.
      * @returns {Notification} - The resulting Notification entity.
      */
     static toEntityFromResource(resource) {
-        return new Notification({ ...resource });
+        return new Notification({
+            id_notification: resource.id_notification,
+            message: resource.message,
+            read: resource.read,
+            id_vehicle: resource.id_vehicle,
+            sent: resource.sent,
+        });
     }
 
     /**
-     * Converts a Notification entity to a resource object for API requests.
+     * Converts a Notification entity to a resource object.
      * @param entity - The Notification entity to convert.
-     * @returns {Object} - The resource object for the API.
+     * @returns {{id_notification, message, read: boolean, id_vehicle, sent}|null} - The resulting resource object.
      */
     static toResourceFromEntity(entity) {
         return {
-            id_notification: entity.id,
+            id_notification: entity.id_notification,
             message: entity.message,
-            read: entity.read,
+            read: !!entity.read,
             id_vehicle: entity.id_vehicle,
             sent: entity.sent
         };
     }
 
     /**
-     * Converts an array of resource objects to an array of Notification entities.
-     * @param {import('axios').AxiosReponse} response - The API response containing notification data
+     * Converts an API response to an array of Notification entities.
+     * @param response - The API response containing notification data.
      * @returns {Notification[]} - An array of Notification entities.
      */
     static toEntitiesFromResponse(response) {
-        if (response.status !== 200) {
-            console.error(`${response.status}, ${response.statusText}`);
-            return [];
-        }
-        let resources = response.data instanceof Array ? response.data : response.data['notifications'];
-
-        return resources.map(resource => this.toEntityFromResource(resource));
+        const resources = this.#extractResources(response);
+        return resources.map((r) => this.toEntityFromResource(r)).filter(Boolean);
     }
 }

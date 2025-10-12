@@ -33,80 +33,93 @@ const useTrackingStore = defineStore('tracking', () => {
         return notificationsLoaded ? notifications.value.length : 0;
     })
 
+    const loading = ref(false);
+
     /**
-     * Fetch all notifications from the API and update the store.
+     * Fetch notifications from the API and update the store.
+     * @returns {Promise<void>} - A promise that resolves when notifications are fetched.
      */
-    function fetchNotifications() {
-        trackingApi.getNotifications().then(response => {
+    async function fetchNotifications() {
+        loading.value = true;
+        try {
+            const response = await trackingApi.getNotifications();
             notifications.value = NotificationAssembler.toEntitiesFromResponse(response);
+        } catch (err) {
+            pushError(err);
+        } finally {
             notificationsLoaded.value = true;
-            console.log(notificationsLoaded.value);
-            console.log(notifications.value);
-        }).catch(error => {
-            errors.value.push(error);
-        });
+            loading.value = false;
+        }
     }
 
     /**
      * Add a new notification via the API and update the store.
      * @param notification - The notification entity to add.
-     * @returns {Promise<unknown>} - A promise that resolves to the added notification.
+     * @returns {Promise<Notification>} - A promise that resolves to the added notification.
      */
-    function addNotification(notification) {
-        return new Promise((resolve, reject) => {
+    async function addNotification(notification) {
+        try {
             const resource = NotificationAssembler.toResourceFromEntity(notification);
-            trackingApi.createNotification(resource).then(response => {
-                const responseData = response.data;
-                const newNotification = NotificationAssembler.toEntityFromResource(responseData);
-                notifications.value.push(newNotification);
-                resolve(newNotification);
-            }).catch(error => {
-                errors.value.push(error);
-                reject(error);
-            });
-        })
+            const created = await trackingApi.createNotification(resource);
+            const entity = NotificationAssembler.toEntityFromResource(created);
+            notifications.value.push(entity);
+            return entity;
+        } catch (err) {
+            pushError(err);
+            return Promise.reject(err);
+        }
     }
 
     /**
      * Update an existing notification via the API and update the store.
      * @param notification - The notification entity to update.
-     * @returns {Promise<unknown | void>} - A promise that resolves to the updated notification.
+     * @returns {Promise<Notification>} - A promise that resolves to the updated notification.
      */
-    function updateNotification(notification) {
-        return new Promise((resolve, reject) => {
-          trackingApi.updateNotification(notification).then(response => {
-              const resource = NotificationAssembler.toResourceFromEntity(response);
-              const updatedNotification = NotificationAssembler.toEntityFromResource(resource);
-              const index = notifications.value.findIndex(n => n.id === updatedNotification.id);
-              if (index !== -1) notifications.value[index] = updatedNotification;
-          })
-        }).catch(error => {
-            errors.value.push(error);
-        });
+    async function updateNotification(notification) {
+        try {
+            const resource = NotificationAssembler.toResourceFromEntity(notification);
+            await trackingApi.updateNotification(resource);
+
+            const updatedRes = await trackingApi.updateNotification(resource);
+
+            const updated = NotificationAssembler.toEntityFromResource(updatedRes);
+
+            const idx = notifications.value.findIndex((n) => n.id === updated.id);
+
+            if (idx !== -1) notifications.value[idx] = updated;
+            return updated;
+        } catch (err) {
+            pushError(err);
+            return Promise.reject(err);
+        }
     }
 
     /**
      * Delete a notification via the API and update the store.
-     * @param {Notification} notification - The notification entity to delete.
-     * @returns {Promise<unknown>} - A promise that resolves when the notification is deleted.
+     * @param notification - The notification entity to delete.
+     * @returns {Promise<never>} - A promise that resolves when the notification is deleted.
      */
-    function deleteNotification(notification) {
-        return new Promise((resolve, reject) => {
-            trackingApi.deleteNotification(notification.id).then(() => {
-                const index = notifications.value.findIndex(n => n.id === notification.id);
-                if (index !== -1) notifications.value.splice(index, 1);
-                resolve();
-            }).catch(error => {
-                errors.value.push(error);
-                reject(error);
-            });
-        });
+    async function deleteNotification(notification) {
+        try {
+            await trackingApi.deleteNotification(notification.id);
+            const idx = notifications.value.findIndex((n) => n.id === notification.id);
+            if (idx !== -1) notifications.value.splice(idx, 1);
+        } catch (err) {
+            pushError(err);
+            return Promise.reject(err);
+        }
     }
+
+    const pushError = (err) => {
+      const e = err?.response?.data ?? err?.message ?? String(err);
+        errors.value.push(e);
+    };
 
     return {
         notifications,
         errors,
         notificationsLoaded,
+        loading,
         notificationsCount,
         fetchNotifications,
         addNotification,
