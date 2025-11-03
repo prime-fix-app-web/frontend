@@ -1,31 +1,33 @@
 import { AutoRepair } from '@/auto-repair-catalog/domain/model/auto-repair.entity.js'
 
-export class AutoRepairAssembler {
-  static toEntityFromResource(resource) {
-    const flat = { ...resource }
-    // Normaliza identificador principal
-    if (!flat.id_auto_repair && typeof flat.id === 'string') {
-      // dejamos ambos por compatibilidad con el constructor
-      flat.id = flat.id
-    }
-    // Aplana location anidada si viene como objeto
-    if (flat.location && typeof flat.location === 'object') {
-      const loc = flat.location
-      if (!flat.id_location && typeof loc.id_location === 'string') flat.id_location = loc.id_location
-      if (!flat.location_id && (loc.id || loc.pk)) flat.location_id = String(loc.id ?? loc.pk)
-    }
-    // Mapea camelCase alternativos
-    if (flat.locationId && !flat.id_location) flat.id_location = String(flat.locationId)
-    if (flat.locationPk && !flat.location_id) flat.location_id = String(flat.locationPk)
+/**
+ * Assembler for converting API to AutoRepair entities
+ * @class
+ */
 
-    return new AutoRepair(flat)
-  }
-  static toEntitiesFromResponse(response) {
-    if (response.status !== 200) {
-      console.error(`${response.status}, ${response.statusText}`)
-      return []
+export class AutoRepairAssembler {
+    /**
+     * Converts a plain resource object to a AutoRepair entities
+     * @param {Object}resource - The resource object representing a services
+     * @returns {AutoRepair} The corresponding AutoRepairs entity
+     */
+    static toEntityFromResource(resource){
+        return new AutoRepair({...resource})
     }
-    const resources = Array.isArray(response.data) ? response.data : response.data['auto_repairs']
-    return resources.map(r => this.toEntityFromResource(r))
-  }
+
+    /**
+     *  Converts an API response to an array of AutoRepairs entities
+     *  Handles both array and object response formats
+     *  Logs an error and return an empty array if the response status is not 200
+     * @param {import('axios').AxiosResponse} response - The API response containing service data.
+     * @returns {AutoRepair[]} Array of AutoRepair entities
+     */
+    static toEntitiesFromResponse(response) {
+        if (response.status !== 200) {
+            console.error(`${response.status}, ${response.statusText}`)
+            return []
+        }
+        const resources = Array.isArray(response.data) ? response.data : response.data['auto_repairs']
+        return resources.map(r => this.toEntityFromResource(r))
+    }
 }

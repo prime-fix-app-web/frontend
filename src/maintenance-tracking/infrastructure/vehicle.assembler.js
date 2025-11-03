@@ -1,4 +1,4 @@
-import {Vehicle} from "@/payment-service/domain/model/vehicle.entity.js";
+import {Vehicle} from "@/maintenance-tracking/domain/model/vehicle.entity.js";
 
 /**
  * Assembler for converting rating resources to Rating entities.

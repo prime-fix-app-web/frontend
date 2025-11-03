@@ -2,6 +2,7 @@
 
 import LanguageSwitcher from "@/shared/presentation/components/language-switcher.vue";
 import {onMounted} from "vue";
+import LayoutOwner from "@/shared/presentation/components/layout-owner.vue";
 
 onMounted(() => {
   console.log(typeof import.meta.env.VITE_NOTIFICATION_QUERY_PARAM_KEY);
@@ -15,7 +16,7 @@ onMounted(() => {
     <div class="global-language-switcher">
       <language-switcher />
     </div>
-    <router-view />
+    <layout-owner/>
   </div>
 </template>
 

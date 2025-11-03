@@ -2,9 +2,8 @@ import {PaymentServiceApi} from "@/payment-service/infrastructure/payment-servic
 import {defineStore} from "pinia";
 import {computed, ref} from "vue";
 import {PaymentAssembler} from "@/payment-service/infrastructure/payment.assembler.js";
-import {VisitAssembler} from "@/payment-service/infrastructure/visit.assembler.js";
 import {RatingAssembler} from "@/payment-service/infrastructure/rating.assembler.js";
-import {VehicleAssembler} from "@/payment-service/infrastructure/vehicle.assembler.js";
+import {VehicleAssembler} from "@/maintenance-tracking/infrastructure/vehicle.assembler.js";
 
 /**
  * Singleton instance of PaymentServiceApi to be used across the store.
