@@ -2,6 +2,7 @@ import {createRouter, createWebHistory} from "vue-router";
 import iamRoutes from "@/iam/presentation/iam-routes.js";
 import {authGuard} from "@/shared/infrastructure/guards/auth.guard.js";
 import dataRoutes from "@/data-collection-diagnosis/presentation/data-routes.js";
+import paymentServiceRoutes from "@/payment-service/presentation/payment-service-routes.js";
 
 const layoutOwner = () => import("./shared/presentation/components/layout-owner.vue");
 const layoutWorkshop = () => import("./shared/presentation/components/layout-workshop.vue");
@@ -12,16 +13,22 @@ const pageNotFound = () => import("./shared/presentation/views/page-not-found.vu
 const trackVehicle = () => import("./maintenance-tracking/presentation/views/track-vehicle.vue");
 const notificationView = () => import("./maintenance-tracking/presentation/views/notification-view.vue");
 
+//AutoRepair-Catalog
+const ownerSearchWorkshop = () => import("@/owner/presentation/views/search-workshop.vue");
+const ownerWorkshopSelection = () => import("@/owner/presentation/views/workshop-selection.vue");
+const ownerProfile = () => import("@/owner/presentation/views/profile.vue");
+const ownerVehicles = () => import("@/owner/presentation/views/vehicles.vue");
+const ownerHistory = () => import("@/owner/presentation/views/history.vue");
+const ownerSettings = () => import("@/owner/presentation/views/settings.vue");
+const ownerTrackVehicle = () => import("@/owner/presentation/views/track-vehicle.vue");
+const ownerNotificationView = () => import("@/owner/presentation/views/notification-view.vue");
+const ownerVisitRequest = () => import("@/owner/presentation/views/visit-request.vue");
+
 const routes = [
     {
         path: '/iam',
         name: 'iam',
         children: iamRoutes,
-    },
-    {
-        path:'/visit',
-        name: 'visit',
-        children: dataRoutes,
     },
     {
         path: '/layout-owner',
@@ -47,6 +54,89 @@ const routes = [
                 name: 'notification-view',
                 component: notificationView,
                 meta: { title: 'Notifications' }
+            },
+            //AutoRepair Catalog BC
+            {
+                path: 'profile',
+                name: 'owner-profile',
+                component: ownerProfile,
+                meta: { title: 'Perfil' }
+            },
+            {
+                path: 'vehicles',
+                name: 'owner-vehicles',
+                component: ownerVehicles,
+                meta: { title: 'Coches' }
+            },
+            {
+                path: 'search-workshop',
+                name: 'owner-search-workshop',
+                component: ownerSearchWorkshop,
+                meta: { title: 'Buscar taller' }
+            },
+            {
+                path: 'workshop-selection',
+                name: 'owner-workshop-selection',
+                component: ownerWorkshopSelection,
+                meta: { title: 'Selección de taller' },
+                beforeEnter: (to, from, next) => {
+                    const hasFilters = !!to.query.department && !!to.query.district;
+                    if (!hasFilters) return next({ name: 'owner-search-workshop' });
+                    next();
+                }
+            },
+            {
+                path: 'visit-request/:id',
+                name: 'owner-visit-request',
+                component: ownerVisitRequest,
+                meta: { title: 'Solicitar visita' },
+                beforeEnter: (to, from, next) => {
+                    if (!to.params.id) return next({ name: 'owner-search-workshop' });
+                    next();
+                }
+            },
+            {
+                path: 'history',
+                name: 'owner-history',
+                component: ownerHistory,
+                meta: { title: 'Historial' }
+            },
+            {
+                path: 'settings',
+                name: 'owner-settings',
+                component: ownerSettings,
+                meta: { title: 'Configuración' }
+            },
+            {
+                path: 'maintenance-tracking',
+                name: 'owner-maintenance-tracking',
+                redirect: { name: 'owner-track-vehicle' },
+                children: [
+                    {
+                        path: 'track-vehicle',
+                        name: 'owner-track-vehicle',
+                        component: ownerTrackVehicle,
+                        meta: { title: 'Seguir estado' }
+                    },
+                    {
+                        path: 'notification-view',
+                        name: 'owner-notification-view',
+                        component: ownerNotificationView,
+                        meta: { title: 'Notificaciones' }
+                    }
+                ]
+            },
+            //Data-collection-Diagnosis BC
+            {
+                path:'/visit',
+                name: 'visit',
+                children: dataRoutes,
+            },
+            //Payment BC
+            {
+                path: 'payment-service',
+                name: 'payment-service',
+                children: paymentServiceRoutes,
             }
         ]
     },
@@ -62,7 +152,12 @@ const routes = [
                 name: 'home-workshop',
                 component: homeWorkshop,
                 meta: { title: 'Home Workshop' }
-            }
+            },
+            {
+                path:'/visit',
+                name: 'visit',
+                children: dataRoutes,
+            },
         ]
     },
     {

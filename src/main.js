@@ -14,7 +14,9 @@ import {
     FloatLabel,Select,
     SelectButton, Textarea,
     ToastService,
-    Dialog
+    Dialog,
+    RadioButton,
+    Dropdown
 } from "primevue";
 import router from "./router.js";
 import pinia from "./pinia.js";
@@ -36,6 +38,8 @@ app.use(i18n)
     .component('pv-dialog', Dialog)
     .component('pv-floatlabel', FloatLabel)
     .component('pv-datepicker', DatePicker)
+    .component('pv-radio-button', RadioButton)
+    .component('pv-dropdown',Dropdown)
     .use(router)
     .use(pinia);
 
