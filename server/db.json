@@ -87,8 +87,33 @@
       "id_user": "U009",
       "id_role": "R002",
       "id_membership": "M003",
+<<<<<<< HEAD
       "password": "hashed_password_9",
       "id": "e0f4"
+=======
+      "password": "hashed_password_9"
+    },
+    {
+      "id": "0bcd",
+      "id_user_account": "Rodrigo",
+      "username": "u202323243",
+      "email": "u202323243@upc.edu.pe",
+      "id_role": "R002"
+    },
+    {
+      "id": "cba7",
+      "id_user_account": "Rodrigo",
+      "username": "flor_de_maria_contreras_leon",
+      "email": "nuevotaller@test.com",
+      "id_role": "R002"
+    },
+    {
+      "id": "4b47",
+      "id_user_account": "Rodrigo",
+      "username": "Didi",
+      "email": "nuevotaller@test.com",
+      "id_role": "R002"
+>>>>>>> feature/autorepair-registration
     }
   ],
   "users": [
