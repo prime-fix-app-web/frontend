@@ -1,189 +1,139 @@
 import { defineStore } from 'pinia'
 import { ref, computed, watch } from 'vue'
-import { OwnerApi } from '@/auto-repair-catalog/infrastructure/owner-api.js'
+import { CatalogApi } from '@/auto-repair-catalog/infrastructure/catalog-api.js'
 import { AutoRepairAssembler } from '@/auto-repair-catalog/infrastructure/auto-repair.assembler.js'
-import useIamStore from '@/iam/application/iam.store.js'
-import { RatingAssembler } from '@/auto-repair-catalog/infrastructure/rating.assembler.js'
-import { VehicleAssembler } from '@/auto-repair-catalog/infrastructure/vehicle.assembler.js'
+import {LocationAssembler} from "@/auto-repair-catalog/infrastructure/location.assembler.js";
 
-const ownerApi = new OwnerApi()
+const catalogApi = new CatalogApi()
 
-const useOwnerStore = defineStore('auto-repair-catalog', () => {
-  const iam = useIamStore()
+const useCatalogStore = defineStore('auto-repair-catalog', () => {
 
-  const autoRepairs = ref([])
-  const ratings = ref([])
-  const vehicles = ref([])
-  const visits = ref([])
+  const autoRepairs = ref([]);
+  const locations = ref([]);
+
   const loading = ref(false)
-  const error = ref(null)
+  const errors = ref([])
 
-  const selectedDepartment = ref('')
-  const selectedDistrict = ref('')
+  const autoRepairsLoaded = ref(false);
+  const locationsLoaded = ref(false);
 
-  const departments = computed(() => {
-    const set = new Set((iam.locations || []).map(l => l.department))
-    return Array.from(set)
-  })
-  const districts = computed(() => {
-    if (!selectedDepartment.value) return []
-    const set = new Set((iam.locations || []).filter(l => l.department === selectedDepartment.value).map(l => l.district))
-    return Array.from(set)
+  const autoRepairsCount = computed(()=>{
+      return autoRepairsLoaded ? autoRepairs.value.length : 0;
   })
 
-  const fetchAutoRepairs = async () => {
-    loading.value = true
-    error.value = null
-    try {
-      const resp = await ownerApi.getAutoRepairs()
-      autoRepairs.value = AutoRepairAssembler.toEntitiesFromResponse(resp)
-    } catch (e) {
-      error.value = e
-      console.error(e)
-    } finally {
-      loading.value = false
-    }
-  }
-
-  const fetchRatings = async () => {
-    try {
-      const resp = await ownerApi.getRatings()
-      ratings.value = RatingAssembler.toEntitiesFromResponse(resp)
-    } catch (e) {
-      console.error(e)
-    }
-  }
-
-  const fetchVehicles = async () => {
-    try {
-      const resp = await ownerApi.getVehicles()
-      vehicles.value = VehicleAssembler.toEntitiesFromResponse(resp)
-    } catch (e) { console.error(e) }
-  }
-  const fetchVisits = async () => {
-    try {
-      const resp = await ownerApi.getVisits()
-      // json-server returns arrays directly; keep as-is
-      visits.value = Array.isArray(resp.data) ? resp.data : (resp.data['visits'] || [])
-    } catch (e) { console.error(e) }
-  }
-
-  // Average stars grouped by workshop id
-  const avgRatingMap = computed(() => {
-    const map = new Map()
-    if (!ratings.value.length) return map
-    const grouped = ratings.value.reduce((acc, r) => {
-      // primary key to group by: prefer explicit relation; fallback to own id
-      const key = r.autoRepairId || r.id
-      if (!key) return acc
-      if (!acc[key]) acc[key] = []
-      acc[key].push(r.stars)
-      return acc
-    }, {})
-    for (const [k, arr] of Object.entries(grouped)) {
-      const avg = arr.reduce((a, b) => a + b, 0) / arr.length
-      map.set(k, avg)
-    }
-    return map
+  const locationsCount = computed(()=>{
+      return locationsLoaded ? locations.value.length : 0;
   })
 
-  const filteredAutoRepairs = computed(() => {
-    if (!selectedDepartment.value || !selectedDistrict.value) return []
-    const depN = String(selectedDepartment.value).trim().toLowerCase()
-    const distN = String(selectedDistrict.value).trim().toLowerCase()
-    const locs = (iam.locations || []).filter(l =>
-      String(l.department || '').trim().toLowerCase() === depN &&
-      String(l.district || '').trim().toLowerCase() === distN
-    )
-    const codeIds = new Set(locs.map(l => String(l.id || '').trim()).filter(Boolean))
-    const pkIds = new Set(locs.map(l => String(l.pk || '').trim()).filter(Boolean))
-    // Fallback: some backends share the same id between auto_repairs and locations
-    const sharedIds = new Set([
-      ...codeIds,
-      ...pkIds,
-    ])
-    if (codeIds.size === 0 && pkIds.size === 0) return []
-    return autoRepairs.value.filter(ar => {
-      const lid = String(ar.locationId || '').trim()
-      const lpk = String(ar.locationPk || '').trim()
-      const aid = String(ar.id || '').trim()
-      return (lid && codeIds.has(lid)) || (lpk && pkIds.has(lpk)) || (aid && sharedIds.has(aid))
-    })
-  })
-
-  function ensureLookupsLoaded() {
-    if (!iam.locationsLoaded) iam.fetchLocations()
+  function fetchAutoRepairs(){
+      catalogApi.getAutoRepairs().then(response =>{
+          autoRepairs.value = AutoRepairAssembler.toEntitiesFromResponse(response);
+          autoRepairsLoaded.value = true;
+      }).catch(error=>{
+          errors.value.push(error);
+      })
   }
 
-  function preselectDefaults() {
-    if (departments.value.map(d => d.toLowerCase()).includes('lima')) selectedDepartment.value = 'Lima'
-    if (!selectedDepartment.value && departments.value.length) selectedDepartment.value = departments.value[0]
-    if (selectedDepartment.value && districts.value.length) {
-      const hasSanMiguel = districts.value.some(d => String(d).toLowerCase() === 'san miguel')
-      selectedDistrict.value = hasSanMiguel ? districts.value.find(d => String(d).toLowerCase() === 'san miguel') : districts.value[0]
-    }
+  function fetchLocations(){
+      catalogApi.getLocations().then(response =>{
+            locations.value = LocationAssembler.toEntitiesFromResponse(response);
+            locationsLoaded.value = true;
+      }).catch(error=>{
+          errors.value.push(error);
+      })
   }
 
-  function getLocationInfo(locationIdOrPk) {
-    const key = String(locationIdOrPk)
-    const locs = iam.locations || []
-    let loc = locs.find(l => String(l.id) === key)
-    if (!loc) loc = locs.find(l => String(l.pk) === key)
-    if (!loc) return null
-    return { address: loc.address, district: loc.district, department: loc.department }
+  const updateLocation = async(id,locationData) =>{
+      loading.value = true;
+      errors.value =[];
+      try{
+          const locationId = Number(id);
+          const response = await catalogApi.updateLocation(locationId, locationData);
+          const index = locations.value.findIndex(v =>Number(v.id_location) === locationId)
+          if(index !==-1){
+              locations.value[index] ={
+                  ...locations.value[index],
+                  ...locationData,
+                  id_location: locationId
+              };
+          }
+          loading.value = false;
+          return response;
+      } catch (error){
+          errors.value.push(error);
+          loading.value = false;
+          throw error;
+      }
   }
 
-  function getAverageRating(autoRepairId) {
-    return avgRatingMap.value.get(autoRepairId) || 0
+  const updateAutoRepair = async (id,autoRepairData)=>{
+      loading.value = true;
+      errors.value =[];
+      try {
+          const autoRepairId = Number(id);
+          const response = await catalogApi.updateAutoRepair(autoRepairId, autoRepairData);
+          const index = autoRepairs.value.findIndex(v =>Number(v.id_auto_repair) === autoRepairId);
+
+          if(index !== -1){
+              autoRepairs.value[index] = {
+                  ...autoRepairs.value[index],
+                  ...autoRepairData,
+                  id_auto_repair: autoRepairId
+              };
+          }
+          loading.value = false;
+          return response;
+      } catch (error){
+          errors.value.push(error);
+          loading.value = false;
+          throw error;
+      }
   }
 
-  const myVehicles = computed(() => {
-    const uid = iam.sessionUser?.id
-    return vehicles.value.filter(v => v.userId === uid)
-  })
-
-  const visitsByVehicle = (vehicleId) => visits.value.filter(v => v.id_vehicle === vehicleId)
-
-  async function requestVisit({ autoRepairId, vehicleId, failure, timeVisit }) {
-    const payload = {
-      failure,
-      time_visit: timeVisit,
-      id_auto_repair: autoRepairId,
-      // id_service is not part of this flow
-      status: 'En espera',
-      id_vehicle: vehicleId,
-    }
-    const resp = await ownerApi.createVisit(payload)
-    const created = resp.data
-    visits.value.push(created)
-    return created
+  function addLocation(location) {
+      catalogApi.createLocation(location).then(response =>{
+          const resource = response.data;
+          const newLocation = LocationAssembler.toEntityFromResource(resource);
+          locations.value.push(newLocation);
+      }).catch(error =>{
+          errors.value.push(error);
+      })
   }
 
-  // Keep selectedDistrict consistent when department changes
-  watch(selectedDepartment, () => {
-    if (!districts.value.includes(selectedDistrict.value)) {
-      selectedDistrict.value = districts.value[0] || ''
-    }
-  })
+  function addAutoRepair(autoRepair){
+      catalogApi.createAutoRepair(autoRepair).then(response =>{
+          const resource = response.data;
+          const newAutoRepair = AutoRepairAssembler.toEntityFromResource(resource);
+          autoRepairs.value.push(newAutoRepair);
+      }).catch(error =>{
+          errors.value.push(error);
+      })
+  }
 
+  function getLocationById(id){
+      return locations.value.find((location)=>location.id_location === id);
+  }
+
+  function getAutoRepairById(id){
+      return autoRepairs.value.find((autoRepair)=>autoRepair.id_auto_repair === id);
+  }
   return {
-    // state
-    autoRepairs, ratings, loading, error,
-    selectedDepartment, selectedDistrict,
-    vehicles, visits, myVehicles,
-    // lookups
-    departments, districts,
-    // actions
-    fetchAutoRepairs, fetchRatings, fetchVehicles, fetchVisits, ensureLookupsLoaded, preselectDefaults,
-    // getters
-    filteredAutoRepairs,
-    // location info
-    getLocationInfo,
-    // ratings
-    getAverageRating,
-    // visits
-    visitsByVehicle, requestVisit,
-  }
+      autoRepairs,
+      locations,
+      errors,
+      autoRepairsLoaded,
+      locationsLoaded,
+      autoRepairsCount,
+      locationsCount,
+      fetchLocations,
+      fetchAutoRepairs,
+      updateLocation,
+      updateAutoRepair,
+      addAutoRepair,
+      addLocation,
+      getAutoRepairById,
+      getLocationById,
+  };
 })
 
-export default useOwnerStore
+export default useCatalogStore;
