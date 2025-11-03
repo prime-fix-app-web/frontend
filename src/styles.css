@@ -27,6 +27,7 @@ body {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     scroll-behavior: smooth;
+    color: var(--color-dark); /* Texto por defecto oscuro en toda la app */
 }
 
 @font-face {
@@ -87,4 +88,28 @@ body {
 /* Icon styles */
 .icon use {
     fill: currentColor;
+}
+
+/* Form controls defaults: contraste y accesibilidad en toda la app */
+input, select, textarea {
+  color: var(--color-dark);
+  background: #fff;
+  border-color: #c8d1d6;
+  font-family: var(--font-sans), sans-serif;
+}
+input::placeholder, textarea::placeholder { color: #6a6f73; }
+select option { color: var(--color-dark); }
+input:disabled, select:disabled, textarea:disabled { color: #8a8f94; background: #f3f5f7; }
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--color-tertiary-complementary);
+  box-shadow: 0 0 0 2px rgba(100,145,164,.15);
+}
+
+/* Botón primario deshabilitado: texto legible y sin opacidad baja */
+button.btn-primary:disabled, button.btn-primary[disabled] {
+  opacity: 1; /* evita opacidad baja por defecto */
+  cursor: not-allowed;
+  background-color: #f6c557; /* tono más claro del primario */
+  color: var(--color-dark);
 }

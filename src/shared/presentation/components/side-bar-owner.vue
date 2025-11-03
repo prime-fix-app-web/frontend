@@ -55,9 +55,20 @@ const router = useRouter()
 const route = useRoute()
 const { t } = useI18n({ useScope: 'global' })
 
+// Rutas alias para marcar activo el Dashboard cuando se esté en Buscar Taller
+const activeAliases: Record<string, string[]> = {
+  '/layout-owner/home-owner': ['/layout-owner/search-workshop']
+}
 
+<<<<<<< HEAD
 function isActive(path) {
   return route.path === path || route.path.startsWith(path + '/')
+=======
+function isActive(path: string) {
+  if (route.path === path || route.path.startsWith(path + '/')) return true
+  const aliases = activeAliases[path] || []
+  return aliases.some(a => route.path === a || route.path.startsWith(a + '/'))
+>>>>>>> feature/autorepair-catalog
 }
 
 
@@ -109,7 +120,8 @@ function go(path) {
   height: 100vh;
   padding: 1.5rem 0;
   flex-shrink: 0;
-  overflow-y: auto;
+  /* Evitar scroll interno innecesario */
+  overflow: hidden;
 }
 
 .user-profile {
@@ -136,7 +148,8 @@ function go(path) {
 
 .sidebar-nav {
   flex: 1;
-  overflow-y: auto;
+  /* Quitar scroll de la sección de navegación */
+  overflow: visible;
 }
 
 .sidebar-nav ul {
@@ -179,7 +192,8 @@ function go(path) {
 
 .sidebar-footer {
   padding: 1rem 1.5rem;
-  margin-bottom: 230px;
+  /* Empujar al fondo sin crear espacio extra que provoque scroll */
+  margin-top: auto;
 }
 
 /* Responsive Design */
