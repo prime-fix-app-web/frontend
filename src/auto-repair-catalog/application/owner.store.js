@@ -117,6 +117,27 @@ const useCatalogStore = defineStore('auto-repair-catalog', () => {
   function getAutoRepairById(id){
       return autoRepairs.value.find((autoRepair)=>autoRepair.id_auto_repair === id);
   }
+
+  function deleteAutoRepair(id_auto_repair){
+      if(!id_auto_repair) return;
+      catalogApi.deleteAutoRepair(id_auto_repair).then(response =>{
+          const index = autoRepairs.value.findIndex(v => v.id_auto_repair === id_auto_repair);
+          if(index !== -1) autoRepairs.value.splice(index, 1);
+      }).catch(error =>{
+          errors.value.push(error);
+      })
+  }
+
+  function deleteLocation(id_location){
+      if(!id_location) return;
+      catalogApi.deleteLocation(id_location).then(response =>{
+          const index = locations.value.findIndex(v => v.id_location === id_location);
+          if(index !== -1) locations.value.splice(index, 1);
+      }).catch(error =>{
+          errors.value.push(error);
+      })
+  }
+
   return {
       autoRepairs,
       locations,
@@ -133,6 +154,8 @@ const useCatalogStore = defineStore('auto-repair-catalog', () => {
       addLocation,
       getAutoRepairById,
       getLocationById,
+      deleteLocation,
+      deleteAutoRepair
   };
 })
 

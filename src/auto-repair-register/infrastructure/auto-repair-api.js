@@ -1,41 +1,61 @@
 import {BaseApi} from "@/shared/infrastructure/http/base-api.js";
 import {BaseEndpoint} from "@/shared/infrastructure/http/base-endpoint.js";
 
-const techniciansRegisterEndpointPath = import.meta.env.VITE_USER_ACCOUNTS_ENDPOINT_PATH;
+const technicianEndpointPath = import.meta.env.VITE_TECHNICIANS_ENDPOINT_PATH;
+const technicianScheduleEndpointPath = import.meta.env.VITE_TECHNICIANS_SCHEDULE_ENDPOINT_PATH;
 
+const technicianQueryKey = import.meta.env.VITE_TECHNICIANS_QUERY_PATH;
+const technicianScheduleQueryKey = import.meta.env.VITE_TECHNICIANS_SCHEDULE_QUERY_PATH;
 
-export class AutorepairApi extends BaseApi {
-    #techniciansRegisterEndpoint;
-
+export class AutoRepairRegisterApi extends BaseApi {
+    #techniciansEndpoint;
+    #technicianScheduleEndpoint;
 
     constructor() {
         super();
-
-        this.#techniciansRegisterEndpoint = new BaseEndpoint(this, techniciansRegisterEndpointPath);
+        this.#techniciansEndpoint = new BaseEndpoint(this, technicianEndpointPath,{
+            usePathParams:import.meta.env.VITE_USE_PATH_PARAMS,
+            idQueryParamKey:technicianQueryKey
+        })
+        this.#technicianScheduleEndpoint = new BaseEndpoint(this, technicianScheduleEndpointPath,{
+            usePathParams:import.meta.env.VITE_USE_PATH_PARAMS,
+            idQueryParamKey: technicianScheduleQueryKey
+        })
     }
 
-
-
-    // ------------------ TechnicianRegister ------------------
-
     getTechnicians() {
-        return this.#techniciansRegisterEndpoint.getAll();
+        return this.#techniciansEndpoint.getAll();
     }
 
     getTechnicianById(id) {
-        return this.#techniciansRegisterEndpoint.getById(id);
+        return this.#techniciansEndpoint.getById(id);
     }
 
     createTechnician(resource) {
-        return this.#techniciansRegisterEndpoint.create(resource);
+        return this.#techniciansEndpoint.create(resource);
     }
 
-    updateTechnician(resource) {
-        return this.#techniciansRegisterEndpoint.update(resource.id_user_account, resource);
+    updateTechnician(id,resource) {
+        return this.#techniciansEndpoint.update(id, resource);
 
     }
+    deleteTechnician(id) {
+        return this.#techniciansEndpoint.delete(id);
+    }
 
-        deleteTechnician(id) {
-        return this.#techniciansRegisterEndpoint.delete(id);
+    getTechnicianSchedule(){
+        return this.#technicianScheduleEndpoint.getAll();
+    }
+
+    getTechnicianScheduleById(id){
+        return this.#technicianScheduleEndpoint.getById(id);
+    }
+
+    updateTechnicianSchedule(id,resource){
+        return this.#technicianScheduleEndpoint.update(id, resource);
+    }
+
+    deleteTechnicianSchedule(id){
+        return this.#technicianScheduleEndpoint.delete(id);
     }
 }

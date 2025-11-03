@@ -1,141 +1,151 @@
 import { defineStore } from "pinia";
 import { computed, ref } from "vue";
-import { TechnicianRegisterAssembler } from "../infrastructure/technician-register.assembler.js";
-import { AutorepairApi } from "../infrastructure/auto-repair-api.js";
+import {TechnicianAssembler} from "@/auto-repair-register/infrastructure/technician.assembler.js";
+import {TechnicianScheduleAssembler} from "@/auto-repair-register/infrastructure/technician-schedule.assembler.js";
+import {AutoRepairRegisterApi} from "@/auto-repair-register/infrastructure/auto-repair-api.js";
 
-const autorepairApi = new AutorepairApi();
+const autoRepairApi = new AutoRepairRegisterApi();
 
 export const useAutoRepairRegisterStore = defineStore('autoRepairRegister', () => {
 
     const technicians = ref([]);
+    const techniciansSchedule = ref([]);
+
     const errors = ref([]);
     const loading = ref(false);
 
-
     const techniciansLoaded = ref(false);
-
-    // ------------------ Getters ------------------
-
+    const techniciansScheduleLoaded = ref(false);
 
     const techniciansCount = computed(() => {
         return techniciansLoaded.value ? technicians.value.length : 0;
     });
+    const techniciansScheduleCount = computed(()=>{
+        return techniciansScheduleLoaded.value ? techniciansSchedule.value.length : 0;
+    });
 
+    function fetchTechnicians(){
+        autoRepairApi.getTechnicians().then(response =>{
+            technicians.value = TechnicianAssembler.toEntitiesFromResponse(response);
+            techniciansLoaded.value = false;
+        }).catch(error =>{
+            errors.value.push(error);
+        })
+    }
+    function fetchTechnicianSchedule(){
+        autoRepairApi.getTechnicianSchedule().then(response =>{
+            techniciansSchedule.value = TechnicianScheduleAssembler.toEntitiesFromResponse(response);
+            techniciansScheduleLoaded.value = false;
+        }).catch(error =>{
+            errors.value.push(error);
+        })
+    }
 
-    // ======= TECHNICIAN REGISTER METHODS ======= //
-
-    async function fetchTechnicians() {
+    const updateTechnician = async (id,technicianData)=>{
+        loading.value = true;
+        errors.value = [];
+        try{
+            const technicianId =Number(id);
+            const response = await autoRepairApi.updateTechnician(technicianId,technicianData);
+            const index = technicians.value.findIndex(v => Number(v.id_technician)===technicianId);
+            if(index !==-1){
+                technicians.value[index]={
+                    ...technicians.value[index],
+                    ...technicianData,
+                    id_technician: technicianId
+                };
+            }
+            loading.value = false;
+            return response
+        } catch (error){
+            errors.value.push(error);
+            loading.value = false;
+            throw error;
+        }
+    };
+    const updateTechnicianSchedule = async (id, scheduleData) =>{
         loading.value = true;
         errors.value = [];
         try {
-            const response = await autorepairApi.getTechnicians();
-            technicians.value = TechnicianRegisterAssembler.toEntitiesFromResponse(response);
-            techniciansLoaded.value = true;
-        } catch (error) {
-            errors.value.push(error.message);
-        } finally {
+            const scheduleId = Number(id);
+            const response = await autoRepairApi.updateTechnicianSchedule(scheduleId,scheduleData);
+            const index = techniciansSchedule.value.findIndex(v => Number(v.id_technician_schedule)===scheduleId);
+            if(index !==-1){
+                techniciansSchedule.value[index]={
+                    ...techniciansSchedule.value[index],
+                    ...scheduleData,
+                    id_schedule: scheduleId
+                };
+            }
             loading.value = false;
+            return response;
+        } catch (error){
+            errors.value.push(error);
+            loading.value = false;
+            throw error;
         }
     }
 
-    function getTechnicianById(id) {
-        return technicians.value.find(technician => technician.id_user_account === String(id));
-    }
-
-    async function addTechnician(technician) {
-        console.log('🔍 === DEBUG ADD TECHNICIAN STORE ===')
-        console.log('📦 Técnico recibido:', technician)
-
-        loading.value = true;
-        errors.value = [];
-        try {
-            console.log('🔄 Convirtiendo a resource...')
-            const resource = TechnicianRegisterAssembler.toResourceFromEntity(technician);
-            console.log('📦 Resource convertido:', resource)
-
-            console.log('📡 Llamando a API createTechnician...')
-            const response = await autorepairApi.createTechnician(resource);
-            console.log('✅ Respuesta API:', response)
-
-            // ✅ CORREGIDO - usa toEntityFromResource
-            const newTechnician = TechnicianRegisterAssembler.toEntityFromResource(response.data);
-            console.log('🎉 Técnico creado:', newTechnician)
-
+    function addTechnician(technician){
+        autoRepairApi.createTechnician(technician).then(response =>{
+            const resource = response.data;
+            const newTechnician = TechnicianAssembler.toEntityFromResource(resource);
             technicians.value.push(newTechnician);
-            return newTechnician;
-        } catch (error) {
-            console.error('💥 ERROR EN STORE:')
-            console.error('   Mensaje:', error.message)
-            console.error('   Status:', error.response?.status)
-            console.error('   Data:', error.response?.data)
-            console.error('   URL:', error.config?.url)
-            errors.value.push(error.message);
-            throw error;
-        } finally {
-            loading.value = false;
-        }
+        }).catch(error =>{
+            errors.value.push(error);
+        })
+    }
+    function addTechnicianSchedule(schedule){
+        autoRepairApi.createTechnician(schedule).then(response =>{
+            const resource = response.data;
+            const newSchedule = TechnicianScheduleAssembler.toEntityFromResource(resource);
+            techniciansSchedule.value.push(newSchedule);
+        }).catch(error =>{
+            errors.value.push(error);
+        })
     }
 
-    async function updateTechnician(technician) {
-        loading.value = true;
-        errors.value = [];
-        try {
-            const resource = TechnicianRegisterAssembler.toResourceFromEntity(technician);
-            const response = await autorepairApi.updateTechnician(resource);
-            const updatedTechnician = TechnicianRegisterAssembler.toEntityFromResource(response.data); // ✅ CORREGIDO
+    function deleteTechnician(id_technician){
+        if(!id_technician) return;
+        autoRepairApi.deleteTechnician(id_technician)
+            .then(()=>{
+                const index = technicians.value.findIndex(v => v.id_technician === id_technician);
+                if(index !== -1) technicians.value.splice(index, 1);
+            }).catch(error =>{
+                errors.value.push(error);
+        })
 
-            const index = technicians.value.findIndex(tech => tech.id_user_account === updatedTechnician.id_user_account);
-            if (index !== -1) {
-                technicians.value[index] = updatedTechnician;
-            }
-            return updatedTechnician;
-        } catch (error) {
-            errors.value.push(error.message);
-            throw error;
-        } finally {
-            loading.value = false;
-        }
+    }
+    function deleteTechnicianSchedule(id_schedule){
+        if(!id_schedule) return;
+        autoRepairApi.deleteTechnicianSchedule(id_schedule).then(()=>{
+            const index = techniciansSchedule.value.findIndex(v=> v.id_technician_schedule === id_schedule);
+            if(index !== -1) technicians.value.splice(index, 1);
+        }).catch(error =>{
+            errors.value.push(error);
+        })
     }
 
-    async function deleteTechnician(id) {
-        loading.value = true;
-        errors.value = [];
-        try {
-            await autorepairApi.deleteTechnician(id);
-            const index = technicians.value.findIndex(tech => tech.id_user_account === id);
-            if (index !== -1) {
-                technicians.value.splice(index, 1);
-            }
-        } catch (error) {
-            errors.value.push(error.message);
-            throw error;
-        } finally {
-            loading.value = false;
-        }
-    }
     function clearErrors() {
         errors.value = [];
     }
     return {
-        // State
-
         technicians,
+        techniciansSchedule,
         errors,
         loading,
         techniciansLoaded,
-
-        // Getters
+        techniciansScheduleLoaded,
         techniciansCount,
-
-
-        // Technician Methods
+        techniciansScheduleCount,
         fetchTechnicians,
-        getTechnicianById,
+        fetchTechnicianSchedule,
         addTechnician,
+        addTechnicianSchedule,
         updateTechnician,
+        updateTechnicianSchedule,
         deleteTechnician,
-        clearErrors
-
+        deleteTechnicianSchedule
     };
 });
 
