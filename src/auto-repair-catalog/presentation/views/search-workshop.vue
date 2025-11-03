@@ -1,7 +1,7 @@
 <script setup>
 import { onMounted, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import useOwnerStore from '@/owner/application/owner.store.js'
+import useOwnerStore from '@/auto-repair-catalog/application/owner.store.js'
 import { useRouter } from 'vue-router'
 
 const { t } = useI18n({ useScope: 'global' })
@@ -18,7 +18,7 @@ const canSearch = computed(() => !!store.selectedDepartment && !!store.selectedD
 function goSearch() {
   if (!canSearch.value) return
   router.push({
-    name: 'owner-workshop-selection',
+    name: 'auto-repair-catalog-workshop-selection',
     query: {
       department: store.selectedDepartment,
       district: store.selectedDistrict,
@@ -30,20 +30,20 @@ function goSearch() {
 <template>
   <div class="search-workshop">
     <header class="main-header">
-      <h1>{{ t('home-owner.searchWorkshop') }}</h1>
+      <h1>{{ t('home-auto-repair-catalog.searchWorkshop') }}</h1>
     </header>
 
     <section class="form-section">
       <div class="form-grid">
         <div class="form-field">
-          <label>{{ t('home-owner.selectDepartment') }}</label>
+          <label>{{ t('home-auto-repair-catalog.selectDepartment') }}</label>
           <select v-model="store.selectedDepartment" class="input">
             <option v-for="dep in store.departments" :key="dep" :value="dep">{{ dep }}</option>
           </select>
         </div>
 
         <div class="form-field">
-          <label>{{ t('home-owner.selectDistrict') }}</label>
+          <label>{{ t('home-auto-repair-catalog.selectDistrict') }}</label>
           <select v-model="store.selectedDistrict" class="input" :disabled="!store.selectedDepartment">
             <option v-for="dist in store.districts" :key="dist" :value="dist">{{ dist }}</option>
           </select>
@@ -51,7 +51,7 @@ function goSearch() {
       </div>
 
       <div class="actions">
-        <button class="btn-primary" :disabled="!canSearch" @click="goSearch">{{ t('home-owner.searchWorkshop') }}</button>
+        <button class="btn-primary" :disabled="!canSearch" @click="goSearch">{{ t('home-auto-repair-catalog.searchWorkshop') }}</button>
       </div>
     </section>
   </div>

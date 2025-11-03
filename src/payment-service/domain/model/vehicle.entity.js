@@ -8,7 +8,7 @@ export class Vehicle {
      * @param {Object} params - The parameters for the vehicle.
      * @param {string} [params.id_vehicle=''] - The unique identifier for the vehicle.
      * @param {string} [params.model=''] - The model of the vehicle.
-     * @param {string} [params.id_user=''] - The id of the owner of the vehicle.
+     * @param {string} [params.id_user=''] - The id of the auto-repair-catalog of the vehicle.
      * @param {string} [params.vehicle_brand=''] - The brand of the vehicle.
      * @param {string} [params.vehicle_plate=''] - The plate of the vehicle.
      * @param {string} [params.vehicle_type=''] - The type of the vehicle.

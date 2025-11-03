@@ -27,7 +27,7 @@ function onSubmit() {
   submitting.value = true
   const target =
       form.role === 'Vehicle Owner'
-          ? '/iam/register-owner'
+          ? '/iam/register-auto-repair-catalog'
           : '/iam/register-workshop'
 
   router.push(target)
@@ -52,7 +52,7 @@ function onSubmit() {
         >
           <div class="option-content">
             <div class="radio-indicator"></div>
-            <span class="option-label">{{ t('user-role.role-owner') }}</span>
+            <span class="option-label">{{ t('user-role.role-auto-repair-catalog') }}</span>
           </div>
         </div>
 

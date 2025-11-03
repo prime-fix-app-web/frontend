@@ -2,9 +2,9 @@ import { defineAsyncComponent } from 'vue'
 
 // Lazy load components
 const TechnicianList = () =>
-    import('./presentation/views/technician-list.vue');
+    import('./views/technician-list.vue');
 const TechnicianDetails = () =>
-    import('./presentation/views/technician-details.vue');
+    import('./views/technician-details.vue');
 
 
 const autoRepairRegisterRoutes = [
@@ -13,20 +13,20 @@ const autoRepairRegisterRoutes = [
         path: 'technicians',
         component: TechnicianList,
         name: 'technicians',
-        meta: { layout: 'owner' }
+        meta: { layout: 'auto-repair-catalog' }
     },
     {
         path: '/technicians/new',
         component: TechnicianDetails,
         name: 'technician-new',
-        meta: { layout: 'owner' },
+        meta: { layout: 'auto-repair-catalog' },
         props: true
     },
     {
         path: '/technicians/edit/:id',
         component: TechnicianDetails,
         name: 'technician-edit',
-        meta: { layout: 'owner' },
+        meta: { layout: 'auto-repair-catalog' },
         props: true
     },
 

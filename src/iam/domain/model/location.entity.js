@@ -12,14 +12,9 @@ export class Location {
      * @param {string} [params.department=''] - The department of the location.
      * @param {string|number} [params.id] - Backend raw primary key (opcional)
      */
-<<<<<<< HEAD
+
     constructor({ id_location = '', address = '', district = '', department = '' }) {
         this.id_location = id_location;
-=======
-    constructor({ id_location = '', address = '', district = '', department = '', id = '' }) {
-        this.id = id_location; // se mantiene compatibilidad con el dominio actual
-        this.pk = id;          // id crudo del backend si existe (json-server/supabase)
->>>>>>> feature/autorepair-catalog
         this.address = address;
         this.district = district;
         this.department = department;

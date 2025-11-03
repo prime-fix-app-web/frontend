@@ -17,7 +17,7 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
-import useOwnerStore from '@/owner/application/owner.store.js'
+import useOwnerStore from '@/auto-repair-catalog/application/owner.store.js'
 
 const store = useOwnerStore()
 const selectedId = ref('')

@@ -10,7 +10,7 @@ function skipRating() {
 
 // Si el usuario decide calificar
 function goToRatingForm() {
-  router.push("/layout-owner/payment-service/rating/form");
+  router.push("/layout-auto-repair-catalog/payment-service/rating/form");
 }
 </script>
 

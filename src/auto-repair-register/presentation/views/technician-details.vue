@@ -1,5 +1,5 @@
 <script setup>
-import { useAutoRepairRegisterStore } from '@/autorepair-registration/application/auto-repair.store.js';
+import { useAutoRepairRegisterStore } from '@/auto-repair-register/application/auto-repair.store.js';
 import LayoutOwner from "@/shared/presentation/components/layout-owner.vue"
 import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'

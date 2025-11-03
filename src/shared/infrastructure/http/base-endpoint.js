@@ -11,41 +11,40 @@ export class BaseEndpoint {
      * @param baseApi - The base API instance.
      * @param endpointPath - The specific endpoint path.
      * @param config - Configuration object for the endpoint.
-     * @param {boolean} config.useQueryParams - Whether to use path params or query params.
+     * @param {string} config.usePathParams - Whether to use path params or query params.
      * @param {string} config.idQueryParamKey - The query parameter key for ID operations.
      */
     constructor(baseApi, endpointPath, config = {}) {
         this.http = baseApi.http;
         this.endpointPath = endpointPath;
-        this.useQueryParams = !!config.idQueryParamKey;
+        this.config = new BaseApiConfig(config);
         this.#idQueryParamKey = config.idQueryParamKey || 'id';
     }
 
     /**
      * Fetches all resources from the endpoint.
-     * @returns {Promise<*>} - An array of all resources.
+     * @returns {*} - The list of all resources.
      */
-    async getAll() {
+    getAll() {
         let url = this.endpointPath;
-        if (!this.useQueryParams) {
-            url += (url.includes('?') ? '&' : '?') + 'select=*';
+        // When using query params (Supabase style), add select=*
+        if (this.config.usePathParams === 'true') {
+            url += '?select=*';
         }
         return this.http.get(url);
     }
 
     /**
      * Fetches a resource by its ID.
-     * @param id - The ID of the resource to fetch.
-     * @returns {Promise<*>} - The resource with the specified ID.
+     * @param id - The ID of the resource.
+     * @returns {*} - The fetched resource.
      */
-    async getById(id) {
+    getById(id) {
         let url = this.endpointPath;
-        if (!this.useQueryParams) {
-            const key = encodeURIComponent(this.#idQueryParamKey);
-            const val = encodeURIComponent(id);
-            url += `${url.includes('?') ? '&' : '?'}${key}=eq.${val}`;
+        if (this.config.usePathParams === 'true') {
+            url += `?${this.#idQueryParamKey}=eq.${id}`;
         } else {
-            url += `/${encodeURIComponent(id)}`;
+            url += `/${id}`;
         }
         return this.http.get(url);
     }
@@ -53,9 +52,9 @@ export class BaseEndpoint {
     /**
      * Creates a new resource.
      * @param resource - The resource data to create.
-     * @returns {Promise<*>} - The response from the create operation.
+     * @returns {*} - The created resource.
      */
-    async create(resource) {
+    create(resource) {
         const url = this.endpointPath;
         return this.http.post(url, resource);
     }
@@ -64,65 +63,34 @@ export class BaseEndpoint {
      * Updates an existing resource by its ID.
      * @param id - The ID of the resource to update.
      * @param resource - The updated resource data.
-     * @returns {Promise<*>} - The response from the update operation.
+     * @returns {*} - The response from the update operation.
      */
-    async update(id, resource) {
+    update(id, resource) {
         let url = this.endpointPath;
-<<<<<<< HEAD
-
-        if (!this.useQueryParams) {
-            const val = encodeURIComponent(id);
-            const key = encodeURIComponent(this.#idQueryParamKey);
-            url += `${url.includes('?') ? '&' : '?'}${key}=eq.${val}`;
+        // When using query params (Supabase style), use query string
+        if (this.config.usePathParams === 'true') {
+            url += `?${this.#idQueryParamKey}=eq.${id}`;
         } else {
-            url += `/${encodeURIComponent(id)}`;
+            // Traditional REST API style with path params
+            url += `/${id}`;
         }
         return this.http.put(url, resource);
-=======
-        url += `?${this.#idQueryParamKey}=eq.${id}`;
-        const payload = { ...resource };
-        return this.http.patch(url, payload, {
-            headers: {
-                'Prefer': 'return=representation',
-                'Content-Type': 'application/json',
-                ...(this.config.apiKey && {
-                    'apikey': this.config.apiKey,
-                    'Authorization': `Bearer ${this.config.apiKey}`
-                })
-            }
-        });
->>>>>>> feature/collection-diagnosis
     }
-
-
 
     /**
      * Deletes a resource by its ID.
      * @param id - The ID of the resource to delete.
-     * @returns {Promise<*>} - The response from the delete operation.
+     * @returns {*} - The response from the delete operation.
      */
-    async delete(id) {
+    delete(id) {
         let url = this.endpointPath;
-<<<<<<< HEAD
-        // When using query params
-        if (!this.useQueryParams) {
-            const key = encodeURIComponent(this.#idQueryParamKey);
-            const val = encodeURIComponent(id);
-            url += `${url.includes('?') ? '&' : '?'}${key}=eq.${val}`;
+        // When using query params (Supabase style), use query string
+        if (this.config.usePathParams === 'true') {
+            url += `?${this.#idQueryParamKey}=eq.${id}`;
         } else {
             // Traditional REST API style with path params
-            url += `/${encodeURIComponent(id)}`;
+            url += `/${id}`;
         }
         return this.http.delete(url);
-=======
-        url += `?${this.#idQueryParamKey}=eq.${id}`;
-        return this.http.delete(url, {
-            headers: {
-                apikey: this.config.apiKey,
-                Authorization: `Bearer ${this.config.apiKey}`,
-            }
-        });
->>>>>>> feature/collection-diagnosis
     }
-
 }

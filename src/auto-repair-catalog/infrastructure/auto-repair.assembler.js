@@ -1,4 +1,4 @@
-import { AutoRepair } from '@/owner/domain/model/auto-repair.entity.js'
+import { AutoRepair } from '@/auto-repair-catalog/domain/model/auto-repair.entity.js'
 
 export class AutoRepairAssembler {
   static toEntityFromResource(resource) {

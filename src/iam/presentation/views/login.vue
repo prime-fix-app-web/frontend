@@ -8,15 +8,9 @@ import { storeToRefs } from 'pinia';
 const { t } = useI18n();
 const router = useRouter();
 const store = useIamStore();
-<<<<<<< HEAD
 const {userAccounts, userAccountsLoaded, usersLoaded, locationsLoaded, paymentsLoaded,
   errors, fetchLocations, fetchPayments, fetchUserAccounts,
   fetchUsers, login} = store;
-=======
-// Extrae refs reactivas del store
-const { userAccounts, userAccountsLoaded, usersLoaded, errors } = storeToRefs(store);
-const { fetchUserAccounts, fetchUsers, login } = store;
->>>>>>> feature/autorepair-catalog
 
 /**
  * Login form data
@@ -50,16 +44,10 @@ const loginError = ref('');
  * On component mount, fetch user accounts and users if not already loaded
  */
 onMounted(() => {
-<<<<<<< HEAD
   if(!userAccountsLoaded) fetchUserAccounts();
   if(!usersLoaded) fetchUsers();
   if(!locationsLoaded) fetchLocations();
   if(!paymentsLoaded) fetchPayments();
-=======
-  if (!userAccountsLoaded.value) fetchUserAccounts();
-  if (!usersLoaded.value) fetchUsers();
-  console.log(userAccounts.value);
->>>>>>> feature/autorepair-catalog
 });
 
 // Indica si los datos necesarios para validar el login ya están listos
@@ -140,7 +128,7 @@ function onSubmit() {
     .then((userAccount) => {
       console.log('Login successful', userAccount);
 
-      // Redirect based on role (id_role: R001 = owner, R002 = workshop)
+      // Redirect based on role (id_role: R001 = auto-repair-catalog, R002 = workshop)
       isSubmitting.value = false;
       if (userAccount.id_role === 'R001') {
         router.push('/layout-owner/home-owner');
@@ -495,15 +483,5 @@ function navigateToUserRole() {
   outline-offset: 2px;
 }
 
-/* High contrast mode support */
-@media (prefers-contrast: high) {
-  .form-input {
-    border: 1px solid var(--color-dark);
-  }
-
-  .submit-button {
-    border: 2px solid var(--color-dark);
-  }
-}
 
 </style>

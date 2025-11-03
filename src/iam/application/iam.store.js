@@ -234,7 +234,7 @@ const useIamStore = defineStore('iam', () => {
 
     /**
      * Starts the registration flow for a given role.
-     * @param role - The role for the new user ('owner' or 'workshop').
+     * @param role - The role for the new user ('auto-repair-catalog' or 'workshop').
      */
     function startRegistrationFlow(role) {
         registerLocation.value = null;
@@ -245,8 +245,8 @@ const useIamStore = defineStore('iam', () => {
     }
 
     /**
-     * Saves the registration data for an owner.
-     * @param fullName - Full name of the owner
+     * Saves the registration data for an auto-repair-catalog.
+     * @param fullName - Full name of the auto-repair-catalog
      * @param username - Username for the account
      * @param dni - DNI number
      * @param phone_number - Phone number

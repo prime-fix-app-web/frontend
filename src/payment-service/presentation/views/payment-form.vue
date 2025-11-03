@@ -55,7 +55,7 @@ async function submitPayment() {
   try {
     await paymentStore.addPayment(newPayment);
     alert("Método de pago añadido correctamente ✅");
-    router.push("/layout-owner/payment-service/payment/select");
+    router.push("/layout-auto-repair-catalog/payment-service/payment/select");
   } catch (error) {
     console.error("❌ Error al añadir método de pago:", error);
   }

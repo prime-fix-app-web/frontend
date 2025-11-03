@@ -11,7 +11,7 @@ onMounted(() => {
 
 // Función para continuar al rating
 function goToRating() {
-  router.push("/layout-owner/payment-service/rating");
+  router.push("/layout-auto-repair-catalog/payment-service/rating");
 }
 </script>
 

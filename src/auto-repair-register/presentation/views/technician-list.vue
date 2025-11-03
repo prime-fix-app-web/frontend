@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAutoRepairRegisterStore } from '@/autorepair-registration/application/auto-repair.store.js'
+import { useAutoRepairRegisterStore } from '@/auto-repair-register/application/auto-repair.store.js'
 import LayoutOwner from "@/shared/presentation/components/layout-owner.vue"
 
 // Router y Stores

@@ -5,48 +5,44 @@ import ButtonLogout from "@/shared/presentation/components/button-logout.vue";
 
 const menuItems = [
   {
-    route: '/layout-owner/profile',
+    route: '/layout-auto-repair-catalog/profile',
     icon: 'user',
-    label: 'side-bar-owner.profile'
+    label: 'side-bar-auto-repair-catalog.profile'
   },
   {
     route: '/layout-owner/home-owner',
     icon: 'category',
-    label: 'side-bar-owner.dashboard'
+    label: 'side-bar-auto-repair-catalog.dashboard'
   },
   {
     route: '/visit/auto_list',
     icon: 'car-suv',
-    label: 'side-bar-owner.vehicles'
+    label: 'side-bar-auto-repair-catalog.vehicles'
   },
   {
-    route: '/layout-owner/search-workshop',
+    route: '/layout-auto-repair-catalog/search-workshop',
     icon: 'tool',
-    label: 'side-bar-owner.searchWorkshop'
+    label: 'side-bar-auto-repair-catalog.searchWorkshop'
   },
   {
-    route: '/layout-owner/history',
+    route: '/layout-auto-repair-catalog/history',
     icon: 'history',
-    label: 'side-bar-owner.history'
+    label: 'side-bar-auto-repair-catalog.history'
   },
   {
-<<<<<<< HEAD
     route: '/layout-owner/track-vehicle',
-=======
-    route: '/visit/list',
->>>>>>> feature/collection-diagnosis
     icon: 'diamonds',
-    label: 'side-bar-owner.track'
+    label: 'side-bar-auto-repair-catalog.track'
   },
   {
-    route: '/layout-owner/settings',
+    route: '/layout-auto-repair-catalog/settings',
     icon: 'settings-bolt',
-    label: 'side-bar-owner.settings'
+    label: 'side-bar-auto-repair-catalog.settings'
   },
   {
-    "route": '/layout-owner/notification-view',
+    "route": '/layout-auto-repair-catalog/notification-view',
     "icon": 'bell',
-    "label": 'side-bar-owner.notifications'
+    "label": 'side-bar-auto-repair-catalog.notifications'
   }
 ];
 
@@ -55,23 +51,9 @@ const router = useRouter()
 const route = useRoute()
 const { t } = useI18n({ useScope: 'global' })
 
-// Rutas alias para marcar activo el Dashboard cuando se esté en Buscar Taller
-const activeAliases: Record<string, string[]> = {
-  '/layout-owner/home-owner': ['/layout-owner/search-workshop']
-}
-
-<<<<<<< HEAD
 function isActive(path) {
   return route.path === path || route.path.startsWith(path + '/')
-=======
-function isActive(path: string) {
-  if (route.path === path || route.path.startsWith(path + '/')) return true
-  const aliases = activeAliases[path] || []
-  return aliases.some(a => route.path === a || route.path.startsWith(a + '/'))
->>>>>>> feature/autorepair-catalog
 }
-
-
 function go(path) {
   if (route.path !== path) router.push(path)
 }

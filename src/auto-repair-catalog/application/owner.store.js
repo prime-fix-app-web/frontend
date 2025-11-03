@@ -1,14 +1,14 @@
 import { defineStore } from 'pinia'
 import { ref, computed, watch } from 'vue'
-import { OwnerApi } from '@/owner/infrastructure/owner-api.js'
-import { AutoRepairAssembler } from '@/owner/infrastructure/auto-repair.assembler.js'
+import { OwnerApi } from '@/auto-repair-catalog/infrastructure/owner-api.js'
+import { AutoRepairAssembler } from '@/auto-repair-catalog/infrastructure/auto-repair.assembler.js'
 import useIamStore from '@/iam/application/iam.store.js'
-import { RatingAssembler } from '@/owner/infrastructure/rating.assembler.js'
-import { VehicleAssembler } from '@/owner/infrastructure/vehicle.assembler.js'
+import { RatingAssembler } from '@/auto-repair-catalog/infrastructure/rating.assembler.js'
+import { VehicleAssembler } from '@/auto-repair-catalog/infrastructure/vehicle.assembler.js'
 
 const ownerApi = new OwnerApi()
 
-const useOwnerStore = defineStore('owner', () => {
+const useOwnerStore = defineStore('auto-repair-catalog', () => {
   const iam = useIamStore()
 
   const autoRepairs = ref([])

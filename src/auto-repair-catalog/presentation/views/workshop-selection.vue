@@ -1,7 +1,7 @@
 <script setup>
 import { onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import useOwnerStore from '@/owner/application/owner.store.js'
+import useOwnerStore from '@/auto-repair-catalog/application/owner.store.js'
 import useIamStore from '@/iam/application/iam.store.js'
 
 const route = useRoute()
@@ -41,7 +41,7 @@ const suggestedDistricts = computed(() => {
 })
 
 function goRequest(id) {
-  router.push({ name: 'owner-visit-request', params: { id } })
+  router.push({ name: 'auto-repair-catalog-visit-request', params: { id } })
 }
 </script>
 

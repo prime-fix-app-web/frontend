@@ -1,4 +1,4 @@
-import { Technician } from '@/autorepair-registration/domain/model/technician-register.entity.js';
+import { Technician } from '@/auto-repair-register/domain/model/technician-register.entity.js';
 
 /**
  * Assembler for converting between TechnicianRegister entities and API resources/responses.

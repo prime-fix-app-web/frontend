@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import useOwnerStore from '@/owner/application/owner.store.js'
+import useOwnerStore from '@/auto-repair-catalog/application/owner.store.js'
 import useIamStore from '@/iam/application/iam.store.js'
 
 const route = useRoute()
@@ -30,7 +30,7 @@ async function submit() {
       failure: form.value.failure,
       timeVisit: form.value.date
     })
-    router.push('/layout-owner/history')
+    router.push('/layout-auto-repair-catalog/history')
   } finally {
     submitting.value = false
   }

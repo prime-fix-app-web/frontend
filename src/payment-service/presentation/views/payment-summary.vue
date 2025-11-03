@@ -38,11 +38,11 @@ function proceedToPayment() {
   }
   if (paymentMethod.value == 'Pago Virtual') {
     console.log(`Método seleccionado: ${paymentMethod.value}`);
-    router.push("/layout-owner/payment-service/payment/select");
+    router.push("/layout-auto-repair-catalog/payment-service/payment/select");
   }
   else if (paymentMethod.value == 'Efectivo') {
     console.log(`Método seleccionado: ${paymentMethod.value}`);
-    router.push("/layout-owner/payment-service/payment/done");
+    router.push("/layout-auto-repair-catalog/payment-service/payment/done");
   }
 
 }
