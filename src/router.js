@@ -1,6 +1,7 @@
 import {createRouter, createWebHistory} from "vue-router";
 import iamRoutes from "@/iam/presentation/iam-routes.js";
 import {authGuard} from "@/shared/infrastructure/guards/auth.guard.js";
+import dataRoutes from "@/data-collection-diagnosis/presentation/data-routes.js";
 
 const layoutOwner = () => import("./shared/presentation/components/layout-owner.vue");
 const layoutWorkshop = () => import("./shared/presentation/components/layout-workshop.vue");
@@ -16,6 +17,11 @@ const routes = [
         path: '/iam',
         name: 'iam',
         children: iamRoutes,
+    },
+    {
+        path:'/visit',
+        name: 'visit',
+        children: dataRoutes,
     },
     {
         path: '/layout-owner',

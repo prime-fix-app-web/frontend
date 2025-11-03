@@ -68,6 +68,7 @@ export class BaseEndpoint {
      */
     async update(id, resource) {
         let url = this.endpointPath;
+<<<<<<< HEAD
 
         if (!this.useQueryParams) {
             const val = encodeURIComponent(id);
@@ -77,7 +78,23 @@ export class BaseEndpoint {
             url += `/${encodeURIComponent(id)}`;
         }
         return this.http.put(url, resource);
+=======
+        url += `?${this.#idQueryParamKey}=eq.${id}`;
+        const payload = { ...resource };
+        return this.http.patch(url, payload, {
+            headers: {
+                'Prefer': 'return=representation',
+                'Content-Type': 'application/json',
+                ...(this.config.apiKey && {
+                    'apikey': this.config.apiKey,
+                    'Authorization': `Bearer ${this.config.apiKey}`
+                })
+            }
+        });
+>>>>>>> feature/collection-diagnosis
     }
+
+
 
     /**
      * Deletes a resource by its ID.
@@ -86,6 +103,7 @@ export class BaseEndpoint {
      */
     async delete(id) {
         let url = this.endpointPath;
+<<<<<<< HEAD
         // When using query params
         if (!this.useQueryParams) {
             const key = encodeURIComponent(this.#idQueryParamKey);
@@ -96,5 +114,15 @@ export class BaseEndpoint {
             url += `/${encodeURIComponent(id)}`;
         }
         return this.http.delete(url);
+=======
+        url += `?${this.#idQueryParamKey}=eq.${id}`;
+        return this.http.delete(url, {
+            headers: {
+                apikey: this.config.apiKey,
+                Authorization: `Bearer ${this.config.apiKey}`,
+            }
+        });
+>>>>>>> feature/collection-diagnosis
     }
+
 }
