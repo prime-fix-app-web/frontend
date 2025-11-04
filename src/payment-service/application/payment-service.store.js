@@ -11,7 +11,7 @@ import {RatingAssembler} from "@/payment-service/infrastructure/rating.assembler
 
 const paymentServiceApi = new PaymentServiceApi()
 
-const usePaymentServiceStore = defineStore('payment-service',() => {
+const usePaymentStore = defineStore('payment-service',() => {
 
     /**
      * List of payments.
@@ -214,4 +214,4 @@ const usePaymentServiceStore = defineStore('payment-service',() => {
     };
 })
 
-export default usePaymentServiceStore;
+export default usePaymentStore;

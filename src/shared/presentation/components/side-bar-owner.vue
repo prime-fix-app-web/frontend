@@ -7,42 +7,42 @@ const menuItems = [
   {
     route: '/layout-auto-repair-catalog/profile',
     icon: 'user',
-    label: 'side-bar-auto-repair-catalog.profile'
+    label: 'side-bar-owner.profile'
   },
   {
     route: '/layout-owner/home-owner',
     icon: 'category',
-    label: 'side-bar-auto-repair-catalog.dashboard'
+    label: 'side-bar-owner.dashboard'
   },
   {
     route: '/visit/auto_list',
     icon: 'car-suv',
-    label: 'side-bar-auto-repair-catalog.vehicles'
+    label: 'side-bar-owner.vehicles'
   },
   {
     route: '/layout-auto-repair-catalog/search-workshop',
     icon: 'tool',
-    label: 'side-bar-auto-repair-catalog.searchWorkshop'
+    label: 'side-bar-owner.searchWorkshop'
   },
   {
     route: '/layout-auto-repair-catalog/history',
     icon: 'history',
-    label: 'side-bar-auto-repair-catalog.history'
+    label: 'side-bar-owner.history'
   },
   {
     route: '/layout-owner/track-vehicle',
     icon: 'diamonds',
-    label: 'side-bar-auto-repair-catalog.track'
+    label: 'side-bar-owner.track'
   },
   {
     route: '/layout-auto-repair-catalog/settings',
     icon: 'settings-bolt',
-    label: 'side-bar-auto-repair-catalog.settings'
+    label: 'side-bar-owner.settings'
   },
   {
     "route": '/layout-auto-repair-catalog/notification-view',
     "icon": 'bell',
-    "label": 'side-bar-auto-repair-catalog.notifications'
+    "label": 'side-bar-owner.notifications'
   }
 ];
 

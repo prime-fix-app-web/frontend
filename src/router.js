@@ -1,6 +1,6 @@
 import {createRouter, createWebHistory} from "vue-router";
 import iamRoutes from "@/iam/presentation/iam-routes.js";
-import {authGuard} from "@/shared/infrastructure/guards/auth.guard.js";
+import {roleGuard} from "@/shared/infrastructure/guards/auth.guard.js";
 import dataRoutes from "@/data-collection-diagnosis/presentation/data-routes.js";
 import paymentServiceRoutes from "@/payment-service/presentation/payment-service-routes.js";
 import autoCatalogRoutes from "@/auto-repair-catalog/presentation/auto-repair-catalog-routes.js";
@@ -14,6 +14,9 @@ const pageNotFound = () => import("./shared/presentation/views/page-not-found.vu
 const trackVehicle = () => import("./maintenance-tracking/presentation/views/track-vehicle.vue");
 const notificationView = () => import("./maintenance-tracking/presentation/views/notification-view.vue");
 
+const VEHICLE_OWNER_ROLE_ID = "R001";
+const WORKSHOP_ROLE_ID = "R002";
+
 const routes = [
     {
         path: '/iam',
@@ -21,14 +24,14 @@ const routes = [
         children: iamRoutes,
     },
     {
-        path: '/layout-auto-repair-catalog',
+        path: '/layout-owner',
         name: 'layout-owner',
         component: layoutOwner,
-        beforeEnter: authGuard,
+        beforeEnter: roleGuard([VEHICLE_OWNER_ROLE_ID]),
         redirect: '/layout-owner/home-owner',
         children: [
             {
-                path: 'home-auto-repair-catalog',
+                path: 'home-owner',
                 name: 'home-auto-repair-catalog',
                 component: homeOwner,
                 meta: { title: 'Home Owner'}
@@ -66,7 +69,7 @@ const routes = [
         path: '/layout-workshop',
         name: 'layout-workshop',
         component: layoutWorkshop,
-        beforeEnter: authGuard,
+        beforeEnter: roleGuard([WORKSHOP_ROLE_ID]),
         redirect: '/layout-workshop/home-workshop',
         children: [
             {
