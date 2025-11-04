@@ -3,15 +3,14 @@ import {BaseEndpoint} from "@/shared/infrastructure/http/base-endpoint.js";
 
 
 const visitsEndpointPath = import.meta.env.VITE_VISITS_ENDPOINT_PATH;
-const vehiclesEndpointPath = import.meta.env.VITE_VEHICLES_ENDPOINT_PATH;
-const autoRepairsEndpointPath = import.meta.env.VITE_AUTOREPAIRS_ENDPOINT_PATH;
 const serviceEndpointPath = import.meta.env.VITE_SERVICES_ENDPOINT_PATH;
+const diagnosticEndpointPath = import.meta.env.VITE_DIAGNOSTIC_ENDPOINT_PATH;
+const expectedVisitEndpointPath = import.meta.env.VITE_EXPECTED_ENDPOINT_PATH;
 
 const visitsQueryParamKey = import.meta.env.VITE_VISIT_QUERY_PARAM_KEY;
-const vehiclesQueryParamKey= import.meta.env.VITE_VEHICLE_QUERY_PARAM_KEY;
-const autoRepairsQueryParamKey = import.meta.env.VITE_AUTOREPAIR_QUERY_PARAM_KEY;
 const serviceQueryParamKey = import.meta.env.VITE_SERVICE_QUERY_PARAM_KEY;
-
+const diagnosticQueryParamKey =import.meta.env.VITE_DIAGNOSTIC_QUERY_KEY;
+const expectedQueryParamKey = import.meta.env.VITE_EXPECTED_QUERY_KEY;
 
 /**
  * DataApi class to handle API operations for Data manipulation and recollection context.
@@ -33,38 +32,31 @@ export class DataApi extends BaseApi{
      * @type {BaseEndpoint}
      * @private
      */
-    #autoRepairEndpoint;
-    /**
-     * @type {BaseEndpoint}
-     * @private
-     */
-    #vehiclesEndpoint;
-    /**
-     * @type {BaseEndpoint}
-     * @private
-     */
     #visitsEndpoint;
     /**
      * Initializes endpoints for visits, auto repairs,vehicles and services.
      */
+
+    #expectedEndpoint;
+    #diagnosticEndpoint;
     constructor(){
         super();
         this.#visitsEndpoint = new BaseEndpoint(this,visitsEndpointPath,{
             usePathParams:import.meta.env.VITE_USE_PATH_PARAMS,
             idQueryParamKey:visitsQueryParamKey,
         });
-        this.#vehiclesEndpoint=new BaseEndpoint(this,vehiclesEndpointPath,{
-            usePathParams:import.meta.env.VITE_USE_PATH_PARAMS,
-            idQueryParamKey:vehiclesQueryParamKey,
-        });
-        this.#autoRepairEndpoint=new BaseEndpoint(this,autoRepairsEndpointPath,{
-            usePathParams:import.meta.env.VITE_USE_PATH_PARAMS,
-            idQueryParamKey:autoRepairsQueryParamKey,
-        });
         this.#serviceEndpoint = new BaseEndpoint(this,serviceEndpointPath,{
             usePathParams:import.meta.env.VITE_USE_PATH_PARAMS,
             idQueryParamKey:serviceQueryParamKey,
         });
+        this.#diagnosticEndpoint = new BaseEndpoint(this,diagnosticEndpointPath,{
+            usePathParams:import.meta.env.VITE_USE_PATH_PARAMS,
+            idQueryParamKey:diagnosticQueryParamKey,
+        });
+        this.#expectedEndpoint = new BaseEndpoint(this,expectedVisitEndpointPath,{
+            usePathParams:import.meta.env.VITE_USE_PATH_PARAMS,
+            idQueryParamKey:expectedQueryParamKey,
+        })
     }
 
     /**
@@ -75,22 +67,13 @@ export class DataApi extends BaseApi{
         return this.#serviceEndpoint.getAll();
     }
 
-    /**
-     * Fetches all auto repairs.
-     * @returns {Promise<import('axios').AxiosResponse>} Promise resolving to the auto repair response.
-     */
-    getAutoRepairs(){
-        return this.#autoRepairEndpoint.getAll();
+    getExpectedVisits(){
+        return this.#expectedEndpoint.getAll();
     }
 
-    /**
-     * Fetches all vehicles.
-     * @returns {Promise<import('axios').AxiosResponse>} Promise resolving to the vehicle response.
-     */
-    getVehicles(){
-        return this.#vehiclesEndpoint.getAll();
+    getDiagnostic(){
+        return this.#diagnosticEndpoint.getAll();
     }
-
     /**
      * Fetches all visits.
      * @returns {Promise<import('axios').AxiosResponse>} Promise resolving to the visit response.
@@ -108,6 +91,17 @@ export class DataApi extends BaseApi{
         return this.#visitsEndpoint.create(resource);
     }
 
+    createService(resource){
+        return this.#visitsEndpoint.create(resource);
+    }
+
+    createDiagnostic(resource){
+        return this.#diagnosticEndpoint.create(resource);
+    }
+
+    createExpectedVisit(resource){
+        return this.#expectedEndpoint.create(resource);
+    }
     /**
      * Updates an existing visit.
      * @param {Object} resource - The visit data to update (must include id).
@@ -115,6 +109,16 @@ export class DataApi extends BaseApi{
      */
     updateVisit(id, resource) {
         return this.#visitsEndpoint.update(id, resource);
+    }
+
+    updateService(id,resource){
+        return this.#serviceEndpoint.update(id, resource);
+    }
+    updateExpectedVisit(id, resource){
+        return this.#expectedEndpoint.update(id,resource);
+    }
+    updateDiagnostic(id,resource){
+        return this.#diagnosticEndpoint.update(id, resource);
     }
     /**
      * Deletes a visit by its ID.
@@ -124,5 +128,13 @@ export class DataApi extends BaseApi{
     deleteVisit(id){
         return this.#visitsEndpoint.delete(id);
     }
-
+    deleteService(id){
+        return this.#serviceEndpoint.delete(id);
+    }
+    deleteExpectedVisit(id){
+        return this.#expectedEndpoint.delete(id);
+    }
+    deleteDiagnostic(id){
+        return this.#expectedEndpoint.delete(id);
+    }
 }
