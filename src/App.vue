@@ -16,7 +16,7 @@ onMounted(() => {
     <div class="global-language-switcher">
       <language-switcher />
     </div>
-    <layout-owner/>
+    <router-view />
   </div>
 </template>
 
