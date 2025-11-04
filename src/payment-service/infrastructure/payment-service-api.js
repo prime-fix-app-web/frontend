@@ -2,10 +2,10 @@ import {BaseApi} from "@/shared/infrastructure/http/base-api.js";
 import {BaseEndpoint} from "@/shared/infrastructure/http/base-endpoint.js";
 
 const paymentsEndpointPath = import.meta.env.VITE_PAYMENTS_ENDPOINT_PATH;
-const visitsEndpointPath = import.meta.env.VITE_VISITS_ENDPOINT_PATH;
 const ratingsEndpointPath = import.meta.env.VITE_RATINGS_ENDPOINT_PATH;
-const vehiclesEndpointPath = import.meta.env.VITE_VEHICLES_ENDPOINT_PATH;
 
+const ratingQueryParamKey =import.meta.env.VITE_RATING_QUERY_PARAM_KEY;
+const paymentQueryParamKey =import.meta.env.VITE_PAYMENT_QUERY_PARAM_KEY;
 /**
  * PaymentServiceApi class to handle API operations for Payment-Service context.
  * Extends BaseApi and provides CRUD operations for categories and tutorials.
@@ -26,44 +26,23 @@ export class PaymentServiceApi extends BaseApi {
      * @type {BaseEndpoint}
      * @private
      */
-    #visitsEndpoint;
-    /**
-     * @type {BaseEndpoint}
-     * @private
-     */
     #ratingsEndpoint;
-    /**
-     * @type {BaseEndpoint}
-     * @private
-     */
-    #vehiclesEndpoint;
 
     /**
      * Initializes endpoints for payments, visits and ratings.
      */
     constructor() {
         super();
-        this.#paymentsEndpoint = new BaseEndpoint(this, paymentsEndpointPath);
-        this.#visitsEndpoint = new BaseEndpoint(this, visitsEndpointPath);
-        this.#ratingsEndpoint = new BaseEndpoint(this, ratingsEndpointPath);
-        this.#vehiclesEndpoint = new BaseEndpoint(this, vehiclesEndpointPath);
-    }
-    /**
-     * Fetches all vehicles.
-     * @returns {Promise<import('axios').AxiosResponse>} Promise resolving to the vehicles' response.
-     */
-    getVehicles() {
-        return this.#vehiclesEndpoint.getAll();
+        this.#paymentsEndpoint = new BaseEndpoint(this, paymentsEndpointPath,{
+            usePathParams:import.meta.env.VITE_USE_PATH_PARAMS,
+            idQueryParamKey:paymentQueryParamKey
+        });
+        this.#ratingsEndpoint = new BaseEndpoint(this, ratingsEndpointPath,{
+            usePathParams:import.meta.env.VITE_USE_PATH_PARAMS,
+            idQueryParamKey:ratingQueryParamKey
+        });
     }
 
-    /**
-     * Fetches a payment by its ID.
-     * @param {string} id - The ID of the payment.
-     * @returns {Promise<import('axios').AxiosResponse>} Promise resolving to the payment response.
-     */
-    getVehicleById(id) {
-        return this.#vehiclesEndpoint.getById(id);
-    }
 
     /**
      * Fetches all payments.
@@ -109,49 +88,6 @@ export class PaymentServiceApi extends BaseApi {
         return this.#paymentsEndpoint.delete(id);
     }
 
-    /**
-     * Fetches all visits.
-     * @returns {Promise<import('axios').AxiosResponse>} Promise resolving to the visits' response.
-     */
-    getVisits() {
-        return this.#visitsEndpoint.getAll();
-    }
-
-    /**
-     * Fetches a visit by its ID.
-     * @param {string} id - The ID of the visit.
-     * @returns {Promise<import('axios').AxiosResponse>} Promise resolving to the visit response.
-     */
-    getVisitById(id) {
-        return this.#visitsEndpoint.getById(id);
-    }
-
-    /**
-     * Creates a new visit.
-     * @param {Object} resource - The visit data to create.
-     * @returns {Promise<import('axios').AxiosResponse>} Promise resolving to the created visit response.
-     */
-    createVisit(resource) {
-        return this.#visitsEndpoint.create(resource);
-    }
-
-    /**
-     * Updates an existing visit.
-     * @param {Object} resource - The visit data to update (must include id).
-     * @returns {Promise<import('axios').AxiosResponse>} Promise resolving to the updated visit response.
-     */
-    updateVisit(resource) {
-        return this.#visitsEndpoint.update(resource.id, resource);
-    }
-
-    /**
-     * Deletes a visit by its ID.
-     * @param {string} id - The ID of the visit to delete.
-     * @returns {Promise<import('axios').AxiosResponse>} Promise resolving to the delete response.
-     */
-    deleteVisit(id) {
-        return this.#visitsEndpoint.delete(id);
-    }
 
     /**
      * Fetches all ratings.
