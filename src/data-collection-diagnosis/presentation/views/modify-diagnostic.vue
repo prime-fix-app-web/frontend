@@ -182,15 +182,12 @@ function generateDiagnosticId() {
           </div>
         </div>
 
-        <!-- Form -->
         <form @submit.prevent="onSubmit" class="modify-form">
-          <!-- Failure -->
           <div class="form-group">
             <label class="form-label">{{ t('vehicle-diagnosis.vehicle-form.failure') }}:</label>
             <span class="form-input">{{ currentVisit.failure || '' }}</span>
           </div>
 
-          <!-- Diagnostic -->
           <div class="form-group">
             <label class="form-label">{{ t('vehicle-diagnosis.vehicle-form.diagnostic') }}</label>
             <textarea
@@ -200,7 +197,6 @@ function generateDiagnosticId() {
                 placeholder="Describa el diagnóstico..."></textarea>
           </div>
 
-          <!-- Price -->
           <div class="form-group">
             <label class="form-label">{{ t('vehicle-diagnosis.vehicle-form.price') }}</label>
             <input
