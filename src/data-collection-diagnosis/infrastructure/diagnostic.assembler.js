@@ -7,7 +7,7 @@ export class DiagnosticAssembler {
     }
 
     static toEntitiesFromResponse(response){
-        if(response.status === 200){
+        if(response.status !== 200){
             console.error(`${response.status}, ${response.statusText}`);
             return [];
         }

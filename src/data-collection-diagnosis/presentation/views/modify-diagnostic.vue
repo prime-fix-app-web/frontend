@@ -133,7 +133,7 @@ function onSubmit() {
     setTimeout(() => {
       loading.value = false
       alert(t('vehicle-diagnosis.button-update'))
-      router.push('/vehicle-diagnosis/diagnosis-view')
+      router.push('/layout-workshop/visit/diagnosis-view')
     }, 500)
   } catch (err) {
     console.error('Error updating diagnosis:', err)
