@@ -12,17 +12,15 @@ export class Visit {
      * @param {string}[params.id_auto_repair=''] - The unique identifier for the auto-repair
      * @param {string}[params.id_service=''] - The unique identifier for the service
      * @param {string}[params.time_visit=''] - The time of the visit scheduled
-     * @param {string}[params.status=''] - The status of the visit
      */
     constructor({id_visit = '', failure='',id_vehicle= '',time_visit= '', id_auto_repair='',
-                    id_service='', status=''}){
+                    id_service=''}){
         this.id_visit = id_visit;
         this.failure = failure;
         this.id_vehicle = id_vehicle;
         this.id_auto_repair = id_auto_repair;
         this.time_visit = time_visit;
         this.id_service = id_service;
-        this.status = status;
 
     }
 

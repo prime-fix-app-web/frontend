@@ -25,7 +25,6 @@ onMounted(async ()=>{
   catalogStore.fetchAutoRepairs();
   iamStore.fetchUserAccounts();
   iamStore.fetchUsers();
-  console.log("All locations:", catalogStore.locations)
 })
 
 watch(() => searchForm.department, (value) => {
@@ -61,15 +60,6 @@ const filteredAutoRepairs = computed(() => {
     const userAccount = userAccounts.find(ua => ua.id === autoRepair.id_user_account)
     const user = userAccount ? users.find(u => u.id === userAccount.id_user) : null
     const location = user ? locations.find(l => l.id === user.id_location) : null
-
-    console.log('AutoRepair debug:', {
-      autoRepairId: autoRepair.id_auto_repair,
-      userAccountId: autoRepair.id_user_account,
-      userId: userAccount?.id_user,
-      locationId: user?.id_location,
-      locationDept: location?.department,
-      locationDist: location?.district
-    })
   })
 
   return mappedAutoRepairs.filter(item => {

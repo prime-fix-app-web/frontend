@@ -90,6 +90,7 @@ const useDataCollection = defineStore('useDataCollection', ()=>{
             const resource = response.data;
             const newVisit = VisitAssembler.toEntityFromResource(resource);
             visits.value.push(newVisit);
+            return newVisit
         }).catch(error => {
             errors.value.push(error);
         })

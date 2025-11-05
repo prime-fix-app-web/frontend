@@ -66,7 +66,6 @@ const currentDiagnosticsByCurrentExpectedVisitId = computed(() => {
 onMounted(async () => {
   loading.value = true;
 
-  // 1️⃣ Esperar a que cada store cargue sus datos
   await Promise.all([
     catalogStore.fetchAutoRepairs?.(),
     trackingStore.fetchVehicles?.(),
@@ -79,13 +78,6 @@ onMounted(async () => {
 
   loading.value = false;
 
-  console.log("🚗 vehicleId:", vehicleId.value);
-  console.log("🧰 currentVehicle:", currentVehicle.value);
-  console.log("🏪 currentAutoRepair:", currentAutoRepair.value);
-  console.log("🧾 currentVisit:", currentVisit.value);
-  console.log("🧠 expectedVisit:", currentExpectedVisit.value);
-  console.log("📋 diagnostics:", dataCollectionStore.diagnostic);
-  console.log("✅ filtered:", currentDiagnosticsByCurrentExpectedVisitId.value);
 });
 </script>
 

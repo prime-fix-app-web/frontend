@@ -29,16 +29,17 @@ const userAccount = computed(() => {
 
 const userAccountName = computed(() => userAccount.value?.username ?? '');
 
-
-function onSelected(){
-  const autoRepairId = props.autoRepair.id_auto_repair
-  router.push(`/layout-owner/auto-repair-catalog/schedule-visit/${autoRepairId}`)
-}
+const selectRepair = (id) => {
+  router.push({ name: "visitForm", query: { id_auto_repair: id } });
+};
 
 onMounted(async ()=>{
   iamStore.fetchUserAccounts();
   iamStore.fetchUsers();
 })
+
+
+
 </script>
 
 <template>
@@ -96,7 +97,7 @@ onMounted(async ()=>{
     </div>
 
     <div class="card-footer">
-      <button type="button" class="btn-select" @click="onSelected">
+      <button type="button" class="btn-select" @click="selectRepair(autoRepair.id_auto_repair)">
         {{ t('search-auto-repair.auto-repair-card.selectButton') }}
       </button>
     </div>

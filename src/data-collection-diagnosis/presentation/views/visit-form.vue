@@ -1,114 +1,124 @@
 <script setup>
-  import {useI18n} from "vue-i18n";
-  import useDataCollection from "@/data-collection-diagnosis/application/data-collection.js";
-  import {useRoute, useRouter} from "vue-router";
-  import {computed,onMounted, ref} from "vue";
-  import {Visit} from "@/data-collection-diagnosis/domain/model/visit.entity.js";
+import { useI18n } from "vue-i18n";
+import useDataCollection from "@/data-collection-diagnosis/application/data-collection.js";
+import { useRoute, useRouter } from "vue-router";
+import { computed, onMounted, ref } from "vue";
+import { Visit } from "@/data-collection-diagnosis/domain/model/visit.entity.js";
+import useIamStore from "@/iam/application/iam.store.js";
+import useTrackingStore from "@/maintenance-tracking/application/tracking.store.js";
 
-  const {t} = useI18n();
-  const route = useRoute();
-  const router = useRouter();
-  const store = useDataCollection();
-  const {errors, visits, addVisit, updateVisit, deleteVisit, fetchVisit, fetchServices, fetchVehicles, fetchAutoRepairs} = store;
+const { t } = useI18n();
+const route = useRoute();
+const router = useRouter();
+const dataStore = useDataCollection();
+const iamStore = useIamStore();
+const trackingStore = useTrackingStore();
 
-  const form = ref({
+const {errors, visits, addVisit, updateVisit, deleteVisit, fetchVisit, fetchServices} = dataStore;
+
+const form = ref({
   id_vehicle: null,
-  failure: '',
+  failure: "",
   time_visit: null,
   id_auto_repair: null,
   id_service: null,
-  status: 'Pendiente'
 });
-  const isEdit = computed(() => !!route.params.id);
-  const dialogVisible = ref(null);
-  const completedVisit = ref(false);
-  const editDialog = ref(false);
 
-  onMounted(async () => {
-     fetchVehicles();
-     fetchServices();
-     fetchAutoRepairs();
-    if (!visits.length) fetchVisit();
+const isEdit = computed(() => !!route.params.id);
+const dialogVisible = ref(null);
+const completedVisit = ref(false);
+const editDialog = ref(false);
 
-    const repairId = route.query.repairId || null;
-    if (isEdit.value) {
+const filteredVehicles = computed(() => {
+  const currentUser = iamStore.sessionUser;
+  if (!currentUser || !currentUser.id_user) return [];
 
-      let visit = getVisitById(route.params.id);
+  if (!trackingStore.vehicles || !Array.isArray(trackingStore.vehicles)) return []
 
-      if (!visit && !visits.length) {
+  return trackingStore.vehicles.filter(
+      (v) => v.id_user === currentUser.id_user
+  );
+});
 
-        fetchVisit();
-        visit = getVisitById(route.params.id);
-      }
+onMounted(async () => {
+  await dataStore.fetchServices();
+  await trackingStore.fetchVehicles();
 
-      if (visit) {
-        form.value = {
-          id_vehicle: visit.id_vehicle || null,
-          failure: visit.failure || '',
-          time_visit: visit.time_visit ? new Date(visit.time_visit) : null,
-          id_auto_repair: repairId || visit.id_auto_repair || null,
-          id_service: visit.id_service || null,
-          status: visit.status || "En Espera",
-        };
-      }
-    } else {
+  if (!visits.length) await fetchVisit();
+
+  const repairId = route.query.id_auto_repair || null;
+
+  if (isEdit.value) {
+    let visit = getVisitById(route.params.id_visit);
+    if (!visit && !visits.length) {
+      await fetchVisit();
+      visit = getVisitById(route.params.id_visit);
+    }
+
+    if (visit) {
       form.value = {
-        id_vehicle: null,
-        failure: '',
-        time_visit: null,
-        id_auto_repair: repairId,
-        id_service: null,
-        status: "En Espera",
+        id_vehicle: visit.id_vehicle || null,
+        failure: visit.failure || "",
+        time_visit: visit.time_visit ? new Date(visit.time_visit) : null,
+        id_auto_repair: repairId || visit.id_auto_repair || null,
+        id_service: visit.id_service || null,
       };
     }
-  });
-
-  function getVisitById(id){
-  return store.getVisitsById(id);
-  }
-
-  function saveVisit () {
-    const visitData = {
-      id_vehicle: form.value.id_vehicle,
-      failure: form.value.failure,
-      time_visit: form.value.time_visit ? form.value.time_visit.toISOString().split('T')[0] : null,
-      id_auto_repair: form.value.id_auto_repair,
-      id_service: form.value.id_service,
-      status: form.value.status,
+  } else {
+    form.value = {
+      id_vehicle: null,
+      failure: "",
+      time_visit: null,
+      id_auto_repair: repairId,
+      id_service: null,
     };
-
-    try {
-      if (isEdit.value) {
-        const visitId = route.params.id;
-        updateVisit(visitId, visitData);
-        editDialog.value = true;
-      } else {
-        const newVisit = {
-          id_visit: Math.floor(Math.random() * 1000000),
-          ...visitData
-        };
-        addVisit(newVisit);
-        completedVisit.value = {...form.value};
-        editDialog.value = false;
-      }
-        store.fetchVisit();
-        dialogVisible.value = true;
-    } catch (error) {
-      console.error("Error al guardar visita:", error);
-    }
   }
+});
 
-  const isFormValid = computed(() => {
-    return form.value.id_vehicle &&
-        form.value.failure &&
-        form.value.time_visit &&
-        form.value.id_service;
-  });
+function getVisitById(id) {
+  return store.getVisitsById(id);
+}
 
-  const navigate = () => router.push({ name: 'auto_list' });
+function saveVisit () {
+  const visitData = {
+    id_vehicle: form.value.id_vehicle,
+    failure: form.value.failure,
+    time_visit: form.value.time_visit ? form.value.time_visit.toISOString().split('T')[0] : null,
+    id_auto_repair: form.value.id_auto_repair,
+    id_service: form.value.id_service,
+  };
 
-  const goBack = () => router.back();
+  try {
+    if (isEdit.value) {
+      const visitId = route.params.id;
+      updateVisit(visitId, visitData);
+      editDialog.value = true;
+    } else {
+      const newVisit = {
+        id_visit: Math.floor(Math.random() * 1000000),
+        ...visitData
+      };
+      addVisit(newVisit);
+      completedVisit.value = {...form.value};
+      editDialog.value = false;
+    }
+    dataStore.fetchVisit();
+    dialogVisible.value = true;
+  } catch (error) {
+    console.error("Error al guardar visita:", error);
+  }
+}
 
+const isFormValid = computed(() => {
+  return form.value.id_vehicle &&
+      form.value.failure &&
+      form.value.time_visit &&
+      form.value.id_service;
+});
+
+
+const navigate = () => router.push({ name: "auto_list" });
+const goBack = () => router.back();
 
 </script>
 
@@ -125,7 +135,7 @@
         <div class="form-group">
           <label class="form-label">{{t('visit-form.vehicle_model')}}</label>
           <pv-select
-              :options="store.vehicles"
+              :options="filteredVehicles"
               optionLabel="model"
               optionValue="id_vehicle"
               v-model="form.id_vehicle"
@@ -149,7 +159,7 @@
         <div class="form-group">
           <label class="form-label">{{t('visit-form.type_of_service')}}</label>
           <pv-select
-              :options="store.services"
+              :options="dataStore.services"
               optionLabel="name"
               optionValue="id_service"
               v-model="form.id_service"
@@ -188,13 +198,12 @@
     <div v-if="completedVisit">
       <p class="success-message">{{ t('completed-screen.message') }}</p>
       <p><strong>{{ t('completed-screen.date') }}:</strong> {{ completedVisit.time_visit }}</p>
-      <p><strong>{{ t('completed-screen.vehicle') }}:</strong> {{ store.getVehiclesById(completedVisit.id_vehicle)?.model }}</p>
-      <p><strong>{{ t('completed-screen.service') }}:</strong> {{ store.getServicesById(completedVisit.id_service)?.name }}</p>
-      <p><strong>{{ t('completed-screen.status') }}:</strong> {{ completedVisit.status }}</p>
+      <p><strong>{{ t('completed-screen.vehicle') }}:</strong> {{ trackingStore.getVehiclesById(completedVisit.id_vehicle)?.model }}</p>
+      <p><strong>{{ t('completed-screen.service') }}:</strong> {{ dataStore.getServiceById(completedVisit.id_service)?.name }}</p>
 
       <div class="button-container">
         <pv-button class="back-button" @click="dialogVisible = false">{{ t('completed-screen.back') }}</pv-button>
-        <pv-button class="submit-button" @click="router.push({ name: 'list' })">{{ t('completed-screen.visit_Scheduled') }}</pv-button>
+        <pv-button class="submit-button" @click="router.push({ name: 'home-auto-repair-catalog' })">{{ t('completed-screen.visit_Scheduled') }}</pv-button>
       </div>
     </div>
   </pv-dialog>
