@@ -27,13 +27,18 @@ const userAccount = computed(() => {
   return idUserAccount ? iamStore.getUserAccountById(idUserAccount) : undefined;
 });
 
-const userAccountName = computed(() => {userAccount.value?.username ?? ''});
+const userAccountName = computed(() => userAccount.value?.username ?? '');
 
 
 function onSelected(){
-  const autoRepairId = props.autoRepair.id
+  const autoRepairId = props.autoRepair.id_auto_repair
   router.push(`/layout-owner/auto-repair-catalog/schedule-visit/${autoRepairId}`)
 }
+
+onMounted(async ()=>{
+  iamStore.fetchUserAccounts();
+  iamStore.fetchUsers();
+})
 </script>
 
 <template>

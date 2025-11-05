@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive, computed, watch } from 'vue'
+import {ref, reactive, computed, watch, onMounted} from 'vue'
 import { useRouter } from 'vue-router'
 import SelectAutoRepair from "@/auto-repair-catalog/presentation/components/select-auto-repair.vue";
 import useCatalogStore from "@/auto-repair-catalog/application/owner.store.js";
@@ -20,30 +20,29 @@ const searchForm = reactive({
   district: ''
 })
 
+onMounted(async ()=>{
+  catalogStore.fetchLocations();
+  catalogStore.fetchAutoRepairs();
+  iamStore.fetchUserAccounts();
+  iamStore.fetchUsers();
+  console.log("All locations:", catalogStore.locations)
+})
+
 watch(() => searchForm.department, (value) => {
   selectedDepartment.value = value || ''
   searchForm.district = ''
 })
 
 const filteredAutoRepairs = computed(() => {
-  const autoRepairs = catalogStore.autoRepairs
-  const locations = catalogStore.locations
-  const userAccounts = iamStore.userAccounts
-  const users = iamStore.users
+  const { department, district } = searchForm
+  const { autoRepairs, locations } = catalogStore
+  const { userAccounts, users } = iamStore
 
-  if (!showResults.value || !searchForm.department || !searchForm.district) {
+  if (!showResults.value || !department || !district) {
     return []
   }
 
-  const matchingLocations = locations.filter(
-      loc =>
-          loc.department === searchForm.department &&
-          loc.district === searchForm.district
-  )
-
-  const matchingIds = new Set(matchingLocations.map(l => l.id))
-
-  return autoRepairs
+  const mappedAutoRepairs = autoRepairs
       .map(autoRepair => {
         const userAccount = userAccounts.find(ua => ua.id === autoRepair.id_user_account)
         if (!userAccount) return null
@@ -51,12 +50,34 @@ const filteredAutoRepairs = computed(() => {
         const user = users.find(u => u.id === userAccount.id_user)
         if (!user) return null
 
-        const location = locations.find(loc => loc.id === user.id_location)
-        if (!location || !matchingIds.has(location.id)) return null
+        const location = locations.find(loc => loc.id_location === user.id_location)
+        if (!location) return null
 
         return { autoRepair, location }
       })
       .filter(Boolean)
+
+  autoRepairs.forEach(autoRepair => {
+    const userAccount = userAccounts.find(ua => ua.id === autoRepair.id_user_account)
+    const user = userAccount ? users.find(u => u.id === userAccount.id_user) : null
+    const location = user ? locations.find(l => l.id === user.id_location) : null
+
+    console.log('AutoRepair debug:', {
+      autoRepairId: autoRepair.id_auto_repair,
+      userAccountId: autoRepair.id_user_account,
+      userId: userAccount?.id_user,
+      locationId: user?.id_location,
+      locationDept: location?.department,
+      locationDist: location?.district
+    })
+  })
+
+  return mappedAutoRepairs.filter(item => {
+    return (
+        item.location.department.trim().toLowerCase() === department.trim().toLowerCase() &&
+        item.location.district.trim().toLowerCase() === district.trim().toLowerCase()
+    )
+  })
 })
 
 const departments = computed(() => {
@@ -160,7 +181,7 @@ function onBack() {
       <div v-if="filteredAutoRepairs.length > 0" class="workshops-list">
         <SelectAutoRepair
             v-for="item in filteredAutoRepairs"
-            :key="item.autoRepair.id"
+            :key="item.autoRepair.id_auto_repair"
             :auto-repair="item.autoRepair"
             :location="item.location"
         />

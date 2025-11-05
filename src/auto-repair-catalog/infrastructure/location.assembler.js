@@ -28,7 +28,6 @@ export class LocationAssembler{
             return [];
         }
         let resources = response.data instanceof Array? response.data : response.data['locations'];
-
         return resources.map(resource => this.toEntityFromResource(resource));
     }
 }

@@ -4,7 +4,6 @@ import { AutoRepair } from '@/auto-repair-catalog/domain/model/auto-repair.entit
  * Assembler for converting API to AutoRepair entities
  * @class
  */
-
 export class AutoRepairAssembler {
     /**
      * Converts a plain resource object to a AutoRepair entities
@@ -12,7 +11,7 @@ export class AutoRepairAssembler {
      * @returns {AutoRepair} The corresponding AutoRepairs entity
      */
     static toEntityFromResource(resource){
-        return new AutoRepair({...resource})
+        return new AutoRepair({...resource});
     }
 
     /**
@@ -25,9 +24,9 @@ export class AutoRepairAssembler {
     static toEntitiesFromResponse(response) {
         if (response.status !== 200) {
             console.error(`${response.status}, ${response.statusText}`)
-            return []
+            return [];
         }
-        const resources = Array.isArray(response.data) ? response.data : response.data['auto_repairs']
-        return resources.map(r => this.toEntityFromResource(r))
+        let resources = response.data instanceof Array ? response.data : response.data['auto-repairs'];
+        return resources.map(resource => this.toEntityFromResource(resource));
     }
 }

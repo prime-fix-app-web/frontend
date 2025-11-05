@@ -1,7 +1,7 @@
 import { BaseApi } from '@/shared/infrastructure/http/base-api.js'
 import { BaseEndpoint } from '@/shared/infrastructure/http/base-endpoint.js'
 
-const autoRepairsEndpointPath = import.meta.env.VITE_AUTOREPAIRS_ENDPOINT_PATH || '/api/v1/auto_repairs'
+const autoRepairsEndpointPath = import.meta.env.VITE_AUTOREPAIRS_ENDPOINT_PATH;
 const locationEndpointPath = import.meta.env.VITE_LOCATIONS_ENDPOINT_PATH;
 
 const autoRepairsQueryParamKey = import.meta.env.VITE_AUTOREPAIR_QUERY_PARAM_KEY;
@@ -34,7 +34,7 @@ export class CatalogApi extends BaseApi {
      */
     constructor() {
       super();
-      this.#autoRepairsEndpoint = new BaseEndpoint(this, autoRepairsEndpointPath, {
+      this.#autoRepairsEndpoint = new BaseEndpoint(this, autoRepairsEndpointPath,{
           usePathParams: import.meta.env.VITE_USE_PATH_PARAMS,
           idQueryParamKey: autoRepairsQueryParamKey
       });
@@ -48,7 +48,7 @@ export class CatalogApi extends BaseApi {
      * Fetches all AutoRepairs
      * @returns {Promise<import('axios').AxiosResponse>} Promise resolving to the created AutoRepair response.     */
     getAutoRepairs() {
-      return this.#autoRepairsEndpoint.getAll()
+      return this.#autoRepairsEndpoint.getAll();
   }
 
     /**

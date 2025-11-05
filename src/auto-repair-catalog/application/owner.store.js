@@ -25,14 +25,14 @@ const useCatalogStore = defineStore('auto-repair-catalog', () => {
       return locationsLoaded ? locations.value.length : 0;
   })
 
-  function fetchAutoRepairs(){
-      catalogApi.getAutoRepairs().then(response =>{
-          autoRepairs.value = AutoRepairAssembler.toEntitiesFromResponse(response);
-          autoRepairsLoaded.value = true;
-      }).catch(error=>{
-          errors.value.push(error);
-      })
-  }
+    function fetchAutoRepairs(){
+        catalogApi.getAutoRepairs().then(response =>{
+            autoRepairs.value = AutoRepairAssembler.toEntitiesFromResponse(response);
+            autoRepairsLoaded.value = true;
+        }).catch(error=>{
+            errors.value.push(error);
+        })
+    }
 
   function fetchLocations(){
       catalogApi.getLocations().then(response =>{

@@ -9,11 +9,10 @@ export class AutoRepair {
      * @param {string}[id_user_account]
      */
     constructor({id_auto_repair='', contact_email='',technicians_count=0,ruc='', id_user_account=''}){
-
         this.id_auto_repair = id_auto_repair;
         this.contact_email = contact_email;
         this.technicians_count = technicians_count;
         this.ruc = ruc;
-        this.id = id_auto_repair;
+        this.id_user_account = id_user_account;
     }
 }
