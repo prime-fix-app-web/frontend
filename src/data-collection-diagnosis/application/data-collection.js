@@ -250,7 +250,40 @@ const useDataCollection = defineStore('useDataCollection', ()=>{
             .catch(error => errors.value.push(error));
     }
     return {
-
+        visits,
+        services,
+        expectedVisit,
+        diagnostic,
+        errors,
+        loading,
+        visitsLoaded,
+        servicesLoaded,
+        expectedLoaded,
+        diagnosticLoaded,
+        visitsCount,
+        servicesCount,
+        expectedCount,
+        diagnosticCount,
+        fetchServices,
+        fetchVisit,
+        fetchExpected,
+        fetchDiagnostic,
+        getVisitsById,
+        getServiceById,
+        getExpectedById,
+        getDiagnosticById,
+        addDiagnostic,
+        addVisit,
+        addService,
+        addExpected,
+        updateVisit,
+        updateService,
+        updateExpected,
+        updateDiagnostic,
+        deleteVisit,
+        deleteService,
+        deleteDiagnostic,
+        deleteExpectedVisit
     };
 })
 

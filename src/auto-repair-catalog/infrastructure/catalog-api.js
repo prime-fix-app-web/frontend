@@ -119,7 +119,7 @@ export class CatalogApi extends BaseApi {
      * @returns {Promise<import('axios').AxiosReponse>} - A promise that resolves to the API response.
      */
     updateLocation(location){
-      return this.#locationsEndpoint.update(location.id, location);
+      return this.#locationsEndpoint.update(location.id_location, location);
   }
 
     /**

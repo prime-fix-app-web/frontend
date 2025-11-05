@@ -2,6 +2,7 @@ import {TrackingApi} from "@/maintenance-tracking/infrastructure/tracking-api.js
 import {defineStore} from "pinia";
 import {computed, ref} from "vue";
 import {NotificationAssembler} from "@/maintenance-tracking/infrastructure/notification-assembler.js";
+import {VehicleAssembler} from "@/maintenance-tracking/infrastructure/vehicle.assembler.js";
 
 const trackingApi = new TrackingApi();
 
@@ -12,6 +13,8 @@ const useTrackingStore = defineStore('tracking', () => {
      * @type {import('vue').Ref<Notification[]>}
      */
     const notifications = ref([]);
+
+    const vehicles = ref([]);
 
     /**
      * List of errors.
@@ -25,12 +28,17 @@ const useTrackingStore = defineStore('tracking', () => {
      */
     const notificationsLoaded = ref(false);
 
+    const vehiclesLoaded = ref(false);
     /**
      * Count of notifications.
      * @type {import('vue').ComputedRef<number>}
      */
     const notificationsCount = computed(() =>{
         return notificationsLoaded ? notifications.value.length : 0;
+    })
+
+    const vehiclesCount = computed(() =>{
+        return vehiclesLoaded ? vehicles.value.length : 0;
     })
 
     const loading = ref(false);
@@ -110,6 +118,63 @@ const useTrackingStore = defineStore('tracking', () => {
         }
     }
 
+    function fetchVehicles(){
+        trackingApi.getVehicles().then((response) => {
+            vehicles.value = VehicleAssembler.toEntitiesFromResponse(response);
+            vehiclesLoaded.value = true;
+        }).catch((err) => {
+            pushError(err);
+        })
+    }
+
+    function getVehiclesById(id) {
+        return vehicles.value.find((vehicle) => vehicle.id_vehicle === id);
+    }
+
+    function addVehicle (vehicle){
+        trackingApi.createVehicle(vehicle).then((response) => {
+            const resource = response.data;
+            const newVehicle = VehicleAssembler.toEntityFromResource(resource);
+            vehicles.value.push(newVehicle);
+        }).catch((err) => {
+            pushError(err);
+        })
+    }
+
+    const updateVehicle = async (id, vehicleData) => {
+        loading.value = true;
+        errors.value = [];
+        try {
+            const vehicleId = String(id).trim();
+
+            const response = await trackingApi.updateVehicle(vehicleId, vehicleData);
+
+            const index = vehicles.value.findIndex(v => v.id_vehicle === vehicleId);
+            if (index !== -1) {
+                vehicles.value[index] = {
+                    ...vehicles.value[index],
+                    ...vehicleData,
+                    id_vehicle: vehicleId,
+                };
+            }
+
+            loading.value = false;
+            return response;
+        } catch (error) {
+            pushError(error);
+            loading.value = false;
+            throw error;
+        }
+    };
+
+    function deleteVehicle(id_vehicle){
+        if(!id_vehicle) return;
+        trackingApi.deleteVehicle(id_vehicle).then((response) => {
+            const index = vehicles.value.findIndex(v=> v.id_vehicle === id_vehicle);
+            if (index !== -1) vehicles.value.splice(index, 1);
+        }).catch((err) => pushError(err))
+    }
+
     const pushError = (err) => {
       const e = err?.response?.data ?? err?.message ?? String(err);
         errors.value.push(e);
@@ -117,14 +182,22 @@ const useTrackingStore = defineStore('tracking', () => {
 
     return {
         notifications,
+        vehicles,
         errors,
         notificationsLoaded,
+        vehiclesLoaded,
         loading,
         notificationsCount,
+        vehiclesCount,
         fetchNotifications,
         addNotification,
         updateNotification,
-        deleteNotification
+        deleteNotification,
+        fetchVehicles,
+        addVehicle,
+        updateVehicle,
+        deleteVehicle,
+        getVehiclesById,
     }
 });
 

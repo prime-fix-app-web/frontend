@@ -281,7 +281,7 @@
     "status": "Status",
     "select_model": "Select Model",
     "select_service": "Select Service",
-    "failure_details":"Describe the vehicle failures",
+    "failure_details": "Describe the vehicle failures",
     "back": "Back",
     "failure_message": "Please describe the vehicle failures",
     "date_message": "Please select a preferred date"
@@ -309,20 +309,64 @@
     "delete": "Delete",
     "noVisits": "No scheduled visits available"
   },
-  "auto_repair":{
+  "auto_repair": {
     "title": "Search for Auto Repair Workshops",
     "search_visit": "Schedule a Visit",
     "technician": "Technicians:"
   },
   "edit-screen": {
-  "title": "The visit has been modified"
+    "title": "The visit has been modified"
   },
   "update-state": {
     "title": "List of Scheduled Visits"
   },
-  "buttons":{
+  "buttons": {
     "add": "Add",
     "update": "Update Status",
     "update-visit": "Update Visit"
+  },
+  "vehicle-diagnosis": {
+    "title": "Status of Vehicles",
+    "subtitle": "Check the current status of vehicles under maintenance",
+    "subtitle-update": "Modify the status and diagnostic of the vehicles",
+    "modal-title": "Update Vehicle Status",
+    "modal-subtitle": "When you update an status, it will notify the vehicle owner automatically.",
+    "loading-message": "Loading vehicles...",
+    "no-vehicles": "No vehicles under maintenance",
+    "vehicle-card": {
+      "car": "Vehicle:",
+      "plate": "Plate:",
+      "owner": "Owner:",
+      "unknown-owner": "Unknown",
+      "id-visit": "Visit ID:",
+      "status": "Status:",
+      "change-state-button": "Update status",
+      "check-button": "View diagnostics",
+      "update-button": "Update",
+      "loading-button": "Updating..."
+    },
+    "vehicle-form": {
+      "select-status": "Select status",
+      "state": "Vehicle maintenance status",
+      "failure": "Failure",
+      "diagnostic": "Diagnostic",
+      "diagnostic-error": "Enter a valid diagnostic",
+      "price": "Price",
+      "price-error": "Enter a valid price"
+    },
+    "button-cancel": "Cancel",
+    "button-add": "Add new diagnostic",
+    "button-updating": "Updating...",
+    "no-data": "No data available",
+    "modal-update-button": "Update"
+  },
+  "vehicleDiagnosis": {
+    "checkTitle": "Vehicle diagnostics",
+    "checkSubtitle": "Review all diagnostics performed",
+    "loading": "Loading diagnostics...",
+    "noDiagnostics": "No diagnostics recorded for this vehicle",
+    "price": "Price",
+    "date": "Date",
+    "status": "Status"
   }
 }

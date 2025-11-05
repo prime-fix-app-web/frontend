@@ -62,7 +62,7 @@ const routes = [
               children: autoCatalogRoutes,
             },
             {
-                path:'/visit',
+                path:'visit',
                 name: 'visit',
                 children: dataRoutes,
             },
@@ -93,7 +93,7 @@ const routes = [
                 meta:{title: 'Dashboard Workshop'}
             },
             {
-                path:'/visit',
+                path:'visit',
                 name: 'visit',
                 children: dataRoutes,
             },

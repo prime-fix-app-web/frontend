@@ -15,13 +15,14 @@ export class Vehicle {
      * @param {string} [params.color=''] - The color of the vehicle.
      *
      */
-    constructor({id_vehicle = '', model = '', id_user = '', vehicle_brand = '', vehicle_plate = '', vehicle_type = '', color = '' }) {
-        this.id = id_vehicle;
+    constructor({id_vehicle = '', model = '', id_user = '', vehicle_brand = '', vehicle_plate = '', vehicle_type = '', color = '' , state_maintenance=0}) {
+        this.id_vehicle = id_vehicle;
         this.model = model;
         this.id_user = id_user;
         this.vehicle_brand = vehicle_brand;
         this.vehicle_plate = vehicle_plate;
         this.vehicle_type = vehicle_type;
         this.color = color;
+        this.state_maintenance =state_maintenance
     }
 }

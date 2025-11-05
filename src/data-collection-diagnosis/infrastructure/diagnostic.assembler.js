@@ -11,7 +11,7 @@ export class DiagnosticAssembler {
             console.error(`${response.status}, ${response.statusText}`);
             return [];
         }
-        let resources = response.data instanceof Array ?response.data: response.data['diagnostic'];
+        let resources = response.data instanceof Array ?response.data: response.data['diagnostics'];
 
         return resources.map(resource => this.toEntityFromResource(resource));
     }

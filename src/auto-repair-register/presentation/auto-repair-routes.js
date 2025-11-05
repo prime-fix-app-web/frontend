@@ -4,7 +4,7 @@ import { defineAsyncComponent } from 'vue'
 const TechnicianList = () =>
     import('./views/technician-list.vue');
 const TechnicianDetails = () =>
-    import('./views/technician-details.vue');
+    import('./views/technician-form.vue');
 
 
 const autoRepairRegisterRoutes = [
