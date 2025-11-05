@@ -5,12 +5,12 @@ import ButtonLogout from "@/shared/presentation/components/button-logout.vue";
 
 const menuItems = [
   {
-    route: '/layout-auto-repair-catalog/profile',
+    route: '/layout-vehicle-owner/profile',
     icon: 'user',
     label: 'side-bar-owner.profile'
   },
   {
-    route: '/layout-owner/home-owner',
+    route: '/layout-vehicle-owner/home-owner',
     icon: 'category',
     label: 'side-bar-owner.dashboard'
   },
@@ -20,27 +20,27 @@ const menuItems = [
     label: 'side-bar-owner.vehicles'
   },
   {
-    route: '/layout-auto-repair-catalog/search-workshop',
+    route: '/layout-vehicle-owner/auto-repair-catalog/searchWorkshop',
     icon: 'tool',
     label: 'side-bar-owner.searchWorkshop'
   },
   {
-    route: '/layout-auto-repair-catalog/history',
+    route: '/layout-vehicle-owner/history',
     icon: 'history',
     label: 'side-bar-owner.history'
   },
   {
-    route: '/layout-owner/track-vehicle',
+    route: '/layout-vehicle-owner/track-vehicle',
     icon: 'diamonds',
     label: 'side-bar-owner.track'
   },
   {
-    route: '/layout-auto-repair-catalog/settings',
+    route: '/layout-vehicle-owner/settings',
     icon: 'settings-bolt',
     label: 'side-bar-owner.settings'
   },
   {
-    "route": '/layout-auto-repair-catalog/notification-view',
+    "route": '/layout-vehicle-owner/notification-view',
     "icon": 'bell',
     "label": 'side-bar-owner.notifications'
   }

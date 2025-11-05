@@ -4,6 +4,8 @@ import {roleGuard} from "@/shared/infrastructure/guards/auth.guard.js";
 import dataRoutes from "@/data-collection-diagnosis/presentation/data-routes.js";
 import paymentServiceRoutes from "@/payment-service/presentation/payment-service-routes.js";
 import autoCatalogRoutes from "@/auto-repair-catalog/presentation/auto-repair-catalog-routes.js";
+import dashboardOwner from "@/shared/presentation/views/dashboard-owner.vue";
+import DashboardWorkshop from "@/shared/presentation/views/dashboard-workshop.vue";
 
 const layoutOwner = () => import("./shared/presentation/components/layout-owner.vue");
 const layoutWorkshop = () => import("./shared/presentation/components/layout-workshop.vue");
@@ -24,17 +26,23 @@ const routes = [
         children: iamRoutes,
     },
     {
-        path: '/layout-owner',
+        path: '/layout-vehicle-owner',
         name: 'layout-owner',
         component: layoutOwner,
         beforeEnter: roleGuard([VEHICLE_OWNER_ROLE_ID]),
-        redirect: '/layout-owner/home-owner',
+        redirect: '/layout-vehicle-owner/dashboard-owner',
         children: [
             {
                 path: 'home-owner',
                 name: 'home-auto-repair-catalog',
                 component: homeOwner,
                 meta: { title: 'Home Owner'}
+            },
+            {
+                path:'dashboard-owner',
+                name: 'dashboard-owner',
+                component: dashboardOwner,
+                meta:{title: 'Dashboard Owner'}
             },
             {
                 path: 'track-vehicle',
@@ -77,6 +85,12 @@ const routes = [
                 name: 'home-workshop',
                 component: homeWorkshop,
                 meta: { title: 'Home Workshop' }
+            },
+            {
+                path:'dashboard-workshop',
+                name: 'dashboard-workshop',
+                component: DashboardWorkshop,
+                meta:{title: 'Dashboard Workshop'}
             },
             {
                 path:'/visit',
