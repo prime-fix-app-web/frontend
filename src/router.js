@@ -6,6 +6,7 @@ import paymentServiceRoutes from "@/payment-service/presentation/payment-service
 import autoCatalogRoutes from "@/auto-repair-catalog/presentation/auto-repair-catalog-routes.js";
 import dashboardOwner from "@/shared/presentation/views/dashboard-owner.vue";
 import DashboardWorkshop from "@/shared/presentation/views/dashboard-workshop.vue";
+import trackingRoutes from "@/maintenance-tracking/presentation/maintenance-tracking.routes.js";
 
 const layoutOwner = () => import("./shared/presentation/components/layout-owner.vue");
 const layoutWorkshop = () => import("./shared/presentation/components/layout-workshop.vue");
@@ -70,6 +71,11 @@ const routes = [
                 path: 'payment-service',
                 name: 'payment-service',
                 children: paymentServiceRoutes,
+            },
+            {
+                path:'maintenance-tracking',
+                name: 'maintenance-tracking',
+                children: trackingRoutes
             }
         ]
     },

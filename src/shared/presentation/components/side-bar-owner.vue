@@ -15,7 +15,7 @@ const menuItems = [
     label: 'side-bar-owner.dashboard'
   },
   {
-    route: '/visit/auto_list',
+    route: '/layout-vehicle-owner/maintenance-tracking/manage-vehicles',
     icon: 'car-suv',
     label: 'side-bar-owner.vehicles'
   },

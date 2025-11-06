@@ -34,10 +34,14 @@ export class TrackingApi extends BaseApi {
 
     constructor() {
         super();
-        this.#notificationsEndpoint = new BaseEndpoint(this, notificationsEndpointPath,
-            {  useQueryParams, idQueryParamKey: notificationQueryParamKey });
+        this.#notificationsEndpoint = new BaseEndpoint(this, notificationsEndpointPath,{
+           usePathParams:import.meta.env.VITE_USE_PATH_PARAMS,
+           idQueryParamKey: notificationQueryParamKey,
+        });
         this.#vehiclesEndpoint = new BaseEndpoint(this, vehiclesEndpointPath, {
-                useQueryParams,idQueryParamKey:vehicleQueryParamKey});
+            usePathParams: import.meta.env.VITE_USE_PATH_PARAMS, // false en prod
+            idQueryParamKey: import.meta.env.VITE_VEHICLE_QUERY_PARAM_KEY // "id_vehicle"
+        });
     }
 
     /**

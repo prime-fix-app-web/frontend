@@ -167,18 +167,24 @@ const useTrackingStore = defineStore('tracking', () => {
         }
     };
 
-    function deleteVehicle(id_vehicle){
-        if(!id_vehicle) return;
-        trackingApi.deleteVehicle(id_vehicle).then((response) => {
-            const index = vehicles.value.findIndex(v=> v.id_vehicle === id_vehicle);
+    const deleteVehicle = async (id_vehicle) => {
+        if (!id_vehicle) {
+            return;
+        }
+        trackingApi.deleteVehicle(id_vehicle).then(() => {
+            const index = vehicles.value.findIndex(v => v.id_vehicle === id_vehicle);
             if (index !== -1) vehicles.value.splice(index, 1);
-        }).catch((err) => pushError(err))
-    }
+        }).catch((err) => {
+            errors.value.push(err);
+        })
+    };
 
     const pushError = (err) => {
       const e = err?.response?.data ?? err?.message ?? String(err);
         errors.value.push(e);
     };
+
+
 
     return {
         notifications,

@@ -88,13 +88,13 @@ export class BaseEndpoint {
      */
     delete(id) {
         let url = this.endpointPath;
-        // When using query params (Supabase style), use query string
-        if (this.config.usePathParams === 'true') {
-            url += `?${this.#idQueryParamKey}=eq.${id}`;
-        } else {
-            // Traditional REST API style with path params
-            url += `/${id}`;
-        }
-        return this.http.delete(url);
+        url += `?${this.#idQueryParamKey}=eq.${id}`;
+        return this.http.delete(url, {
+            headers: {
+                apikey: this.config.apiKey,
+                Authorization: `Bearer ${this.config.apiKey}`,
+            }
+        });
     }
+
 }
