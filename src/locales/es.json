@@ -413,5 +413,50 @@
     "cancel": "Cancelar",
     "add": "Agregar",
     "save": "Guardar"
+  },
+  "settings-view": {
+    "title": "Configuración",
+    "changePassword": "Cambiar contraseña",
+    "newPassword": "Nueva contraseña",
+    "repeatPassword": "Repetir contraseña",
+    "savePassword": "Guardar",
+    "paymentMethods": "Métodos de pago",
+    "bank": "Banco",
+    "cardNumber": "Número",
+    "expirationDate": "Fecha de caducidad",
+    "deletePaymentMethod": "Eliminar",
+    "addPaymentMethod": "Añadir método de pago",
+    "subscription": "Suscripción",
+    "plan": "Plan de {months} meses",
+    "cost": "Costo: {price}",
+    "renewSubscription": "Renovar suscripción"
+  },
+  "profile-view": {
+    "title": "Perfil",
+    "editProfile": "Editar perfil",
+    "cancelEdit": "Cancelar",
+    "saveChanges": "Guardar cambios",
+    "username": "Nombre de usuario",
+    "address": "Dirección",
+    "password": "Contraseña"
+  },
+  "dashboard-workshop": {
+    "title": "Menú inicial",
+    "scheduledVisits": "Visitas agendadas",
+    "receivedRatings": "Calificaciones recibidas",
+    "noScheduledVisits": "No hay visitas agendadas",
+    "noRatings": "No hay calificaciones recibidas",
+    "customerName": "Nombre de cliente",
+    "date": "Fecha",
+    "time": "Hora",
+    "details": "Detalles",
+    "client": "Cliente",
+    "ratingDate": "Fecha de calificación",
+    "rating": "Puntaje",
+    "comment": "Comentario",
+    "visitDetails": "Detalle de visita",
+    "vehicleModel": "Modelo de coche",
+    "failures": "Fallas",
+    "close": "Cerrar"
   }
 }

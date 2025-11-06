@@ -395,5 +395,50 @@
     "cancel": "Cancel",
     "add": "Add",
     "save": "Save"
+  },
+  "settings-view": {
+    "title": "Settings",
+    "changePassword": "Change password",
+    "newPassword": "New password",
+    "repeatPassword": "Repeat password",
+    "savePassword": "Save",
+    "paymentMethods": "Payment methods",
+    "bank": "Bank",
+    "cardNumber": "Number",
+    "expirationDate": "Expiration date",
+    "deletePaymentMethod": "Delete",
+    "addPaymentMethod": "Add payment method",
+    "subscription": "Subscription",
+    "plan": "{months} months plan",
+    "cost": "Cost: {price}",
+    "renewSubscription": "Renew subscription"
+  },
+  "profile-view": {
+    "title": "Profile",
+    "editProfile": "Edit profile",
+    "cancelEdit": "Cancel",
+    "saveChanges": "Save changes",
+    "username": "Username",
+    "address": "Address",
+    "password": "Password"
+  },
+  "dashboard-workshop": {
+    "title": "Dashboard",
+    "scheduledVisits": "Scheduled visits",
+    "receivedRatings": "Received ratings",
+    "noScheduledVisits": "No scheduled visits",
+    "noRatings": "No ratings received",
+    "customerName": "Customer name",
+    "date": "Date",
+    "time": "Time",
+    "details": "Details",
+    "client": "Client",
+    "ratingDate": "Rating date",
+    "rating": "Score",
+    "comment": "Comment",
+    "visitDetails": "Visit details",
+    "vehicleModel": "Vehicle model",
+    "failures": "Failures",
+    "close": "Close"
   }
 }

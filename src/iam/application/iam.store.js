@@ -275,6 +275,29 @@ export const useIamStore = defineStore('iam', () => {
         catalogStore.deleteLocation(id);
     }
 
+    const updateUserAccount = async (id,accountData) => {
+        loading.value = true;
+        errors.value = [];
+        try {
+            const accountId = Number(id);
+            const response = await iamApi.updateUserAccount(accountId, accountData)
+            const index = userAccounts.value.findIndex(v => Number(v.id_user_account) === accountId);
+            if (index !== -1) {
+                userAccounts.value[index] = {
+                    ...userAccounts.value[index],
+                    ...userAccounts,
+                    id_user_account: accountId,
+                };
+            }
+            loading.value = false;
+            return response;
+        } catch (error) {
+            errors.value.push(error);
+            loading.value = false;
+            throw error;
+        }
+    }
+
     function addPayment(payment) {
         return paymentStore.addPayment(payment);
     }
@@ -504,7 +527,8 @@ export const useIamStore = defineStore('iam', () => {
         selectPlan,
         finishRegister,
         resetRegistrationFlow,
-        loadSessionFromStorage
+        loadSessionFromStorage,
+        updateUserAccount
     };
 });
 

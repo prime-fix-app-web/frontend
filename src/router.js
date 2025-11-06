@@ -16,7 +16,8 @@ const pageNotFound = () => import("./shared/presentation/views/page-not-found.vu
 
 const trackVehicle = () => import("./maintenance-tracking/presentation/views/track-vehicle.vue");
 const notificationView = () => import("./maintenance-tracking/presentation/views/notification-view.vue");
-
+const setting =() =>import("./shared/presentation/views/settings.vue");
+const profile=()=>import("./shared/presentation/views/profile.vue");
 const VEHICLE_OWNER_ROLE_ID = "R001";
 const WORKSHOP_ROLE_ID = "R002";
 
@@ -46,6 +47,11 @@ const routes = [
                 meta:{title: 'Dashboard Owner'}
             },
             {
+                path:'profile-owner',
+                component: profile,
+                meta:{title: 'Profile Owner'}
+            },
+            {
                 path: 'track-vehicle',
                 name: 'track-vehicle',
                 component: trackVehicle,
@@ -56,6 +62,11 @@ const routes = [
                 name: 'notification-view',
                 component: notificationView,
                 meta: { title: 'Notifications' }
+            },
+            {
+                path:'settings-owner',
+                component:setting,
+                meta:{title: 'Settings'}
             },
             {
               path:'auto-repair-catalog',
@@ -97,6 +108,11 @@ const routes = [
                 name: 'dashboard-workshop',
                 component: DashboardWorkshop,
                 meta:{title: 'Dashboard Workshop'}
+            },
+            {
+              path:'profile',
+              component:profile,
+              meta: {title: 'Profile Workshop'}
             },
             {
                 path:'visit',

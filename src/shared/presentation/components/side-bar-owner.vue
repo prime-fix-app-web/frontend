@@ -5,7 +5,7 @@ import ButtonLogout from "@/shared/presentation/components/button-logout.vue";
 
 const menuItems = [
   {
-    route: '/layout-vehicle-owner/profile',
+    route: '/layout-vehicle-owner/profile-owner',
     icon: 'user',
     label: 'side-bar-owner.profile'
   },
@@ -30,19 +30,19 @@ const menuItems = [
     label: 'side-bar-owner.history'
   },
   {
-    route: '/layout-vehicle-owner/track-vehicle',
+    route: '/layout-vehicle-owner/maintenance-tracking/track-vehicle',
     icon: 'diamonds',
     label: 'side-bar-owner.track'
   },
   {
-    route: '/layout-vehicle-owner/settings',
+    route: '/layout-vehicle-owner/settings-owner',
     icon: 'settings-bolt',
     label: 'side-bar-owner.settings'
   },
   {
-    "route": '/layout-vehicle-owner/notification-view',
-    "icon": 'bell',
-    "label": 'side-bar-owner.notifications'
+    route: '/layout-vehicle-owner/maintenance-tracking/notification-view',
+    icon: 'bell',
+    label: 'side-bar-owner.notifications'
   }
 ];
 
