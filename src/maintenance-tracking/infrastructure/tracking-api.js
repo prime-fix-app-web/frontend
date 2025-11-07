@@ -1,17 +1,26 @@
 import {BaseApi} from "@/shared/infrastructure/http/base-api.js";
 import {BaseEndpoint} from "@/shared/infrastructure/http/base-endpoint.js";
 
-
 /**
  * Endpoint path for notifications.
  */
 const notificationsEndpointPath = import.meta.env.VITE_NOTIFICATIONS_ENDPOINT_PATH;
 
 /**
+ * Endpoint path for vehicles
+ */
+const vehiclesEndpointPath = import.meta.env.VITE_VEHICLES_ENDPOINT_PATH;
+
+/**
  * Query parameter key for notification ID.
  * @type {string} - The query parameter key for notification ID.
  */
 const notificationQueryParamKey = String(import.meta.env.VITE_NOTIFICATION_QUERY_PARAM_KEY).toLowerCase();
+
+/**
+ * Query parameter key for a vehicle ID
+ */
+const vehicleQueryParamKey = import.meta.env.VITE_VEHICLE_QUERY_PARAM_KEY;
 
 /**
  * Flag to determine if query params should be used.
@@ -21,11 +30,18 @@ const useQueryParams = String(import.meta.env.VITE_USE_PATH_PARAMS).toLowerCase(
 
 export class TrackingApi extends BaseApi {
     #notificationsEndpoint;
+    #vehiclesEndpoint;
 
     constructor() {
         super();
-        this.#notificationsEndpoint = new BaseEndpoint(this, notificationsEndpointPath,
-            {  useQueryParams, idQueryParamKey: notificationQueryParamKey });
+        this.#notificationsEndpoint = new BaseEndpoint(this, notificationsEndpointPath,{
+           usePathParams:import.meta.env.VITE_USE_PATH_PARAMS,
+           idQueryParamKey: notificationQueryParamKey,
+        });
+        this.#vehiclesEndpoint = new BaseEndpoint(this, vehiclesEndpointPath, {
+            usePathParams: import.meta.env.VITE_USE_PATH_PARAMS, // false en prod
+            idQueryParamKey: import.meta.env.VITE_VEHICLE_QUERY_PARAM_KEY // "id_vehicle"
+        });
     }
 
     /**
@@ -95,4 +111,26 @@ export class TrackingApi extends BaseApi {
         const res = await this.#notificationsEndpoint.delete(id);
         return res?.data ?? res;
     }
+
+
+    getVehicles(){
+        return this.#vehiclesEndpoint.getAll();
+    }
+
+    getVehiclesById(id){
+        return this.#vehiclesEndpoint.getById(id);
+    }
+
+    createVehicle(vehicle){
+        return this.#vehiclesEndpoint.create(vehicle);
+    }
+
+    updateVehicle(id,vehicle){
+        return this.#vehiclesEndpoint.update(id, vehicle);
+    }
+
+    deleteVehicle(id){
+        return this.#vehiclesEndpoint.delete(id);
+    }
+
 }

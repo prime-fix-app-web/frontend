@@ -1,8 +1,8 @@
 import {BaseApi} from "@/shared/infrastructure/http/base-api.js";
 import {BaseEndpoint} from "@/shared/infrastructure/http/base-endpoint.js";
 
-const locationsEndpointPath = import.meta.env.VITE_LOCATIONS_ENDPOINT_PATH;
-const paymentsEndpointPath = import.meta.env.VITE_PAYMENTS_ENDPOINT_PATH;
+const locationsEndpointPath = import.meta.env.VITE_LOCATIONS_ENDPOINT_PATH ;
+const paymentsEndpointPath = import.meta.env.VITE_PAYMENTS_ENDPOINT_PATH ;
 const usersEndpointPath = import.meta.env.VITE_USERS_ENDPOINT_PATH;
 const userAccountsEndpointPath = import.meta.env.VITE_USER_ACCOUNTS_ENDPOINT_PATH;
 
@@ -53,14 +53,6 @@ export class IamApi extends BaseApi {
      */
     constructor() {
         super();
-        this.#locationsEndpoint = new BaseEndpoint(this, locationsEndpointPath, {
-            usePathParams: import.meta.env.VITE_USE_PATH_PARAMS,
-            idQueryParamKey: locationQueryParamKey
-        });
-        this.#paymentsEndpoint = new BaseEndpoint(this, paymentsEndpointPath, {
-            usePathParams: import.meta.env.VITE_USE_PATH_PARAMS,
-            idQueryParamKey: paymentQueryParamKey
-        });
         this.#usersEndpoint = new BaseEndpoint(this, usersEndpointPath, {
             usePathParams: import.meta.env.VITE_USE_PATH_PARAMS,
             idQueryParamKey: userQueryParamKey
@@ -71,93 +63,6 @@ export class IamApi extends BaseApi {
         });
     }
 
-    /**
-     * Fetches all locations from the API.
-     * @returns {Promise<import('axios').AxiosReponse>} A promise that resolves to the API response.
-     */
-    getLocations() {
-        return this.#locationsEndpoint.getAll();
-    }
-
-    /**
-     * Fetches a location by its ID.
-     * @param id - The ID of the location to fetch.
-     * @returns {Promise<import('axios').AxiosReponse>} A promise that resolves to the API response.
-     */
-    getLocationById(id) {
-        return this.#locationsEndpoint.getById(id);
-    }
-
-    /**
-     * Creates a new location.
-     * @param resource - The location resource to create.
-     * @returns {Promise<import('axios').AxiosReponse>} - A promise that resolves to the API response.
-     */
-    createLocation(resource) {
-        return this.#locationsEndpoint.create(resource);
-    }
-
-    /**
-     * Updates an existing location.
-     * @param resource - The location resource to update.
-     * @returns {Promise<import('axios').AxiosReponse>} - A promise that resolves to the API response.
-     */
-    updateLocation(resource) {
-        return this.#locationsEndpoint.update(resource.id, resource);
-    }
-
-    /**
-     * Deletes a location by its ID.
-     * @param id - The ID of the location to delete.
-     * @returns {Promise<import('axios').AxiosResponse>} - A promise that resolves to the API response.
-     */
-    deleteLocation(id) {
-        return this.#locationsEndpoint.delete(id);
-    }
-
-    /**
-     * Fetches all payments from the API.
-     * @returns {Promise<import('axios').AxiosResponse>} - A promise that resolves to the API response.
-     */
-    getPayments() {
-        return this.#paymentsEndpoint.getAll();
-    }
-
-    /**
-     * Fetches a payment by its ID.
-     * @param id - The ID of the payment to fetch.
-     * @returns {Promise<import('axios').AxiosResponse>} - A promise that resolves to the API response.
-     */
-    getPaymentById(id) {
-        return this.#paymentsEndpoint.getById(id);
-    }
-
-    /**
-     * Creates a new payment.
-     * @param resource - The payment resource to create.
-     * @returns {Promise<import('axios').AxiosResponse>} - A promise that resolves to the API response.
-     */
-    createPayment(resource) {
-        return this.#paymentsEndpoint.create(resource);
-    }
-
-    /**
-     * Updates an existing payment.
-     * @param resource - The payment resource to update.
-     * @returns {Promise<import('axios').AxiosResponse>} - A promise that resolves to the API response.
-     */
-    updatePayment(resource) {
-        return this.#paymentsEndpoint.update(resource.id, resource);
-    }
-
-    /**
-     * Deletes a payment by its ID.
-     * @param id - The ID of the payment to delete.
-     * @returns {Promise<import('axios').AxiosResponse>} - A promise that resolves to the API response.
-     */
-    deletePayment(id) {
-        return this.#paymentsEndpoint.delete(id);
-    }
 
     /**
      * Fetches all users.

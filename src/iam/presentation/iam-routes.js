@@ -22,7 +22,7 @@ const iamRoutes = [
         meta: { title: 'Payment View' }
     },
     {
-        path: 'plan-owner',
+        path: 'plan-auto-repair-catalog',
         name: 'plan-owner',
         component: planOwner,
         meta: { title: 'Plan Owner' }
@@ -40,7 +40,7 @@ const iamRoutes = [
       meta: { title: 'Forgot Password' }
     },
     {
-        path: 'register-owner',
+        path: 'register-auto-repair-catalog',
         name: 'register-owner',
         component: registerOwner,
         meta: { title: 'Register Owner' }

@@ -1,0 +1,313 @@
+<script setup>
+import {AutoRepair} from "@/auto-repair-catalog/domain/model/auto-repair.entity.js";
+import {Location} from "@/auto-repair-catalog/domain/model/location.entity.js";
+import IamStore, {useIamStore} from "@/iam/application/iam.store.js";
+import {useI18n} from "vue-i18n";
+import {useRouter} from "vue-router";
+import {computed, onMounted} from "vue";
+
+const props = defineProps({
+  autoRepair: {
+    type: Object,
+    required: true
+  },
+  location: {
+    type: Object,
+    required: false
+  }
+})
+
+const { t } = useI18n();
+const router = useRouter();
+
+const iamStore = useIamStore();
+
+const userAccount = computed(() => {
+  const idUserAccount =props.autoRepair?.id_user_account;
+  return idUserAccount ? iamStore.getUserAccountById(idUserAccount) : undefined;
+});
+
+const userAccountName = computed(() => userAccount.value?.username ?? '');
+
+const selectRepair = (id) => {
+  router.push({ name: "visitForm", query: { id_auto_repair: id } });
+};
+
+onMounted(async ()=>{
+  iamStore.fetchUserAccounts();
+  iamStore.fetchUsers();
+})
+
+
+
+</script>
+
+<template>
+  <article class="auto-repair-card">
+    <div class="card-header">
+      <div class="workshop-info" v-if="userAccountName">
+        <h3 class="workshop-name">
+          {{ userAccountName }} - {{ autoRepair?.ruc }}
+        </h3>
+        <p class="workshop-contact" v-if="autoRepair?.email">{{ autoRepair.email }}</p>
+      </div>
+
+      <div class="rating">
+        <span class="stars">⭐⭐⭐⭐⭐</span>
+      </div>
+    </div>
+
+    <div class="card-body">
+      <div v-if="location" class="location-info">
+        <p class="address">{{ location.address }}</p>
+        <p class="district">
+          {{ location.district }}, {{ location.department }}
+        </p>
+      </div>
+
+      <div class="stats">
+        <div class="stat-item">
+          <span class="stat-icon">
+            <svg>
+              <use href="/assets/icons/sprite.symbol.svg#users"></use>
+            </svg>
+          </span>
+          <div class="stat-content">
+            <span class="stat-label">
+              {{ t('search-auto-repair.auto-repair-card.numberTechnicians') }}
+            </span>
+            <span class="stat-value">{{ autoRepair?.technicians_count }}</span>
+          </div>
+        </div>
+
+        <div class="stat-item">
+          <span class="stat-icon">
+            <svg>
+              <use href="/assets/icons/sprite.symbol.svg#tool"></use>
+            </svg>
+          </span>
+          <div class="stat-content">
+            <span class="stat-label">
+              {{ t('search-auto-repair.auto-repair-card.availableTechnicians') }}
+            </span>
+            <span class="stat-value">{{ autoRepair?.technicians_count }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-footer">
+      <button type="button" class="btn-select" @click="selectRepair(autoRepair.id_auto_repair)">
+        {{ t('search-auto-repair.auto-repair-card.selectButton') }}
+      </button>
+    </div>
+  </article>
+
+</template>
+
+<style scoped>
+.auto-repair-card {
+  background: var(--color-second-complementary);
+  border: none;
+  border-radius: 12px;
+  padding: 1.75rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.auto-repair-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+}
+
+/* Header */
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(100, 145, 164, 0.2);
+}
+
+.workshop-info {
+  flex: 1;
+}
+
+.workshop-name {
+  font-family: var(--font-bold);
+  font-size: 1.2rem;
+  color: var(--color-primary);
+  margin: 0 0 0.25rem 0;
+}
+
+.workshop-contact {
+  font-family: var(--font-regular);
+  font-size: 0.875rem;
+  color: var(--color-tertiary-complementary);
+  margin: 0;
+}
+
+.rating {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.stars {
+  font-size: 0.9rem;
+  color: var(--color-first-complementary);
+  letter-spacing: 1px;
+}
+
+/* Body */
+.card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+.location-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.address {
+  font-family: var(--font-medium);
+  font-size: 0.95rem;
+  color: var(--color-dark);
+  margin: 0;
+}
+
+.district {
+  font-family: var(--font-regular);
+  font-size: 0.875rem;
+  color: var(--color-tertiary-complementary);
+  margin: 0;
+}
+
+/* Stats */
+.stats {
+  display: flex;
+  flex-direction: row;
+  gap: 2rem;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.stat-icon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--color-dark);
+  flex-shrink: 0;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.stat-icon:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  transform: scale(1.1);
+}
+
+/* Ensure SVGs inside stat-icon inherit color and scale properly */
+.stat-icon svg {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
+  stroke: currentColor;
+}
+
+.stat-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.stat-label {
+  font-family: var(--font-regular);
+  font-size: 0.875rem;
+  color: var(--color-dark);
+}
+
+.stat-value {
+  font-family: var(--font-bold);
+  font-size: 1.1rem;
+  color: var(--color-primary);
+}
+
+/* Footer */
+.card-footer {
+  display: flex;
+  justify-content: center;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(100, 145, 164, 0.2);
+}
+
+.btn-select {
+  font-family: var(--font-semibold);
+  font-size: 1rem;
+  padding: 0.875rem 2.5rem;
+  border: none;
+  border-radius: 8px;
+  background-color: var(--color-first-complementary);
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: auto;
+}
+
+.btn-select:hover {
+  background-color: #d99a1a;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(242, 170, 31, 0.4);
+}
+
+.btn-select:active {
+  transform: translateY(0);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .auto-repair-card {
+    padding: 1.5rem;
+  }
+
+  .workshop-name {
+    font-size: 1.1rem;
+  }
+
+  .card-header {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .stats {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .stat-icon {
+    width: 36px;
+    height: 36px;
+  }
+
+  .stat-icon svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .btn-select {
+    width: 100%;
+  }
+}
+</style>

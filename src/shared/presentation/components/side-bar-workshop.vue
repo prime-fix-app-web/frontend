@@ -10,27 +10,27 @@ const menuItems = [
     label: 'side-bar-workshop.profile'
   },
   {
-    route: '/layout-workshop/home-workshop',
+    route: '/layout-workshop/dashboard-workshop',
     icon: 'category',
     label: 'side-bar-workshop.dashboard'
   },
   {
-    route: '/layout-workshop/workshop',
+    route: '/layout-workshop/auto-repair-register/manage-auto-repair',
     icon: 'tool',
     label: 'side-bar-workshop.workshop'
   },
   {
-    route: '/layout-workshop/requests',
+    route: '/layout-workshop/auto-repair-register/manage-request',
     icon: 'clipboard',
     label: 'side-bar-workshop.requests'
   },
   {
-    route: '/layout-workshop/manage-technicians/technicians',
+    route: '/layout-workshop/auto-repair-register/technicians',
     icon: 'users',
     label: 'side-bar-workshop.manageTechnicians'
   },
   {
-    route: '/layout-workshop/maintenance-tracking/status-vehicle',
+    route: '/layout-workshop/visit/diagnosis-view',
     icon: 'diamonds',
     label: 'side-bar-workshop.statusVehicles'
   },
@@ -100,7 +100,7 @@ function go(path) {
   height: 100vh;
   padding: 1.5rem 0;
   flex-shrink: 0;
-  overflow-y: auto;
+  overflow: hidden;
 }
 
 .user-profile {
@@ -127,7 +127,8 @@ function go(path) {
 
 .sidebar-nav {
   flex: 1;
-  overflow-y: auto;
+  /* Quitar scroll de la sección de navegación */
+  overflow: visible;
 }
 
 .sidebar-nav ul {
@@ -170,7 +171,8 @@ function go(path) {
 
 .sidebar-footer {
   padding: 1rem 1.5rem;
-  margin-bottom: 230px;
+  /* Empujar al fondo sin crear espacio extra que provoque scroll */
+  margin-top: auto;
 }
 
 /* Responsive Design */

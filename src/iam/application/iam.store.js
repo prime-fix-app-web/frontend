@@ -1,159 +1,467 @@
 import {IamApi} from "@/iam/infrastructure/iam-api.js";
 import {defineStore} from "pinia";
 import {computed, ref} from "vue";
-import {LocationAssembler} from "@/iam/infrastructure/location.assembler.js";
-import {PaymentAssembler} from "@/iam/infrastructure/payment.assembler.js";
 import {UserAccountAssembler} from "@/iam/infrastructure/user-account.assembler.js";
 import {UserAssembler} from "@/iam/infrastructure/user.assembler.js";
-import {Location} from "@/iam/domain/model/location.entity.js";
+import {LocationAssembler} from "@/auto-repair-catalog/infrastructure/location.assembler.js";
+import {PaymentAssembler} from "@/payment-service/infrastructure/payment.assembler.js";
 import {User} from "@/iam/domain/model/user.entity.js";
 import {UserAccount} from "@/iam/domain/model/user-account.entity.js";
-import {Payment} from "@/iam/domain/model/payment.entity.js";
+import {Location} from "@/auto-repair-catalog/domain/model/location.entity.js";
+import {Payment} from "@/payment-service/domain/model/payment.entity.js";
 
-/**
- * Singleton instance of IamApi to be used across the store.
- * @type {IamApi}
- */
+import useCatalogStore from "@/auto-repair-catalog/application/owner.store.js";
+import usePaymentStore from "@/payment-service/application/payment-service.store.js";
+
+import {MembershipChoice} from "@/data-collection-diagnosis/domain/types/membership-choice.js";
+import {RoleChoicesType} from "@/data-collection-diagnosis/domain/types/role-choice.js";
+
+const VEHICLE_OWNER_ROLE_ID = 'R001';
+const WORKSHOP_ROLE_ID = 'R002';
+
 const iamApi = new IamApi();
 
-const useIamStore = defineStore('iam', () => {
-    /**
-     * List of locations.
-     * @type {import('vue').Ref<Location[]>}
-     */
-    const locations = ref([]);
-    /**
-     * List of payments.
-     * @type {import('vue').Ref<Payment[]>}
-     */
-    const payments = ref([]);
-    /**
-     * List of users.
-     * @type {import('vue').Ref<User[]>}
-     */
-    const users = ref([]);
-    /**
-     * List of user accounts.
-     * @type {import('vue').Ref<UserAccount[]>}
-     */
-    const userAccounts = ref([]);
+export const useIamStore = defineStore('iam', () => {
 
-    /**
-     * List of errors.
-     * @type {import('vue').Ref<Error[]>}
-     */
+    const catalogStore = useCatalogStore();
+    const paymentStore = usePaymentStore();
+
+    const userAccounts = ref([]);
+    const users = ref([]);
+
+    const locations = computed(() => catalogStore.locations);
+    const payments = computed(() => paymentStore.payments);
+
+    const loading = ref(false);
     const errors = ref([]);
 
-    /**
-     * Indicates if locations have been loaded.
-     * @type {import('vue').Ref<boolean>}
-     */
-    const locationsLoaded = ref(false);
-    /**
-     * Indicates if payments have been loaded.
-     * @type {import('vue').Ref<boolean>}
-     */
-    const paymentsLoaded = ref(false);
-    /**
-     * Indicates if users have been loaded.
-     * @type {import('vue').Ref<boolean>}
-     */
-    const usersLoaded = ref(false);
-    /**
-     * Indicates if user accounts have been loaded.
-     * @type {import('vue').Ref<boolean>}
-     */
-    const userAccountsLoaded = ref(false);
-
-    /**
-     * Count of locations.
-     * @type {import('vue').ComputedRef<number>}
-     */
-    const locationsCount = computed(() => {
-        return locationsLoaded ? locations.value.length : 0;
-    });
-
-    /**
-     * Count of payments.
-     * @type {import('vue').ComputedRef<number>}
-     */
-    const paymentsCount = computed(() => {
-        return paymentsLoaded ? payments.value.length : 0;
-    });
-
-    /**
-     * Count of users.
-     * @type {import('vue').ComputedRef<number>}
-     */
-    const usersCount = computed(() => {
-        return usersLoaded ? users.value.length : 0;
-    });
-
-    /**
-     * Count of user accounts.
-     * @type {import('vue').ComputedRef<number>}
-     */
-    const userAccountsCount = computed(() => {
-        return userAccountsLoaded ? userAccounts.value.length : 0;
-    });
-
-
-    /**
-     * The currently authenticated user's account.
-     * @type {import('vue').Ref<UserAccount|null>}
-     */
     const sessionUserAccount = ref(null);
-    /**
-     * The currently authenticated user.
-     * @type {import('vue').Ref<User|null>}
-     */
     const sessionUser = ref(null);
-    /**
-     * Indicates if a user is authenticated.
-     * @type {import('vue').ComputedRef<boolean>}
-     */
-    const isAuthenticated = computed(() => !!sessionUserAccount.value);
-    /**
-     * The role ID of the currently authenticated user.
-     * @type {import('vue').ComputedRef<string|null>}
-     */
-    const roleId = computed(() => sessionUserAccount.value ? sessionUserAccount.value.id_role : null);
 
-    /**
-     * Registration location during the registration flow.
-     * @type {import('vue').Ref<Location|null>}
-     */
-    const registerLocation = ref(null);
+    const userAccountsLoaded =ref(false);
+    const userLoaded = ref(false);
 
-    /**
-     * Registration payment during the registration flow.
-     * @type {import('vue').Ref<Payment|null>}
-     */
-    const registerPayment = ref(null);
-
-    /**
-     * Registration user during the registration flow.
-     * @type {import('vue').Ref<User|null>}
-     */
     const registerUser = ref(null);
-
-    /**
-     * Registration user account during the registration flow.
-     * @type {import('vue').Ref<UserAccount|null>}
-     */
     const registerUserAccount = ref(null);
-
-    /**
-     * Registration membership type during the registration flow.
-     * @type {import('vue').Ref<string|null>}
-     */
+    const registerPayment = ref(null);
+    const registerRole = ref(null);
+    const registerLocation = ref(null);
     const registerMemberShipType = ref(null);
 
-    /**
-     * Load session from localStorage if available.
-     * This function should be called on application startup to restore the session.
-     * @returns {void}
-     */
+    const userAccountCount = computed(() => {
+        return userAccountsLoaded ? userAccounts.value.length:0;
+    })
+
+    const userCount = computed(() => {
+        return userLoaded ? users.value.length:0;
+    })
+
+    const paymentCount = computed(() => {
+        this.payments().length;
+    })
+
+    const locationCount = computed(() => {
+        this.locations().length;
+    })
+
+    const isAuthenticated = computed(() => !!sessionUserAccount.value);
+    const roleId = computed(() => sessionUserAccount.value?.id_role ?? '');
+    const fullName = computed(() => {
+        const user = sessionUser.value;
+        return user ? `${user.name} ${user.last_name}` : '';
+    });
+
+    function formatError(err, fallback) {
+        if (err instanceof Error) {
+            return err.message.includes('Resource not found') ? `${fallback}: No encontrado` : err.message;
+        }
+        const apiError = err?.response?.data?.message || err?.message;
+        return apiError || fallback;
+    }
+
+    function saveSessionToStorage() {
+        if (typeof localStorage === 'undefined') return;
+
+        try {
+            const userAccount = sessionUserAccount.value;
+            const user = sessionUser.value;
+
+            if (userAccount && user) {
+                const sessionData = {
+                    userAccount: userAccount,
+                    user: user,
+                    timestamp: Date.now()
+                };
+                localStorage.setItem('prime-fix-session', JSON.stringify(sessionData));
+            }
+        } catch (err) {
+            console.warn('Failed to save session to localStorage:', err);
+        }
+    }
+    function clearSessionStorage() {
+        if (typeof localStorage === 'undefined') return;
+
+        try {
+            localStorage.removeItem('prime-fix-session');
+        } catch (err) {
+            console.warn('Failed to clear session from localStorage:', err);
+        }
+    }
+    function restoreSessionFromStorage() {
+        if (typeof localStorage === 'undefined') {
+            console.warn("localStorage is not available in this environment.");
+            return;
+        }
+        try {
+            const sessionData = localStorage.getItem('prime-fix-session');
+            if (sessionData) {
+                const parsed = JSON.parse(sessionData);
+                const {userAccount: rawUserAccount, user: rawUser} = parsed;
+
+                // Lógica de validación
+                const isOwner = rawUserAccount?.id_role === VEHICLE_OWNER_ROLE_ID;
+                const isWorkshop = rawUserAccount?.id_role === WORKSHOP_ROLE_ID;
+
+                const hasUserAccountData = rawUserAccount
+                    && typeof rawUserAccount.id_role === 'string'
+                    && (isOwner || isWorkshop);
+                const hasUserData = rawUser
+                    && typeof rawUser.id_user === 'string'
+                    && rawUser.id_user.length > 0;
+
+                if (hasUserAccountData && hasUserData) {
+                    // Re-instanciar las entidades
+                    const userAccount = new UserAccount(rawUserAccount);
+                    const user = new User(rawUser);
+
+                    sessionUserAccount.value = userAccount;
+                    sessionUser.value = user;
+
+                    // Usando RoleChoicesType para obtener el nombre legible
+                    const roleName = isOwner ? RoleChoicesType.VEHICLE_OWNER : RoleChoicesType.AUTO_REPAIR_WORKSHOP;
+
+                    console.log(`Session restored: User ${userAccount.username || userAccount.email || user.name || 'Unknown'} with role ${userAccount.id_role} (${roleName})`);
+                } else {
+                    console.error('NOT LOGGED - Corrupted session detected and cleared.');
+                    clearSessionStorage();
+                }
+            } else {
+                console.log('NOT LOGGED - No session found in localStorage');
+            }
+        } catch (err) {
+            console.warn('NOT LOGGED - Failed to restore session from localStorage:', err);
+            clearSessionStorage();
+        }
+    }
+
+    function fetchUserAccounts() {
+        iamApi.getUserAccounts().then(response =>{
+            userAccounts.value = UserAccountAssembler.toEntitiesFromResponse(response);
+            userAccountsLoaded.value = true;
+        }).catch(error=>{
+          errors.value.push(error);
+        })
+    }
+    function fetchUsers() {
+        iamApi.getUsers().then(response =>{
+            users.value = UserAssembler.toEntitiesFromResponse(response);
+            userLoaded.value = true;
+        }).catch(error=>{
+            errors.value.push(error);
+        })
+    }
+
+    async function login(email, password) {
+        loading.value = true;
+        errors.value = [];
+        try {
+            if (!userAccountsLoaded.value) {
+                await fetchUserAccounts();
+            }
+            if (!userLoaded.value) {
+                await fetchUsers();
+            }
+            const account = userAccounts.value.find(a =>
+                a.email?.toLowerCase().trim() === email.toLowerCase().trim()
+            );
+
+            if (!account) throw new Error("User or password incorrect");
+
+            if (account.password.trim() !== password.trim()) {
+                throw new Error("User or password incorrect");
+            }
+
+            const user = users.value.find(u => u.id_user === account.id_user);
+            if (!user) throw new Error("User not found");
+
+            sessionUserAccount.value = account;
+            sessionUser.value = user;
+
+            saveSessionToStorage();
+            return account;
+        } catch (err) {
+            errors.value.push(formatError(err, "Login failed"));
+            throw err;
+        } finally {
+            loading.value = false;
+        }
+        try {
+            try {
+                saveSessionToStorage();
+                console.log("Sesión guardada en localStorage");
+            } catch (e) {
+                console.error("Error guardando sesión:", e);
+            }
+
+            return account;
+        } catch (err) {
+            errors.value.push(formatError(err, "Login failed"));
+            throw err;
+        }
+    }
+    function logout() {
+        sessionUserAccount.value = null;
+        sessionUser.value = null;
+        clearSessionStorage();
+        console.log('Logout successful');
+    }
+
+    function getUserById(id) {
+        return users.value.find(u => u.id_user === id);
+    }
+    function getUserAccountById(id) {
+        return userAccounts.value.find(ua => ua.id_user_account === id);
+    }
+    function getLocationById(id) {
+        return catalogStore.getLocationById(id);
+    }
+
+    function addUserAccount(userAccount) {
+        return new Promise((resolve, reject) => {
+            const resource = UserAccountAssembler.toResourceFromEntity(userAccount);
+            iamApi.createUserAccount(resource).then(response => {
+                const responseData = response.data;
+                const newUserAccount = UserAccountAssembler.toEntityFromResource(responseData);
+                userAccounts.value.push(newUserAccount);
+                resolve(newUserAccount);
+            }).catch(error => {
+                errors.value.push(error);
+                reject(error);
+            });
+        });
+    }
+    function addUser(user) {
+        return new Promise((resolve, reject) => {
+            const resource = UserAssembler.toResourceFromEntity(user);
+            iamApi.createUser(resource).then(response => {
+                const responseData = response.data;
+                const newUser = UserAssembler.toEntityFromResource(responseData);
+                users.value.push(newUser);
+                resolve(newUser);
+            }).catch(error => {
+                errors.value.push(error);
+                reject(error);
+            });
+        });
+    }
+
+    function addLocation(location) {
+        return catalogStore.addLocation(location);
+    }
+    function updateLocation(location) {
+        catalogStore.updateLocation(location.id_location, location);
+    }
+    function deleteLocation(id) {
+        catalogStore.deleteLocation(id);
+    }
+
+    const updateUserAccount = async (id,accountData) => {
+        loading.value = true;
+        errors.value = [];
+        try {
+            const accountId = Number(id);
+            const response = await iamApi.updateUserAccount(accountId, accountData)
+            const index = userAccounts.value.findIndex(v => Number(v.id_user_account) === accountId);
+            if (index !== -1) {
+                userAccounts.value[index] = {
+                    ...userAccounts.value[index],
+                    ...userAccounts,
+                    id_user_account: accountId,
+                };
+            }
+            loading.value = false;
+            return response;
+        } catch (error) {
+            errors.value.push(error);
+            loading.value = false;
+            throw error;
+        }
+    }
+
+    function addPayment(payment) {
+        return paymentStore.addPayment(payment);
+    }
+    function updatePayment(updatedPayment) {
+        paymentStore.updatePayment(updatedPayment);
+    }
+    function deletePayment(id) {
+        paymentStore.deletePayment(id);
+    }
+
+    function startRegistrationFlow(role) {
+        if (!Object.values(RoleChoicesType).includes(role)) {
+            console.error(`Invalid role provided: ${role}`);
+            return;
+        }
+        registerRole.value = role;
+        registerUser.value = null;
+        registerUserAccount.value = null;
+        registerPayment.value = null;
+        registerLocation.value = null;
+        registerMemberShipType.value = null;
+        errors.value = null;
+        errors.value = [];
+    }
+    function saveRegisterOwner(form) {
+        const newLocation = new Location({
+            id_location: 'L0' + (locationCount + 1).toString(),
+            department: form.department,
+            district: form.district,
+            address: form.address
+        })
+
+        const newUser = new User({
+            id_user: 'U0' + (users.value.length + 1).toString(),
+            name: form.fullName.split(' ')[0] || '',
+            last_name: form.fullName.split(' ').slice(1).join(' '),
+            dni: form.dni,
+            phone_number: form.phone_number,
+            id_location: newLocation.id_location,
+        })
+
+        const newUserAccount = new UserAccount({
+            id_user_account: 'UA' + (userAccounts.value.length + 1).toString(),
+            username: form.username.trim(),
+            email: form.email.trim(),
+            id_user: newUser.id_user,
+            id_role: VEHICLE_OWNER_ROLE_ID,
+            id_membership: '',
+            password: form.password,
+            is_new: true
+        });
+
+        registerLocation.value = newLocation;
+        registerUser.value = newUser;
+        registerUserAccount.value = newUserAccount;
+        // Asignar el nombre legible del rol
+        registerRole.value = RoleChoicesType.VEHICLE_OWNER;
+    }
+    function saveRegisterWorkshop(form) {
+        const newLocation = new Location({
+            id_location: 'L0' + (locationCount + 1).toString(),
+            department: form.department,
+            district: form.district,
+            address: form.address
+        })
+
+        const newUser = new User({
+            id_user: 'U0' + (users.value.length + 1).toString(),
+            name: form.name,
+            last_name: '',
+            dni: form.ruc,
+            phone_number: form.phone_number,
+            id_location: newLocation.id_location,
+        })
+
+        const newUserAccount = new UserAccount({
+            id_user_account: 'UA' + (userAccounts.value.length + 1).toString(),
+            username: form.username.trim(),
+            email: form.email.trim(),
+            id_user: newUser.id_user,
+            id_role: WORKSHOP_ROLE_ID,
+            id_membership: '',
+            password: form.password,
+            is_new: true
+        });
+
+        registerLocation.value = newLocation;
+        registerUser.value = newUser;
+        registerUserAccount.value = newUserAccount;
+        registerRole.value = RoleChoicesType.AUTO_REPAIR_WORKSHOP;
+    }
+    function selectPlan(plan) {
+        const membershipId = MembershipChoice[plan];
+
+        if (!membershipId) {
+            console.error(`Invalid plan duration key: ${plan}`);
+            return;
+        }
+
+        registerMemberShipType.value = membershipId;
+
+        const userAccountNoMembership = registerUserAccount.value;
+        if (userAccountNoMembership) {
+            userAccountNoMembership.id_membership = membershipId;
+            // For reactivity in Vue, it's often best practice to create a new object
+            registerUserAccount.value = {...userAccountNoMembership};
+        }
+    }
+    async function finishRegister(paymentDetails) {
+        const role = registerRole.value;
+        const user = registerUser.value;
+        const userAccount = registerUserAccount.value;
+        const location = registerLocation.value;
+        const membershipId = registerMemberShipType.value;
+        loading.value = true;
+        error.value = null;
+
+        if(!role || !user || !userAccount || !location || !membershipId || !paymentDetails) {
+            error.value = 'Incomplete registration flow. Please restart.';
+            loading.value = false;
+            return;
+        }
+
+        const newPayment = new Payment({
+            id_payment: 'PY0' + (paymentStore.paymentCount + 1).toString(), // Simulado
+            card_number: paymentDetails.card_number,
+            card_type: paymentDetails.card_type,
+            month: paymentDetails.month,
+            year: paymentDetails.year,
+            cvv: paymentDetails.cvv,
+            id_user_account: userAccount.id_user_account
+        });
+
+        try {
+            // Ejecutar llamadas a la API de forma transaccional (secuencial)
+            await addLocation(location);
+            await addUser(user);
+            await addUserAccount(userAccount);
+            await addPayment(newPayment);
+
+            // Iniciar sesión automáticamente
+            sessionUserAccount.value = userAccount;
+            sessionUser.value = user;
+            saveSessionToStorage();
+
+        } catch (err) {
+            // El error se establece dentro de las funciones CRUD (addUser, etc.)
+            error.value = error.value || formatError(err, 'Final registration step failed');
+            errors.value.push(err);
+        } finally {
+            loading.value = false;
+        }
+    }
+
+    function resetRegistrationFlow() {
+        registerRole.value = null;
+        registerUser.value = null;
+        registerUserAccount.value = null;
+        registerPayment.value = null;
+        registerLocation.value = null;
+        registerMemberShipType.value = null;
+        errors.value = null;
+    }
+
     function loadSessionFromStorage() {
         const storedUserAccount = localStorage.getItem('userAccount');
         const storedUser = localStorage.getItem('user');
@@ -173,607 +481,55 @@ const useIamStore = defineStore('iam', () => {
         }
     }
 
-    /**
-     * Simulated login function.
-     * @param email - User email
-     * @param password - User password
-     * @returns {Promise<unknown>} - Resolves with user account on success, rejects with error on failure.
-     */
-    function login(email, password) {
-        return new Promise((resolve, reject) => {
-            const userAccount = userAccounts.value.find(
-                account => account.email === email && account.password === password
-            );
-            if (userAccount) {
-                sessionUserAccount.value = userAccount;
-                const user = users.value.find(u => u.id === userAccount.id_user);
-                if (user) {
-                    sessionUser.value = user;
-                    localStorage.setItem('user', JSON.stringify(user));
-                }
-                localStorage.setItem('userAccount', JSON.stringify(userAccount));
-                localStorage.setItem('isAuthenticated', 'true');
-
-                console.log('Login successful', userAccount);
-                resolve(userAccount);
-            } else {
-                reject(new Error('Invalid credentials'));
-            }
-        });
-    }
-
-    /**
-     * Logs out the current user and clears the session.
-     * @returns {void}
-     */
-    function logout() {
-        sessionUserAccount.value = null;
-        sessionUser.value = null;
-        clearSession();
-        console.log('Logout successful');
-    }
-
-    /**
-     * Clears session data from localStorage.
-     * @returns {void}
-     */
-    function clearSession() {
-        localStorage.removeItem('userAccount');
-        localStorage.removeItem('user');
-        localStorage.removeItem('isAuthenticated');
-    }
-
-    /**
-     * Gets the access token for the current session.
-     * @returns {string|null} - The access token if authenticated, otherwise null.
-     */
-    function getAccessToken() {
-        return isAuthenticated.value ? 'simulated-token-' + sessionUserAccount.value?.id : null;
-    }
-
-
-    /**
-     * Starts the registration flow for a given role.
-     * @param role - The role for the new user ('owner' or 'workshop').
-     */
-    function startRegistrationFlow(role) {
-        registerLocation.value = null;
-        registerPayment.value = null;
-        registerUser.value = null;
-        registerUserAccount.value = null;
-        registerMemberShipType.value = role;
-    }
-
-    /**
-     * Saves the registration data for an owner.
-     * @param fullName - Full name of the owner
-     * @param username - Username for the account
-     * @param dni - DNI number
-     * @param phone_number - Phone number
-     * @param department - Department
-     * @param district - District
-     * @param address - Address
-     * @param email - Email address
-     * @param password - Password
-     */
-    function saveRegisterOwner({ fullName, username, dni, phone_number, department,
-                               district, address, email, password }) {
-        const newLocation = new Location({
-            id_location: 'L0' + (locationsCount.value + 1).toString(),
-            department: department,
-            district: district,
-            address: address
-        });
-
-        const newUser = new User({
-            id_user: 'U0' + (usersCount.value + 1).toString(),
-            name: fullName.split(' ')[0] || '',
-            last_name: fullName.split(' ').slice(1).join(' '),
-            dni: dni,
-            phone_number: phone_number,
-            id_location: newLocation.id
-        });
-
-        const newUserAccount = new UserAccount({
-           id_user_account: 'UA' + (userAccountsCount.value + 1).toString(),
-           username: username.trim(),
-            email: email.trim(),
-            id_user: newUser.id,
-            id_role: 'R001',
-            id_membership: '', // No membership at registration
-            password: password.trim(),
-        });
-
-        registerLocation.value = newLocation;
-        registerUser.value = newUser;
-        registerUserAccount.value = newUserAccount;
-    }
-
-    /**
-     * Saves the registration data for a workshop.
-     * @param workshopName - Name of the workshop
-     * @param username - Username for the account
-     * @param ruc - RUC number
-     * @param phone_number - Phone number
-     * @param department - Department
-     * @param district - District
-     * @param address - Address
-     * @param email - Email address
-     * @param password - Password
-     */
-    function saveRegisterWorkshop({ workshopName, username, ruc, phone_number, department, district, address, email, password }) {
-        const newLocation = new Location({
-            id_location: 'L0' + (locationsCount.value + 1).toString(),
-            department: department,
-            district: district,
-            address: address
-        });
-
-        const newUser = new User({
-            id_user: 'U0' + (usersCount.value + 1).toString(),
-            name: workshopName,
-            last_name: '',
-            dni: ruc,
-            phone_number: phone_number,
-            id_location: newLocation.id
-        });
-
-        const newUserAccount = new UserAccount({
-            id_user_account: 'UA' + (userAccountsCount.value + 1).toString(),
-            username: username.trim(),
-            email: email.trim(),
-            id_user: newUser.id_user,
-            id_role: 'R002',
-            id_membership: '', // No membership at registration
-            password: password.trim(),
-        });
-
-        registerLocation.value = newLocation;
-        registerUser.value = newUser;
-        registerUserAccount.value = newUserAccount;
-    }
-
-
-    /**
-     * Selects a membership plan and updates the registration data accordingly.
-     * @param plan - The selected plan ('3m', '12m', or '1m')
-     */
-    function selectPlan(plan) {
-        const membershipId = plan === '3m' ? 'M001' : plan === '12m' ? 'M002' : 'M003';
-
-        const userAccountNoMembership = registerUserAccount.value;
-        if (userAccountNoMembership) {
-            registerMemberShipType.value = membershipId;
-            userAccountNoMembership.id_membership = membershipId;
-            registerUserAccount.value = userAccountNoMembership;
-        }
-    }
-
-    /**
-     * Finalizes the registration process by creating all necessary entities.
-     * @param card_number - Card number
-     * @param month - Expiration month
-     * @param year - Expiration year
-     * @param cvv - CVV code
-     * @param card_type - Type of card (e.g., 'Visa', 'MasterCard')
-     * @returns {Promise<void>} - Resolves when registration is complete, rejects on error.
-     */
-    async function finishRegister({ card_number, month, year, cvv, card_type }) {
-        const role = registerMemberShipType.value;
-        const user = registerUser.value;
-        const userAccount = registerUserAccount.value;
-        const location = registerLocation.value;
-        const membershipId = userAccount.id_membership;
-
-        if(!role || !user || !userAccount || !location || !membershipId) {
-            errors.value.push(new Error('Incomplete registration data'));
-            return;
-        }
-
-        console.log('🚀 Starting registration process...');
-        console.log('Location:', location);
-        console.log('User:', user);
-        console.log('UserAccount:', userAccount);
-
-        try {
-            // 1. Create location first and WAIT for the response
-            console.log('📍 Creating location...');
-            const createdLocation = await addLocation(location);
-            console.log('✅ Location created: ', createdLocation);
-
-            const createdUser = await addUser(user);
-            console.log('✅ User created ', createdUser);
-
-
-            const createdUserAccount = await addUserAccount(userAccount);
-            console.log('✅ User account created:', createdUserAccount);
-
-            const newPayment = new Payment({
-                id_payment: 'PY0' + (paymentsCount.value + 1).toString(),
-                card_number: card_number,
-                card_type: card_type,
-                month: month,
-                year: year,
-                cvv: cvv,
-                id_user_account: userAccount.id,
-            });
-
-            const createdPayment = await addPayment(newPayment);
-            console.log('✅ Payment created:', createdPayment);
-
-            console.log('Registration process completed successfully');
-
-        } catch (error) {
-            console.error('❌ Registration failed:', error);
-            console.error('Error details:', error.response?.data || error.message);
-            errors.value.push(error);
-        }
-    }
-
-    /**
-     * Resets the registration flow data.
-     * @returns {void}
-     */
-    function resetRegistrationFlow() {
-        registerLocation.value = null;
-        registerPayment.value = null;
-        registerUser.value = null;
-        registerUserAccount.value = null;
-        registerMemberShipType.value = null;
-        errors.value = [];
-    }
-
-    /**
-     * Fetches all locations from the API and updates the store.
-     * @returns {void}
-     */
-    function fetchLocations() {
-        iamApi.getLocations().then(response => {
-            locations.value = LocationAssembler.toEntitiesFromResponse(response);
-            locationsLoaded.value = true;
-            console.log(locationsLoaded.value);
-            console.log(locations.value);
-        }).catch(error => {
-            errors.value.push(error);
-        });
-    }
-
-    /**
-     * Fetches all payments from the API and updates the store.
-     * @returns {void}
-     */
-    function fetchPayments() {
-        iamApi.getPayments().then(response => {
-            payments.value = PaymentAssembler.toEntitiesFromResponse(response);
-            paymentsLoaded.value = true;
-            console.log(paymentsLoaded.value);
-            console.log(payments.value);
-        }).catch(error => {
-            errors.value.push(error);
-        });
-    }
-
-    /**
-     * Fetches all users from the API and updates the store.
-     * @returns {void}
-     */
-    function fetchUsers() {
-        iamApi.getUsers().then(response => {
-            users.value = UserAssembler.toEntitiesFromResponse(response);
-            usersLoaded.value = true;
-            console.log(usersLoaded.value);
-            console.log(users.value);
-        }).catch(error => {
-            errors.value.push(error);
-        });
-    }
-
-    /**
-     * Fetches all user accounts from the API and updates the store.
-     * @returns {void}
-     */
-    function fetchUserAccounts() {
-        iamApi.getUserAccounts().then(response => {
-            userAccounts.value = UserAccountAssembler.toEntitiesFromResponse(response);
-            userAccountsLoaded.value = true;
-            console.log(userAccountsLoaded.value);
-            console.log(userAccounts.value);
-        }).catch(error => {
-            errors.value.push(error);
-        });
-    }
-
-    /**
-     * Gets a location by its ID.
-     * @param id - The ID of the location to retrieve.
-     * @returns {Location} - The location with the specified ID, or undefined if not found.
-     */
-    function getLocationById(id) {
-        return locations.value.find(location => location.id === id);
-    }
-
-    /**
-     * Adds a new location.
-     * @param location - The location to add.
-     * @returns {Promise} - Promise that resolves with the created location
-     */
-    function addLocation(location) {
-        return new Promise((resolve, reject) => {
-            const resource = LocationAssembler.toResourceFromEntity(location);
-            iamApi.createLocation(resource).then(response => {
-                const responseData = response.data;
-                const newLocation = LocationAssembler.toEntityFromResource(responseData);
-                locations.value.push(newLocation);
-                resolve(newLocation);
-            }).catch(error => {
-                errors.value.push(error);
-                reject(error);
-            });
-        });
-    }
-
-    /**
-     * Updates an existing location.
-     * @param location - The location to update.
-     * @returns {void}
-     */
-    function updateLocation(location) {
-        iamApi.updateLocation(location).then(response => {
-            const resource = response.data;
-            const updatedLocation = LocationAssembler.toEntityFromResource(resource);
-            const index = locations.value.findIndex(loc => loc.id === updatedLocation.id);
-            if (index !== -1) locations.value[index] = updatedLocation;
-        }).catch(error => {
-            errors.value.push(error);
-        })
-    }
-
-    /**
-     * Deletes a location.
-     * @param location - The location to delete.
-     * @returns {void}
-     */
-    function deleteLocation(location) {
-        iamApi.deleteLocation(location.id).then(() => {
-            const index = locations.value.findIndex(loc => loc.id === location.id);
-            if (index !== -1) locations.value.splice(index, 1);
-        }).catch(error => {
-            errors.value.push(error);
-        })
-    }
-
-    /**
-     * Gets a payment by its ID.
-     * @param id - The ID of the payment to retrieve.
-     * @returns {Payment} - The payment with the specified ID, or undefined if not found.
-     */
-    function getPaymentById(id) {
-        return payments.value.find(payment => payment.id === id);
-    }
-
-    /**
-     * Adds a new payment.
-     * @param payment - The payment to add.
-     * @return {Promise} - Promise that resolves with the created payment
-     */
-    function addPayment(payment) {
-        return new Promise((resolve, reject) => {
-            const resource = PaymentAssembler.toResourceFromEntity(payment);
-            iamApi.createPayment(resource).then(response => {
-                const responseData = response.data;
-                const newPayment = PaymentAssembler.toEntityFromResource(responseData);
-                payments.value.push(newPayment);
-                resolve(newPayment);
-            }).catch(error => {
-                errors.value.push(error);
-                reject(error);
-            });
-        });
-    }
-
-    /**
-     * Updates an existing payment.
-     * @param payment - The payment to update.
-     * @return {void}
-     */
-    function updatePayment(payment) {
-        iamApi.updatePayment(payment).then(response => {
-            const resource = response.data;
-            const updatedPayment = PaymentAssembler.toEntityFromResource(resource);
-            const index = payments.value.findIndex(pay => pay.id === updatedPayment.id);
-            if (index !== -1) payments.value[index] = updatedPayment;
-        }).catch(error => {
-            errors.value.push(error);
-        })
-    }
-
-    /**
-     * Deletes a payment.
-     * @param payment - The payment to delete.
-     * @return {void}
-     */
-    function deletePayment(payment) {
-        iamApi.deletePayment(payment.id).then(() => {
-            const index = payments.value.findIndex(pay => pay.id === payment.id);
-            if (index !== -1) payments.value.splice(index, 1);
-        }).catch(error => {
-            errors.value.push(error);
-        })
-    }
-
-    /**
-     * Gets a user by their ID.
-     * @param id - The ID of the user to retrieve.
-     * @returns {User} - The user with the specified ID, or undefined if not found.
-     */
-    function getUserById(id) {
-        return users.value.find(user => user.id === id);
-    }
-
-    /**
-     * Adds a new user.
-     * @param user - The user to add.
-     * @returns {Promise} - Promise that resolves with the created user
-     */
-    function addUser(user) {
-        return new Promise((resolve, reject) => {
-            const resource = UserAssembler.toResourceFromEntity(user);
-            iamApi.createUser(resource).then(response => {
-                const responseData = response.data;
-                const newUser = UserAssembler.toEntityFromResource(responseData);
-                users.value.push(newUser);
-                resolve(newUser);
-            }).catch(error => {
-                errors.value.push(error);
-                reject(error);
-            });
-        });
-    }
-
-    /**
-     * Updates an existing user.
-     * @param user - The user to update.
-     */
-    function updateUser(user) {
-        iamApi.updateUser(user).then(response => {
-            const resource = response.data;
-            const updatedUser = UserAssembler.toEntityFromResource(resource);
-            const index = users.value.findIndex(u => u.id === updatedUser.id);
-            if (index !== -1) users.value[index] = updatedUser;
-        }).catch(error => {
-            errors.value.push(error);
-        })
-    }
-
-    /**
-     * Deletes a user.
-     * @param user - The user to delete.
-     */
-    function deleteUser(user) {
-        iamApi.deleteUser(user.id).then(() => {
-            const index = users.value.findIndex(u => u.id === user.id);
-            if (index !== -1) users.value.splice(index, 1);
-        }).catch(error => {
-            errors.value.push(error);
-        })
-    }
-
-    /**
-     * Gets a user account by its ID.
-     * @param id - The ID of the user account to retrieve.
-     * @returns {UserAccount} - The user account with the specified ID, or undefined if not found.
-     */
-    function getUserAccountById(id) {
-        return userAccounts.value.find(account => account.id === id);
-    }
-
-    /**
-     * Adds a new user account.
-     * @param userAccount - The user account to add.
-     * @return {Promise} - Promise that resolves with the created user account
-     */
-    function addUserAccount(userAccount) {
-        return new Promise((resolve, reject) => {
-            const resource = UserAccountAssembler.toResourceFromEntity(userAccount);
-            iamApi.createUserAccount(resource).then(response => {
-                const responseData = response.data;
-                const newUserAccount = UserAccountAssembler.toEntityFromResource(responseData);
-                userAccounts.value.push(newUserAccount);
-                resolve(newUserAccount);
-            }).catch(error => {
-                errors.value.push(error);
-                reject(error);
-            });
-        });
-    }
-
-    /**
-     * Updates an existing user account.
-     * @param userAccount - The user account to update.
-     * @return {void}
-     */
-    function updateUserAccount(userAccount) {
-        iamApi.updateUserAccount(userAccount).then(response => {
-            const resource = response.data;
-            const updatedUserAccount = UserAccountAssembler.toEntityFromResource(resource);
-            const index = userAccounts.value.findIndex(acc => acc.id === updatedUserAccount.id);
-            if (index !== -1) userAccounts.value[index] = updatedUserAccount;
-        }).catch(error => {
-            errors.value.push(error);
-        })
-    }
-
-    /**
-     * Deletes a user account.
-     * @param userAccount - The user account to delete.
-     * @return {void}
-     */
-    function deleteUserAccount(userAccount) {
-        iamApi.deleteUserAccount(userAccount.id).then(() => {
-            const index = userAccounts.value.findIndex(acc => acc.id === userAccount.id);
-            if (index !== -1) userAccounts.value.splice(index, 1);
-        }).catch(error => {
-            errors.value.push(error);
-        })
-    }
-
-
     return {
-        locations,
-        payments,
-        users,
         userAccounts,
+        users,
+        loading,
         errors,
-        locationsLoaded,
-        paymentsLoaded,
-        usersLoaded,
-        userAccountsLoaded,
-        locationsCount,
-        paymentsCount,
-        usersCount,
-        userAccountsCount,
         sessionUserAccount,
         sessionUser,
-        isAuthenticated,
-        roleId,
-        registerLocation,
-        registerPayment,
         registerUser,
         registerUserAccount,
+        userAccountsLoaded,
+        userLoaded,
+        registerPayment,
+        registerRole,
+        registerLocation,
         registerMemberShipType,
-        loadSessionFromStorage,
+        locations,
+        payments,
+        userAccountCount,
+        userCount,
+        paymentCount,
+        locationCount,
+        isAuthenticated,
+        roleId,
+        fullName,
+        restoreSessionFromStorage,
         login,
         logout,
-        clearSession,
-        getAccessToken,
+        fetchUserAccounts,
+        fetchUsers,
+        getUserById,
+        getUserAccountById,
+        addUserAccount,
+        addUser,
+        getLocationById,
+        addLocation,
+        updateLocation,
+        deleteLocation,
+        addPayment,
+        updatePayment,
+        deletePayment,
         startRegistrationFlow,
         saveRegisterOwner,
         saveRegisterWorkshop,
         selectPlan,
         finishRegister,
         resetRegistrationFlow,
-        fetchLocations,
-        fetchPayments,
-        fetchUsers,
-        fetchUserAccounts,
-        getLocationById,
-        addLocation,
-        updateLocation,
-        deleteLocation,
-        getPaymentById,
-        addPayment,
-        updatePayment,
-        deletePayment,
-        getUserById,
-        addUser,
-        updateUser,
-        deleteUser,
-        getUserAccountById,
-        addUserAccount,
-        updateUserAccount,
-        deleteUserAccount
+        loadSessionFromStorage,
+        updateUserAccount
     };
-})
+});
 
 export default useIamStore;
-

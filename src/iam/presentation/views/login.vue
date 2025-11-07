@@ -1,15 +1,27 @@
 <script setup lang="js">
 import {useI18n} from "vue-i18n";
 import {computed, onMounted, ref} from "vue";
-import {useRouter} from "vue-router";
+import {useRoute, useRouter} from "vue-router";
 import useIamStore from "@/iam/application/iam.store.js";
+import { storeToRefs } from 'pinia';
+import useCatalogStore from "@/auto-repair-catalog/application/owner.store.js";
+import usePaymentStore from "@/payment-service/application/payment-service.store.js";
 
 const { t } = useI18n();
 const router = useRouter();
+const route = useRoute();
 const store = useIamStore();
-const {userAccounts, userAccountsLoaded, usersLoaded, locationsLoaded, paymentsLoaded,
-  errors, fetchLocations, fetchPayments, fetchUserAccounts,
-  fetchUsers, login} = store;
+const storeCatalog = useCatalogStore();
+const storePayments = usePaymentStore();
+
+const {userAccounts, userAccountsLoaded, userLoaded, errors} = storeToRefs(store);
+const {fetchUserAccounts, fetchUsers, login} = store;
+
+const {fetchLocations} = storeCatalog;
+const {locationsLoaded} = storeToRefs(storeCatalog);
+
+const {fetchPayments} = storePayments;
+const {paymentsLoaded} = storeToRefs(storePayments);
 
 /**
  * Login form data
@@ -26,7 +38,7 @@ const isPasswordVisible = ref(false);
  * @type {Ref<UnwrapRef<boolean>, UnwrapRef<boolean> | boolean>} - whether the form is being submitted or not
  */
 const isSubmitting = ref(false);
-
+const isAppLoading = ref(false);
 /**
  * Form errors
  * @type {Ref<UnwrapRef<{email: null, password: null}>, UnwrapRef<{email: null, password: null}> | {email: null, password: null}>} - form errors for email and password
@@ -43,11 +55,17 @@ const loginError = ref('');
  * On component mount, fetch user accounts and users if not already loaded
  */
 onMounted(() => {
-  if(!userAccountsLoaded) fetchUserAccounts();
-  if(!usersLoaded) fetchUsers();
-  if(!locationsLoaded) fetchLocations();
-  if(!paymentsLoaded) fetchPayments();
+  if(!userAccountsLoaded.value) fetchUserAccounts();
+  if(!userLoaded.value) fetchUsers();
+  if(!locationsLoaded.value) fetchLocations();
+  if(!paymentsLoaded.value) fetchPayments();
+  console.log('userAccountsLoaded:', userAccountsLoaded.value);
+  console.log('userLoaded:', userLoaded.value);
+  console.log('isDataReady:', isDataReady.value);
 });
+
+
+const isDataReady = computed(() => userAccountsLoaded.value && userLoaded.value);
 
 /**
  * Validate email format
@@ -85,7 +103,8 @@ function validatePassword(password) {
  * @type {ComputedRef<unknown>} - true if the form is valid, false otherwise
  */
 const isFormValid = computed(() => {
-  return form.value.email &&
+  return isDataReady.value &&
+         form.value.email &&
          form.value.password &&
          form.value.password.length >= 6 &&
          /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.value.email);
@@ -101,49 +120,28 @@ function togglePasswordVisibility() {
 /**
  * Handle form submission
  */
-function onSubmit() {
-  // Reset errors
-  errorsForm.value = { email: null, password: null };
-  loginError.value = '';
+async function onSubmit() {
+  try {
+    const account = await store.login(form.value.email.trim(), form.value.password.trim());
 
-  // Validate form
-  const emailError = validateEmail(form.value.email);
-  const passwordError = validatePassword(form.value.password);
+    console.log(" Login exitoso:", account);
 
-  if (emailError || passwordError) {
-    errorsForm.value.email = emailError;
-    errorsForm.value.password = passwordError;
-    return;
+    if (account.id_role === "R001") {
+      await router.push("/layout-vehicle-owner/dashboard-owner");
+    } else if (account.id_role === "R002") {
+      await router.push("/layout-workshop/dashboard-workshop");
+    } else {
+      console.warn("Rol desconocido, redirigiendo a login");
+      await router.push("/iam/login");
+    }
+  } catch (err) {
+    console.error(" Login fallido:", err);
+    loginError.value = "Credenciales incorrectas";
   }
-
-  isSubmitting.value = true;
-  login(form.value.email, form.value.password)
-    .then((userAccount) => {
-      console.log('Login successful', userAccount);
-
-      // Redirect based on role (id_role: R001 = owner, R002 = workshop)
-      isSubmitting.value = false;
-      if (userAccount.id_role === 'R001') {
-        router.push('/layout-owner/home-owner');
-      } else if (userAccount.id_role === 'R002') {
-        router.push('/layout-workshop/home-workshop');
-      } else {
-        router.push('/iam/user-role');
-      }
-    })
-    .catch((error) => {
-      // Login failed
-      console.error('Login failed', error);
-      isSubmitting.value = false;
-      errorsForm.value.email = { invalid: true };
-      errorsForm.value.password = { invalid: true };
-      loginError.value = t('login.invalidCredentials');
-    });
 }
 
-/**
- * Navigate to user role selection for registration
- */
+
+
 function navigateToUserRole() {
   router.push('/iam/user-role');
 }
@@ -211,15 +209,16 @@ function navigateToUserRole() {
           </div>
         </div>
 
-        <!-- Submit Button -->
         <button
             type="submit"
             class="submit-button"
             :disabled="isSubmitting || !isFormValid"
             :class="{ loading: isSubmitting }"
         >
-          <div v-if="isSubmitting" class="spinner"></div>
-          <div>{{ isSubmitting ? $t('login.loading') : $t('login.signIn') }}</div>
+          <div v-if="isSubmitting || !isDataReady" class="spinner"></div>
+          <div>
+            {{ !isDataReady ? 'Cargando…' : (isSubmitting ? $t('login.loading') : $t('login.signIn')) }}
+          </div>
         </button>
 
         <!-- Error message for invalid credentials -->
@@ -475,15 +474,5 @@ function navigateToUserRole() {
   outline-offset: 2px;
 }
 
-/* High contrast mode support */
-@media (prefers-contrast: high) {
-  .form-input {
-    border: 1px solid var(--color-dark);
-  }
-
-  .submit-button {
-    border: 2px solid var(--color-dark);
-  }
-}
 
 </style>
