@@ -126,6 +126,12 @@ export const useAutoRepairRegisterStore = defineStore('autoRepairRegister', () =
         })
     }
 
+    function getTechnicianById(id_technician){
+        return technicians.value.find(v => v.id_technician === id_technician);
+    }
+
+
+
     function clearErrors() {
         errors.value = [];
     }
@@ -145,7 +151,8 @@ export const useAutoRepairRegisterStore = defineStore('autoRepairRegister', () =
         updateTechnician,
         updateTechnicianSchedule,
         deleteTechnician,
-        deleteTechnicianSchedule
+        deleteTechnicianSchedule,
+        getTechnicianById
     };
 });
 

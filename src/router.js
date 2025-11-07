@@ -7,6 +7,8 @@ import autoCatalogRoutes from "@/auto-repair-catalog/presentation/auto-repair-ca
 import dashboardOwner from "@/shared/presentation/views/dashboard-owner.vue";
 import DashboardWorkshop from "@/shared/presentation/views/dashboard-workshop.vue";
 import trackingRoutes from "@/maintenance-tracking/presentation/maintenance-tracking.routes.js";
+import autoRepairRoutes from "@/auto-repair-register/presentation/auto-repair-routes.js";
+import autoRepairRegisterRoutes from "@/auto-repair-register/presentation/auto-repair-routes.js";
 
 const layoutOwner = () => import("./shared/presentation/components/layout-owner.vue");
 const layoutWorkshop = () => import("./shared/presentation/components/layout-workshop.vue");
@@ -95,7 +97,7 @@ const routes = [
         name: 'layout-workshop',
         component: layoutWorkshop,
         beforeEnter: roleGuard([WORKSHOP_ROLE_ID]),
-        redirect: '/layout-workshop/home-workshop',
+        redirect: '/layout-workshop/dashboard-workshop',
         children: [
             {
                 path: 'home-workshop',
@@ -119,6 +121,17 @@ const routes = [
                 name: 'visit',
                 children: dataRoutes,
             },
+            {
+                path:'settings',
+                component:setting,
+                meta:{title: 'Settings'}
+            },
+            {
+                path:'auto-repair-register',
+                name: 'auto-repair-register',
+                children: autoRepairRegisterRoutes,
+            }
+
         ]
     },
     {

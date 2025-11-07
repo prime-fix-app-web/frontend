@@ -37,8 +37,8 @@ export function roleGuard(allowedRoles = []) {
             console.warn(`Role Guard: acceso denegado — rol ${userRole}, permitido: ${allowedRoles.join(", ")}`);
             const correctLayout =
                 userRole === VEHICLE_OWNER_ROLE_ID
-                    ? "/layout-owner/home-owner"
-                    : "/layout-workshop/home-workshop";
+                    ? "/layout-owner/dashboard-owner"
+                    : "/layout-workshop/dashboard-workshop";
 
             next(correctLayout);
             return;
@@ -47,8 +47,8 @@ export function roleGuard(allowedRoles = []) {
         if (isNew) {
             const newUserPath =
                 userRole === VEHICLE_OWNER_ROLE_ID
-                    ? "/layout-owner/home-owner"
-                    : "/layout-workshop/home-workshop";
+                    ? "/layout-owner/dashboard-owner"
+                    : "/layout-workshop/dashboard-workshop";
 
             if (to.path !== newUserPath) {
                 console.log(`Role Guard: redirigiendo usuario nuevo a ${newUserPath}`);

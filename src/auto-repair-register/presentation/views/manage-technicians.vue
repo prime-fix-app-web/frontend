@@ -1,0 +1,198 @@
+<script setup>
+import {computed, onMounted} from 'vue';
+import { useRouter } from 'vue-router';
+import TechnicianCard from "@/auto-repair-register/presentation/components/technician-card.vue";
+import useAutoRepairRegisterStore from "@/auto-repair-register/application/auto-repair.store.js";
+import useIamStore from "@/iam/application/iam.store.js";
+import useCatalogStore from "@/auto-repair-catalog/application/owner.store.js";
+
+const registerStore = useAutoRepairRegisterStore();
+const iamStore = useIamStore();
+const catalogStore = useCatalogStore();
+
+const router = useRouter();
+
+const sessionUserAccount = iamStore.sessionUserAccount;
+
+const technicianSchedules = computed(() => registerStore.technicianSchedules || []);
+
+
+const autoRepair = computed(() => {
+  const userAccount = sessionUserAccount;
+  if (!userAccount) return undefined;
+  const autoRepairs = catalogStore.autoRepairs;
+  return autoRepairs.find(ar => ar.id_user_account === userAccount.id_user_account);
+});
+
+const technicians = computed(() => {
+  const ar = autoRepair.value;
+  if (!ar) return [];
+  const allTechnicians = registerStore.technicians;
+  return allTechnicians.filter(t => t.id_auto_repair === ar.id_auto_repair);
+});
+
+const getTechnicianSchedules = (technicianId) => {
+  const schedules = computed(() => {
+    const allSchedules = registerStore.techniciansSchedule;
+    return allSchedules.filter(s => s.id_technician === technicianId);
+  });
+  return schedules.value;
+};
+
+onMounted(async () => {
+  registerStore.fetchTechnicians()
+  registerStore.fetchTechnicianSchedule()
+})
+</script>
+
+<template>
+  <div class="manage-technicians-container">
+    <h1 class="page-title">{{ $t('manage-technicians.title') }}</h1>
+
+    <div class="technicians-section">
+      <div class="header-section">
+        <button
+            class="add-technician-button"
+            type="button"
+            @click="router.push('/layout-workshop/auto-repair-register/technicians/new')"
+        >
+          {{ $t('manage-technicians.addTechnician') }}
+        </button>
+      </div>
+
+      <div class="technicians-list">
+        <div v-if="technicians.length === 0" class="empty-state">
+          <p>{{ $t('manage-technicians.noTechnicians') }}</p>
+        </div>
+        <TechnicianCard
+            v-for="tech in registerStore.technicians"
+            :key="tech.id_technician"
+            :technician="tech"
+            :technicianSchedules="technicianSchedules"
+        />
+      </div>
+    </div>
+  </div>
+</template>
+
+<style scoped>
+.manage-technicians-container {
+  width: 100%;
+  height: 100%;
+  padding: 2rem;
+  background-color: var(--color-light);
+  overflow-y: auto;
+}
+
+.header-section {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.page-title {
+  font-family: var(--font-bold);
+  font-size: 3rem;
+  color: var(--color-primary);
+  margin: 0 0 2rem 0;
+  border-bottom: 3px solid var(--color-primary);
+  padding-bottom: 0.5rem;
+}
+
+.technicians-section {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  max-width: 90%;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+.add-technician-button {
+  background-color: var(--color-first-complementary);
+  color: var(--color-dark);
+  border: none;
+  border-radius: 25px;
+  padding: 0.75rem 2rem;
+  font-size: 1rem;
+  font-family: var(--font-medium);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  white-space: nowrap;
+}
+
+.add-technician-button:hover {
+  background-color: #e6991a;
+}
+
+.technicians-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 3rem 2rem;
+  background-color: var(--color-second-complementary);
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.empty-state p {
+  font-size: 1.25rem;
+  font-family: var(--font-medium);
+  color: var(--color-dark);
+  margin: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .manage-technicians-container {
+    padding: 1rem;
+  }
+
+  .page-title {
+    font-size: 2rem;
+  }
+
+  .header-section {
+    justify-content: stretch;
+  }
+
+  .add-technician-button {
+    width: 100%;
+    padding: 1rem 2rem;
+  }
+
+  .technicians-list {
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+
+  .page-title {
+    font-size: 1.5rem;
+  }
+
+  .add-technician-button {
+    font-size: 0.9rem;
+    padding: 0.875rem 1.5rem;
+  }
+
+  .empty-state {
+    padding: 2rem 1rem;
+  }
+
+  .empty-state p {
+    font-size: 1.1rem;
+  }
+}
+
+
+</style>

@@ -15,17 +15,17 @@ const menuItems = [
     label: 'side-bar-workshop.dashboard'
   },
   {
-    route: '/layout-workshop/workshop',
+    route: '/layout-workshop/auto-repair-register/manage-auto-repair',
     icon: 'tool',
     label: 'side-bar-workshop.workshop'
   },
   {
-    route: '/visit/list-workshop',
+    route: '/layout-workshop/auto-repair-register/manage-request',
     icon: 'clipboard',
     label: 'side-bar-workshop.requests'
   },
   {
-    route: '/layout-workshop/manage-technicians/technicians',
+    route: '/layout-workshop/auto-repair-register/technicians',
     icon: 'users',
     label: 'side-bar-workshop.manageTechnicians'
   },

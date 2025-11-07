@@ -458,5 +458,60 @@
     "vehicleModel": "Modelo de coche",
     "failures": "Fallas",
     "close": "Cerrar"
+  },
+  "manage-technicians": {
+    "title": "Gestionar técnicos",
+    "addTechnician": "Agregar técnico",
+    "noTechnicians": "No hay técnicos registrados",
+    "technician-card": {
+      "no-schedules-message": "Este técnico no tiene horarios",
+      "edit-button": "Editar",
+      "delete-button": "Eliminar",
+      "monday": "Lunes",
+      "tuesday": "Martes",
+      "wednesday": "Miércoles",
+      "thursday": "Jueves",
+      "friday": "Viernes",
+      "saturday": "Sábado",
+      "sunday": "Domingo"
+    },
+    "technician-form": {
+      "edit-title": "Editar técnico",
+      "add-title": "Agregar técnico",
+      "technician-name": "Nombre del técnico",
+      "name-placeholder": "Juan",
+      "name-required": "El nombre del técnico es obligatorio",
+      "technician-lastname": "Apellido del técnico",
+      "lastname-placeholder": "Pérez",
+      "lastname-required": "El apellido del técnico es obligatorio",
+      "schedules-title": "Horarios",
+      "day": "Día",
+      "start-time": "Hora de inicio",
+      "end-time": "Hora de fin",
+      "remove-schedule": "Eliminar horario",
+      "add-schedule": "Agregar horario",
+      "cancel": "Cancelar",
+      "update": "Actualizar",
+      "create": "Crear"
+    }
+  },
+  "manage-auto-repair": {
+    "title": "Workshop",
+    "workshopName": "Workshop name",
+    "workshopNamePlaceholder": "AutoRepairs",
+    "ruc": "R.U.C.",
+    "rucPlaceholder": "564165161",
+    "phoneNumber": "Workshop phone number",
+    "phoneNumberPlaceholder": "99888959",
+    "department": "Department",
+    "departmentPlaceholder": "Lima",
+    "district": "District",
+    "districtPlaceholder": "San Miguel",
+    "address": "Address",
+    "addressPlaceholder": "Castilla 696 C",
+    "email": "Email",
+    "emailPlaceholder": "autorepairs@gmail.com",
+    "back": "Back",
+    "saveChanges": "Save changes"
   }
 }
