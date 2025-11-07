@@ -10,7 +10,7 @@ const menuItems = [
     label: 'side-bar-owner.profile'
   },
   {
-    route: '/layout-vehicle-owner/home-owner',
+    route: '/layout-vehicle-owner/dashboard-owner',
     icon: 'category',
     label: 'side-bar-owner.dashboard'
   },

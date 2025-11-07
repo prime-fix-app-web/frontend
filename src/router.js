@@ -20,6 +20,7 @@ const trackVehicle = () => import("./maintenance-tracking/presentation/views/tra
 const notificationView = () => import("./maintenance-tracking/presentation/views/notification-view.vue");
 const setting =() =>import("./shared/presentation/views/settings.vue");
 const profile=()=>import("./shared/presentation/views/profile.vue");
+const history=()=>import("./shared/presentation/views/history.vue");
 const VEHICLE_OWNER_ROLE_ID = "R001";
 const WORKSHOP_ROLE_ID = "R002";
 
@@ -89,6 +90,10 @@ const routes = [
                 path:'maintenance-tracking',
                 name: 'maintenance-tracking',
                 children: trackingRoutes
+            },
+            {
+                path:'history',
+                component:history
             }
         ]
     },
