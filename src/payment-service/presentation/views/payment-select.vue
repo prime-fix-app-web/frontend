@@ -31,11 +31,11 @@ const paymentOptions = computed(() =>
 
 // Navegación
 function goBack() {
-  router.push("/layout-auto-repair-catalog/payment-service/payment");
+  router.push("/layout-vehicle-owner/payment-service/payment");
 }
 
 function goToAddMethod() {
-  router.push("/layout-auto-repair-catalog/payment-service/payment/select/form");
+  router.push("/layout-vehicle-owner/payment-service/payment/select/form");
 }
 
 function goToPay() {
@@ -43,7 +43,7 @@ function goToPay() {
     alert("Por favor selecciona un método de pago antes de continuar.");
     return;
   }
-  router.push("/layout-auto-repair-catalog/payment-service/payment/done");
+  router.push("/layout-vehicle-owner/payment-service/payment/done");
 }
 </script>
 

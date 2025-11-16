@@ -54,7 +54,7 @@ const usePaymentStore = defineStore('payment-service',() => {
         return ratingsLoaded ? ratings.value.length : 0;
     });
 
-
+    const vehicleFilter = ref('');
 
     /**
      * Fetches payments from the API and updates state.
@@ -203,6 +203,7 @@ const usePaymentStore = defineStore('payment-service',() => {
         ratingsCount,
         fetchPayments,
         fetchRatings,
+        vehicleFilter,
         getPaymentById,
         getRatingById,
         addPayment,

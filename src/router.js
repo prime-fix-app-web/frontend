@@ -15,12 +15,13 @@ const layoutWorkshop = () => import("./shared/presentation/components/layout-wor
 const homeOwner = () => import("./shared/presentation/views/home-owner.vue");
 const homeWorkshop = () => import("./shared/presentation/views/home-workshop.vue");
 const pageNotFound = () => import("./shared/presentation/views/page-not-found.vue");
+const visitHistory =() =>import("./data-collection-diagnosis/presentation/views/visit-history.vue");
+
 
 const trackVehicle = () => import("./maintenance-tracking/presentation/views/track-vehicle.vue");
 const notificationView = () => import("./maintenance-tracking/presentation/views/notification-view.vue");
 const setting =() =>import("./shared/presentation/views/settings.vue");
 const profile=()=>import("./shared/presentation/views/profile.vue");
-const history=()=>import("./shared/presentation/views/history.vue");
 const VEHICLE_OWNER_ROLE_ID = "R001";
 const WORKSHOP_ROLE_ID = "R002";
 
@@ -93,7 +94,8 @@ const routes = [
             },
             {
                 path:'history',
-                component:history
+                component:visitHistory,
+                meta: {title: 'Visit History'}
             }
         ]
     },

@@ -1,14 +1,17 @@
+import VisitHistory from "@/data-collection-diagnosis/presentation/views/visit-history.vue";
 
 const visitForm =() => import('./views/visit-form.vue');
 const diagnosticView =()=>import('./views/diagnostic-view.vue');
 const modifyDiagnostic =()=> import('./views/modify-diagnostic.vue');
 const checkDiagnostic =()=>import('./views/check-diagnostic.vue');
+const visitHistory=()=>import('./views/visit-history.vue');
 
 const dataRoutes = [
     {path:'new-visit',name:'new',component:visitForm, meta:{title:'New Visit'}},
     {path:'diagnosis-view', name:'view', component:diagnosticView, meta:{title:'Diagnostic View'}},
     {path:'check-diagnosis/:id', name: 'check', component:checkDiagnostic, meta:{title:'Check diagnostic'}},
     {path:'modify-diagnosis/edit/:id', name:'edit', component:modifyDiagnostic, meta:{title:'Edit diagnostic'}},
+    {path:'visit-history',name:'history',component:VisitHistory, meta:{title:'Visit History'}},
 ]
 
 export default dataRoutes;

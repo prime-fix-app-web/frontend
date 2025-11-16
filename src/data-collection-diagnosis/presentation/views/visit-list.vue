@@ -1,183 +1,744 @@
 <script setup>
-import { useI18n } from "vue-i18n";
+import {ref, computed, onMounted} from 'vue'
+import useIamStore from '@/iam/application/iam.store'
 import useDataCollection from "@/data-collection-diagnosis/application/data-collection.js";
-import { ref, onMounted } from "vue";
-import { useRouter } from "vue-router";
+import useTrackingStore from "@/maintenance-tracking/application/tracking.store.js";
+import useCatalogStore from "@/auto-repair-catalog/application/owner.store.js";
+import {useI18n} from "vue-i18n";
+
+// Props
+const props = defineProps({
+  isNewVisits: {
+    type: Boolean,
+    required: true
+  }
+})
 
 const { t } = useI18n();
-const router = useRouter();
-const store = useDataCollection();
-const { visits, fetchVisit, deleteVisit,fetchVehicles,fetchServices,fetchAutoRepairs } = store;
+const loading = ref(false);
+const error = ref(null);
 
-const visitsList = ref([]);
+// Stores
+const dataStore = useDataCollection()
+const iamStore = useIamStore()
+const trackingStore = useTrackingStore()
+const catalogStore = useCatalogStore()
+// Modal state
+const isCancelModalOpen = ref(false)
+const selectedVisitId = ref(null)
+const modalLoading = ref(false)
 
-onMounted(async () => {
-  if (!visits.length) await fetchVisit();
-  if (!store.vehiclesLoaded) await fetchVehicles();
-  if (!store.servicesLoaded) await fetchServices();
-  if (!store.autoRepairsLoaded) await fetchAutoRepairs();
+/**
+ * Filtered visits based on user ownership and maintenance state
+ */
+const filteredVisits = computed(() => {
+  const currentUserId = iamStore.sessionUserId;
+  if (!currentUserId) {
+    console.warn('No current user ID found')
+    return []
+  }
 
-  visitsList.value = store.visits;
+  const allVisits = dataStore.visits
+  const allVehicles = trackingStore.vehicles
+  const isScheduled = props.isNewVisits
 
-});
+  const vehicleMap = new Map(allVehicles.map(v => [v.id_vehicle, v]))
 
-const getVehicleById = (id) => store.getVehiclesById(id);
-const getServiceById = (id) => store.getServicesById(id);
-const getAutoRepairById = (id) => store.getAutoRepairsById(id);
+  return allVisits.filter(visit => {
+    const vehicle = vehicleMap.get(visit.id_vehicle)
+    if (!vehicle) return false
 
-const editVisit = (id) => {
-  router.push({ name: 'edit', params: { id } });
+    if (!iamStore.isCurrentUser(vehicle.id_user)) return false
+
+    // Filter by maintenance state
+    return isScheduled
+        ? vehicle.state_maintenance < 6
+        : vehicle.state_maintenance === 6
+  })
+})
+
+onMounted(() => {
+  dataStore.fetchServices();
+  iamStore.fetchUsers();
+  trackingStore.fetchVehicles();
+  dataStore.fetchVisit();
+})
+
+/**
+ * Sum of diagnostic prices for a visit
+ */
+function countPriceDiagnosticByExpectedVisitId(visitId) {
+  return computed(() => {
+    const expectedVisit = dataStore.expectedVisit.find(ev => ev.id_visit === visitId)
+
+    return dataStore.expectedVisit
+        .filter(d => d.id_expected === expectedVisit?.id_expected)
+        .reduce((sum, d) => sum + d.price, 0)
+  })
 }
+
+/**
+ * Modal actions
+ */
+function openCancelModal(visitId) {
+  selectedVisitId.value = visitId
+  isCancelModalOpen.value = true
+}
+
+function closeCancelModal() {
+  if (modalLoading.value) return
+  isCancelModalOpen.value = false
+  selectedVisitId.value = null
+}
+
+function confirmCancelVisit() {
+  const visitId = selectedVisitId.value
+  if (!visitId) return
+
+  modalLoading.value = true
+
+  const expectedVisit = dataStore.expectedVisit.find(v => v.id_visit === visitId)
+  if (!expectedVisit) {
+    modalLoading.value = false
+    closeCancelModal()
+    return
+  }
+
+  dataStore.updateExpected({
+    id_expected: expectedVisit.id_expected,
+    state_visit: 'Visit Cancelled',
+    id_visit: visitId,
+    is_scheduled: false
+  })
+
+  setTimeout(() => {
+    modalLoading.value = false
+    closeCancelModal()
+  }, 500)
+}
+
+/**
+ * Cancelled check
+ */
+function isVisitCancelled(visitId) {
+  const expectedVisit = dataStore.expectedVisit.find(v => v.id_visit === visitId)
+  return expectedVisit?.state_visit === 'Visit Cancelled' && !expectedVisit.is_scheduled
+}
+
+/**
+ * Helpers to retrieve objects
+ */
+function getAutoRepair(id) {
+  return catalogStore.getAutoRepairById(id)
+}
+
+function getUserAccountById(id) {
+  return iamStore.getUserAccountById(id)
+}
+
+function getUserById(id) {
+  return iamStore.getUserById(id)
+}
+
+function getLocationById(id) {
+  return iamStore.getLocationById(id)
+}
+
+function getAddressByAutoRepair(autoRepairId) {
+  return computed(() => {
+    const autoRepair = getAutoRepair(autoRepairId)
+    if (!autoRepair) return 'Unknown Location'
+
+    const userAccount = getUserAccountById(autoRepair.id_user_account)
+    if (!userAccount) return 'Unknown Location'
+
+    const user = getUserById(userAccount.id_user)
+    if (!user) return 'Unknown Location'
+
+    const location = getLocationById(user.id_location)
+    return location?.address ?? 'Unknown Location'
+  })
+}
+
 </script>
 
 <template>
-  <div class="vehicles-container">
-    <div class="cards-container">
-      <h2 class="title">{{ t('visit_list.title') }}</h2>
+  <div class="visit-list-container">
+    <div v-if="loading" class="loading-container">
+      <div class="spinner"></div>
 
-      <div class="vehicle-card" v-for="visit in visitsList" :key="visit.id">
-        <pv-card>
-          <template #content>
-            <div class="card-content">
-              <div class="card-info">
-                <h3 class="visit-title">{{ t('visit_list.vehicle_model') }} {{ getVehicleById(visit.id_vehicle)?.model}}</h3>
-                <p class="visit-feature"><b>{{ t('visit_list.vehicle_brand') }}</b> {{ getVehicleById(visit.id_vehicle)?.vehicle_brand }}</p>
-                <p class="visit-feature"><b>{{ t('visit_list.service') }}</b> {{ getServiceById(visit.id_service)?.name}}</p>
-                <p class="visit-feature"><b>{{ t('visit_list.failure') }}</b> {{ visit.failure }}</p>
-                <p class="visit-feature"><b>{{ t('visit_list.date') }}</b> {{ visit.time_visit }}</p>
-                <p class="visit-feature"><b>{{ t('visit_list.status') }}</b> {{ visit.status }}</p>
-                <p class="visit-contact">
-                  <b>{{ t('visit_list.contact') }}</b>
-                  <a :href="'mailto:' + visit.contact_email" class="email-text">{{ getAutoRepairById(visit.id_auto_repair)?.contact_email }}</a>
-                </p>
-              </div>
-              <div class="card-buttons">
-                <pv-button class="edit-button" @click="editVisit(visit.id_visit)">{{ t('visit_list.edit') }}</pv-button>
-                <pv-button class="delete-button" @click="store.deleteVisit(visit.id_visit)">{{ t('visit_list.delete') }}</pv-button>
+      <p>{{ t('visit_list.loading') }}</p>
+    </div>
+    <div v-if="error" class="error-message">
+      <p>{{ error }}</p>
+    </div>
+
+    <div v-if="!loading && !error">
+      <div class="visit-header-section">
+        <h1 class="section-title">
+          {{ isNewVisits ? t('visit_list.scheduledVisits') : t('visit_list.visitHistory') }}
+        </h1>
+      </div>
+
+      <div class="visits-section">
+
+        <div v-if="filteredVisits.length === 0" class="empty-state">
+          <p>
+            {{
+              isNewVisits
+                  ? t('visit_list.noScheduledVisits')
+                  : t('visit_list.noHistory')
+            }}
+          </p>
+        </div>
+
+
+        <div v-else class="visits-container">
+          <div v-for="visit in filteredVisits" :key="visit.id_visit" class="visit-card">
+
+
+            <div class="visit-header">
+              <div class="visit-id">
+                <span class="label">{{ t('visit_list.visitId') }}</span>
+                <span class="value">{{ visit.id_visit }}</span>
+
+                <span
+                    v-if="isNewVisits && isVisitCancelled(visit.id_visit)"
+                    class="label-cancelled"
+                >
+                  {{ t('visit_list.label-cancelled') }}
+                </span>
               </div>
             </div>
-          </template>
-        </pv-card>
+
+            <!-- Body -->
+            <div class="visit-body">
+              <div class="visit-info-row">
+                <div class="info-item">
+                  <span class="info-label">{{ t('visit_list.workshop') }}</span>
+                  <span class="info-value">
+                    {{ getUserAccountById(getAutoRepair(visit.id_auto_repair)?.id_user_account)?.username || "N/A" }}
+                  </span>
+                </div>
+              </div>
+
+              <div class="visit-info-row">
+                <div class="info-item">
+                  <span class="info-label">{{ t('visit_list.date') }}</span>
+                  <span class="info-value">{{ visit.time_visit || "N/A" }}</span>
+                </div>
+              </div>
+
+              <div class="visit-info-row">
+                <div class="info-item">
+                  <span class="info-label">{{ t('visit_list.address') }}</span>
+                  <span class="info-value">
+                    {{ getAddressByAutoRepair(visit.id_auto_repair) || "N/A" }}
+                  </span>
+                </div>
+              </div>
+
+              <div class="visit-info-row" v-if="!isNewVisits">
+                <div class="info-item">
+                  <span class="info-label">{{ t('visit_list.price') }}</span>
+                  <span class="info-value">
+                    {{ countPriceDiagnosticByExpectedVisitId(visit.id_visit) || 0 }}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Actions -->
+            <div v-if="isNewVisits" class="visit-actions">
+              <button
+                  class="btn-cancel"
+                  :disabled="isVisitCancelled(visit.id_visit)"
+                  @click="openCancelModal(visit.id_visit)"
+              >
+                {{
+                  isVisitCancelled(visit.id_visit)
+                      ? t('visit_list.visitCancelled')
+                      : t('visit_list.cancelVisit')
+                }}
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
+  </div>
+
+  <!-- Modal -->
+  <div v-if="isCancelModalOpen" class="modal-backdrop" @click="closeCancelModal"></div>
+
+  <div
+      v-if="isCancelModalOpen"
+      class="cancel-modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="cancelModalTitle"
+  >
+    <header class="cancel-modal-header">
+      <h2 id="cancelModalTitle" class="modal-title">{{ t('visit_list.cancelModal.title') }}</h2>
+      <p class="modal-subtitle">{{ t('visit_list.cancelModal.subtitle') }}</p>
+    </header>
+
+    <section class="cancel-modal-body">
+      <p class="warning-message">{{ t('visit_list.cancelModal.warning') }}</p>
+      <div class="visit-details">
+        <span class="detail-label">{{ t('visit_list.visitId') }}</span>
+        <span class="detail-value">{{ selectedVisitId }}</span>
+      </div>
+    </section>
+
+    <footer class="cancel-modal-actions">
+      <button
+          class="btn-back"
+          @click="closeCancelModal"
+          :disabled="modalLoading"
+      >
+        {{ t('visit_list.cancelModal.goBack') }}
+      </button>
+
+      <button
+          class="btn-confirm-cancel"
+          @click="confirmCancelVisit"
+          :disabled="modalLoading"
+      >
+        {{
+          modalLoading
+              ? t('visit_list.cancelModal.cancelling')
+              : t('visit_list.cancelModal.confirm')
+        }}
+      </button>
+    </footer>
   </div>
 </template>
 
 <style scoped>
-.vehicles-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
+.visit-list-container {
+  width: 100%;
+  height: 100%;
+  padding: 2rem;
+  background-color: var(--color-light);
+  overflow-y: auto;
 }
 
-.cards-container {
+.loading-container {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  justify-content: center;
+  align-items: center;
+  padding: 3rem;
+  gap: 1rem;
 }
 
-.vehicle-card {
-  background-color: #f5f5f5;
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid var(--color-second-complementary);
+  border-top: 4px solid var(--color-first-complementary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-container p {
+  font-family: var(--font-medium);
+  color: var(--color-primary);
+  font-size: 1rem;
+}
+
+.error-message {
+  background-color: #fee;
+  border: 1px solid #fcc;
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 1rem 0;
+  text-align: center;
+}
+
+.error-message p {
+  color: #c33;
+  font-family: var(--font-medium);
+  margin: 0;
+}
+
+.visits-section {
+  width: 70%;
+}
+
+.visit-header-section {
+  border-bottom: 3px solid var(--color-primary);
+  margin-bottom: 2rem;
+  padding-bottom: 0.5rem;
+}
+
+.section-title {
+  font-family: var(--font-bold);
+  font-size: 3rem;
+  color: var(--color-primary);
+  margin: 0;
+}
+
+.visits-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 100%;
+}
+
+.visit-card {
+  background-color: var(--color-second-complementary);
   border-radius: 12px;
-  padding: 20px 30px;
+  padding: 1.5rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: box-shadow 0.3s ease, transform 0.2s ease;
 }
 
-.p-card {
-  background-color: transparent !important;
-  box-shadow: none !important;
+.visit-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
 }
 
-.card-content {
+.visit-header {
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid #e0d8d0;
+}
+
+.visit-id {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.visit-id .label {
+  font-family: var(--font-semibold);
+  font-size: 0.95rem;
+  color: var(--color-primary);
+}
+
+.visit-id .value {
+  font-family: var(--font-bold);
+  font-size: 1.1rem;
+  color: var(--color-dark);
+}
+
+.visit-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.visit-info-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+  min-width: 200px;
+}
+
+.info-label {
+  font-family: var(--font-semibold);
+  font-size: 0.875rem;
+  color: var(--color-primary);
+}
+
+.info-value {
+  font-family: var(--font-regular);
+  font-size: 1rem;
+  color: var(--color-dark);
+}
+
+.visit-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 1rem;
+  border-top: 1px solid #e0d8d0;
+}
+
+.btn-cancel {
+  background-color: var(--color-first-complementary);
+  color: var(--color-dark);
+  font-family: var(--font-semibold);
+  font-size: 1rem;
+  padding: 0.75rem 2rem;
+  border: none;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn-cancel:hover {
+  background-color: #e09a0f;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(242, 170, 31, 0.3);
+}
+
+.btn-cancel:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  background-color: var(--color-second-complementary);
+  border-radius: 12px;
+  margin: 1rem 0;
+}
+
+.empty-state p {
+  font-family: var(--font-medium);
+  font-size: 1.1rem;
+  color: var(--color-tertiary-complementary);
+  margin: 0;
+}
+
+.label-cancelled {
+  display: inline-block;
+  background-color: #fee;
+  color: #c33;
+  border: 1px solid #fcc;
+  font-family: var(--font-semibold);
+  font-size: 0.85rem;
+  padding: 0.2rem 0.6rem;
+  border-radius: 12px;
+  margin-left: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  line-height: 1;
+}
+
+.btn-cancel:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.btn-cancel:disabled:hover {
+  transform: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Modal Backdrop */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  z-index: 90;
+  transition: opacity 180ms ease-in-out;
+  opacity: 1;
+}
+
+/* Cancel Modal */
+.cancel-modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(1);
+  width: min(520px, 95%);
+  max-width: 520px;
+  background: var(--color-light);
+  border-radius: 14px;
+  padding: 1.5rem;
+  box-shadow: 0 18px 40px rgba(17, 67, 88, 0.12), 0 6px 18px rgba(0,0,0,0.06);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  transition: transform 220ms cubic-bezier(.2,.9,.3,1), opacity 180ms ease;
+  opacity: 1;
+  border: 1px solid rgba(17, 67, 88, 0.04);
+}
+
+/* Modal Header */
+.cancel-modal-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  border-bottom: 2px solid var(--color-primary);
+  padding-bottom: 0.75rem;
+}
+
+.cancel-modal .modal-title {
+  font-family: var(--font-bold);
+  font-size: 1.5rem;
+  color: var(--color-primary);
+  margin: 0;
+}
+
+.cancel-modal .modal-subtitle {
+  font-family: var(--font-regular);
+  font-size: 0.95rem;
+  color: var(--color-dark);
+  margin: 0;
+  line-height: 1.4;
+  opacity: 0.9;
+}
+
+/* Modal Body */
+.cancel-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 0.5rem 0;
+}
+
+.warning-message {
+  font-family: var(--font-medium);
+  font-size: 1rem;
+  color: #c33;
+  background-color: #fee;
+  border: 1px solid #fcc;
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.visit-details {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  gap: 20px;
+  align-items: center;
+  background: var(--color-second-complementary);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
 }
 
-.card-info {
-  flex: 1;
+.detail-label {
+  font-family: var(--font-semibold);
+  font-size: 0.95rem;
+  color: var(--color-primary);
 }
 
-.visit-title {
-  font-size: 20px;
-  color: #333;
-  margin-bottom: 8px;
-  font-weight: 700;
+.detail-value {
+  font-family: var(--font-bold);
+  font-size: 1rem;
+  color: var(--color-dark);
 }
 
-.visit-feature {
-  font-size: 16px;
-  color: #555;
-  margin: 2px 0;
-}
-
-.visit-contact {
-  font-size: 16px;
-  color: #555;
-  margin-top: 6px;
-}
-
-.email-text {
-  color: #007bff;
-  text-decoration: underline;
-}
-
-.email-text:hover {
-  color: #e6cc34;
-  cursor: pointer;
-}
-
-.card-buttons {
+/* Modal Actions */
+.cancel-modal-actions {
   display: flex;
-  flex-direction: column;
-  gap: 10px;
-  min-width: 120px;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding-top: 0.5rem;
+  align-items: center;
 }
 
-.edit-button,
-.delete-button {
-  background-color: #fdb825 !important;
-  color: #333 !important;
-  font-weight: 600;
-  border-radius: 20px !important;
-  text-transform: none !important;
-  font-size: 14px;
-  padding: 8px 20px !important;
-  width: 100%;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+.btn-back {
+  background: transparent;
+  border: 1px solid rgba(0,0,0,0.08);
+  padding: 0.75rem 1.25rem;
+  border-radius: 10px;
+  cursor: pointer;
+  color: var(--color-dark);
+  font-family: var(--font-semibold);
+  font-size: 1rem;
+  transition: background 140ms ease, transform 120ms ease, box-shadow 140ms ease;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.03);
 }
 
-.edit-button:hover,
-.delete-button:hover {
-  background-color: #e5a620 !important;
+.btn-back:hover:not(:disabled) {
+  background: rgba(0,0,0,0.02);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.06);
 }
 
+.btn-back:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-confirm-cancel {
+  background: #c33;
+  color: var(--color-light);
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: var(--font-semibold);
+  font-size: 1rem;
+  min-width: 140px;
+  transition: background 140ms ease, transform 120ms ease, box-shadow 160ms ease;
+  box-shadow: 0 4px 12px rgba(204, 51, 51, 0.2);
+}
+
+.btn-confirm-cancel:hover:not(:disabled) {
+  background: #a22;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(204, 51, 51, 0.3);
+}
+
+.btn-confirm-cancel:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 0 4px 12px rgba(204, 51, 51, 0.2);
+}
+
+/* Responsive */
 @media (max-width: 768px) {
-  .card-content {
+  .cancel-modal {
+    width: 92%;
+    padding: 1.25rem;
+  }
+
+  .cancel-modal-actions {
     flex-direction: column;
-    align-items: flex-start;
+    gap: 0.5rem;
   }
 
-  .card-buttons {
+  .btn-back,
+  .btn-confirm-cancel {
     width: 100%;
-    flex-direction: row;
-    justify-content: flex-start;
   }
 
-  .edit-button,
-  .delete-button {
-    width: auto;
+  .visit-list-container {
+    padding: 1rem;
+  }
+
+  .section-title {
+    font-size: 2rem;
+  }
+
+  .visit-header-section {
+    margin-bottom: 1.5rem;
+  }
+
+  .visit-card {
+    padding: 1rem;
+  }
+
+  .info-item {
+    min-width: 100%;
+  }
+
+  .btn-cancel {
+    width: 100%;
+  }
+
+  .visit-actions {
+    justify-content: stretch;
   }
 }
 
-.title {
-  color: #1a4d6d;
-  font-size: 40px;
-  font-weight: bold;
-  margin-bottom: 10px;
-  border-bottom: 6px solid #1a4d6d;
-  padding-bottom: 15px;
-}
 
 </style>

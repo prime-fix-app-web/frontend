@@ -1,6 +1,8 @@
 <script setup>
 import {useI18n} from "vue-i18n";
+import usePaymentStore from "@/payment-service/application/payment-service.store.js";
 const {t} = useI18n();
+
 
 </script>
 

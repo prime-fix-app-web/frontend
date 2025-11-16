@@ -40,7 +40,7 @@ async function submitRating() {
   try {
     await paymentStore.addRating(newRating);
     console.log("Rating enviado:", newRating);
-    router.push("/layout-auto-repair-catalog/payment-service/rating/done");
+    router.push("/layout-vehicle-owner/payment-service/rating/done");
   } catch (err) {
     console.error("Error al enviar rating:", err);
   } finally {

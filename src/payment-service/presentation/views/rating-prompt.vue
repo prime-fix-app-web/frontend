@@ -5,12 +5,12 @@ const router = useRouter();
 
 // Si el usuario decide no calificar
 function skipRating() {
-  router.push("/layout-owner/home-owner");
+  router.push("/layout-vehicle-owner/home-owner");
 }
 
 // Si el usuario decide calificar
 function goToRatingForm() {
-  router.push("/layout-auto-repair-catalog/payment-service/rating/form");
+  router.push("/layout-vehicle-owner/payment-service/rating/form");
 }
 </script>
 

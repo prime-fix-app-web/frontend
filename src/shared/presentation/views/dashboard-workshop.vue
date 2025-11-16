@@ -126,7 +126,6 @@ onMounted(async () => {
   <div class="dashboard-container">
     <h1 class="dashboard-title">{{ $t('dashboard-workshop.title') }}</h1>
 
-    <!-- Scheduled Visits Section -->
     <section class="dashboard-section">
       <h2 class="section-title">{{ $t('dashboard-workshop.scheduledVisits') }}</h2>
 
@@ -166,7 +165,6 @@ onMounted(async () => {
       </div>
     </section>
 
-    <!-- Ratings Section -->
     <section class="dashboard-section">
       <h2 class="section-title">{{ $t('dashboard-workshop.receivedRatings') }}</h2>
 

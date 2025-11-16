@@ -52,6 +52,22 @@ export const useIamStore = defineStore('iam', () => {
         return userAccountsLoaded ? userAccounts.value.length:0;
     })
 
+    const sessionUserId = computed(() => sessionUser.value?.id_user ?? null);
+    const sessionUserAccountId = computed(() => sessionUserAccount.value?.id_user_account ?? null);
+
+    function isCurrentUser(userId) {
+        const current = sessionUserId.value;
+        if (!current || !userId) return false;
+        return String(current) === String(userId);
+    }
+
+    function isCurrentUserAccount(accountId) {
+        const current = sessionUserAccountId.value;
+        if (!current || !accountId) return false;
+        return String(current) === String(accountId);
+    }
+
+
     const userCount = computed(() => {
         return userLoaded ? users.value.length:0;
     })
@@ -130,7 +146,6 @@ export const useIamStore = defineStore('iam', () => {
                     && rawUser.id_user.length > 0;
 
                 if (hasUserAccountData && hasUserData) {
-                    // Re-instanciar las entidades
                     const userAccount = new UserAccount(rawUserAccount);
                     const user = new User(rawUser);
 
@@ -353,7 +368,6 @@ export const useIamStore = defineStore('iam', () => {
         registerLocation.value = newLocation;
         registerUser.value = newUser;
         registerUserAccount.value = newUserAccount;
-        // Asignar el nombre legible del rol
         registerRole.value = RoleChoicesType.VEHICLE_OWNER;
     }
     function saveRegisterWorkshop(form) {
@@ -486,6 +500,10 @@ export const useIamStore = defineStore('iam', () => {
         users,
         loading,
         errors,
+        sessionUserId,
+        sessionUserAccountId,
+        isCurrentUser,
+        isCurrentUserAccount,
         sessionUserAccount,
         sessionUser,
         registerUser,
