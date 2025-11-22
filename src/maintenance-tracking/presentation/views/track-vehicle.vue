@@ -83,7 +83,7 @@ function closeNotificationModal() {
           aria-label="Notifications"
       >
         <svg class="bell-icon">
-          <use href="./assets/icons/sprite.symbol.svg#bell"></use>
+          <use href="/assets/icons/sprite.symbol.svg#bell"></use>
         </svg>
 
         <span
