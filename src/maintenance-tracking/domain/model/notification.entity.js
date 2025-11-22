@@ -20,6 +20,7 @@ export class Notification {
         this.sent = sent;
     }
 
+    /* Getters and setters */
     get id() { return this.id_notification; }
     set id(value) { this.id_notification = value; }
 }

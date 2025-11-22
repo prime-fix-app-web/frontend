@@ -1,21 +1,24 @@
 <script setup lang="ts">
-import { computed, inject } from 'vue';
 import { useRouter } from 'vue-router';
 import usePaymentStore from "@/payment-service/application/payment-service.store.js";
 import {useI18n} from "vue-i18n";
 
+/**
+ * Props definition for the ProgressBar component.
+ */
 const props = defineProps<{
   currentStep: number;
   currentVehicle?: { id: string };
 }>();
 
-
-// Router de Vue
 const router = useRouter();
 const {t} = useI18n();
 
 const paymentServiceStore = usePaymentStore()
 
+/**
+ * Steps definition for the progress bar.
+ */
 const steps = [
   { id: 1, label: 'En espera', translationKey: 'progress-bar.waiting' },
   { id: 2, label: 'En diagnóstico', translationKey: 'progress-bar.diagnosis' },
@@ -25,10 +28,30 @@ const steps = [
   { id: 6, label: 'Recogido', translationKey: 'progress-bar.collected' }
 ];
 
+/**
+ * Determines if a step is completed, current, or pending.
+ * @param stepId - The ID of the step to check.
+ * @returns Boolean indicating the status of the step.
+ */
 const isStepCompleted = (stepId: number) => stepId < props.currentStep;
+
+/**
+ * Determines if a step is the current step.
+ * @param stepId - The ID of the step to check.
+ * @returns Boolean indicating if the step is current.
+ */
 const isCurrentStep = (stepId: number) => stepId === props.currentStep;
+
+/**
+ * Determines if a step is pending.
+ * @param stepId - The ID of the step to check.
+ * @returns Boolean indicating if the step is pending.
+ */
 const isStepPending = (stepId: number) => stepId > props.currentStep;
 
+/**
+ * Navigates to the payment page for the current vehicle.
+ */
 const goPayment = () => {
   paymentServiceStore.vehicleIdFilter = props.currentVehicle?.id;
   router.push('/layout-vehicle-owner/payment-service/payment');

@@ -1,5 +1,5 @@
 <script setup>
-import {ref, computed, reactive, watch, onMounted} from 'vue';
+import {ref, computed, reactive, onMounted} from 'vue';
 import useTrackingStore from "@/maintenance-tracking/application/tracking.store.js";
 import useIamStore from "@/iam/application/iam.store.js";
 import {Vehicle} from "@/maintenance-tracking/domain/model/vehicle.entity.js";
@@ -9,29 +9,52 @@ const iamStore = useIamStore();
 
 const sessionUser = computed(() => iamStore.sessionUser);
 
+/**
+ * Indicates whether the vehicle modal is visible.
+ * @type {import('vue').Ref<boolean>}
+ */
 const showModal = ref(false);
+
+/**
+ * Indicates whether the modal is in edit mode.
+ * @type {import('vue').Ref<boolean>}
+ */
 const isEditMode = ref(false);
+
+/**
+ * The ID of the selected vehicle for editing.
+ * @type {import('vue').Ref<string|null>}
+ */
 const selectedVehicleId = ref(null);
 
+/**
+ * Filtered list of vehicles belonging to the current user.
+ * @type {import('vue').ComputedRef<Vehicle[]>}
+ */
 const vehiclesByUserId = computed(() => {
   const currentUser = iamStore.sessionUser;
   if (!currentUser || !currentUser.id_user) return [];
   if (!trackingStore.vehicles || !Array.isArray(trackingStore.vehicles)) return [];
 
-  // Filtramos por usuario y además por estado activo
+  // Filter vehicles by current user's ID and active maintenance state
   return trackingStore.vehicles.filter(
       (v) => v.id_user === currentUser.id_user && v.state_maintenance !== -1
   );
 });
 
+/**
+ * Deletes a vehicle by its ID.
+ * @param id_vehicle - The ID of the vehicle to delete.
+ * @returns {Promise<void>} - A promise that resolves when the vehicle is deleted.
+ */
 async function deleteVehicleById(id_vehicle) {
   try {
     if (!id_vehicle) throw new Error("Id del vehículo requerido");
 
-    // Llamamos al endpoint de trackingApi
+
     const res = await trackingStore.deleteVehicle(id_vehicle);
 
-    // Eliminamos del store local si quieres
+
     const index = trackingStore.vehicles.findIndex(v => v.id_vehicle === id_vehicle);
     if (index !== -1) {
       trackingStore.vehicles.splice(index, 1);
@@ -45,6 +68,10 @@ async function deleteVehicleById(id_vehicle) {
   }
 }
 
+/**
+ * Reactive form data for vehicle.
+ * @type {import('vue').Reactive<{model: string, brand: string, plate: string, color: string, type: string}>}
+ */
 const vehicleForm = reactive({
   model: '',
   brand: '',
@@ -53,6 +80,10 @@ const vehicleForm = reactive({
   type: ''
 });
 
+/**
+ * Reactive error messages for form validation.
+ * @type {import('vue').Reactive<{model: string|null, brand: string|null, plate: string|null, color: string|null, type: string|null}>}
+ */
 const errors = reactive({
   model: null,
   brand: null,
@@ -61,6 +92,10 @@ const errors = reactive({
   type: null
 });
 
+/**
+ * Validates the vehicle form.
+ * @returns {boolean}
+ */
 const validateForm = () => {
   errors.model = vehicleForm.model.length < 2 ? 'Requerido, mínimo 2 caracteres' : null;
   errors.brand = vehicleForm.brand.length < 2 ? 'Requerido, mínimo 2 caracteres' : null;
@@ -71,6 +106,9 @@ const validateForm = () => {
   return !Object.values(errors).some(e => e !== null);
 };
 
+/**
+ * Handles the addition of a new vehicle.
+ */
 const onAddVehicle = () => {
   isEditMode.value = false;
   selectedVehicleId.value = null;
@@ -78,6 +116,10 @@ const onAddVehicle = () => {
   showModal.value = true;
 };
 
+/**
+ * Handles the editing of an existing vehicle.
+ * @param vehicle - The vehicle to edit.
+ */
 const onEditVehicle = (vehicle) => {
   isEditMode.value = true;
   selectedVehicleId.value = vehicle.id_vehicle;
@@ -89,12 +131,15 @@ const onEditVehicle = (vehicle) => {
   showModal.value = true;
 };
 
+/*+
+  * Handles the deletion of a vehicle.
+ */
 const onDeleteVehicle = async (vehicle) => {
   if (!vehicle?.id_vehicle) return;
 
   try {
     await trackingStore.updateVehicle(vehicle.id_vehicle, {
-      state_maintenance: -1 // -1 indica inactivo
+      state_maintenance: -1
     });
 
     alert("Vehículo marcado como inactivo");
@@ -105,12 +150,18 @@ const onDeleteVehicle = async (vehicle) => {
   }
 };
 
+/**
+ * Closes the vehicle modal and resets the form.
+ */
 const onCloseModal = () => {
   showModal.value = false;
   Object.keys(vehicleForm).forEach(key => vehicleForm[key] = '');
   selectedVehicleId.value = null;
 };
 
+/**
+ * Handles the submission of the vehicle form.
+ */
 const onSubmit = () => {
   if (!validateForm()) return;
 
@@ -148,8 +199,11 @@ const onSubmit = () => {
 
   onCloseModal();
 };
-onMounted(async () => {
 
+/**
+ * Fetches vehicles on component mount if a user session exists.
+ */
+onMounted(async () => {
   if (sessionUser.value?.id_user) {
     await trackingStore.fetchVehicles();
   }

@@ -25,6 +25,7 @@ export class UserAccount {
         this.password = password;
     }
 
+    /** Getters and setters  */
     get id() { return this.id_user_account; }
     set id(value) { this.id_user_account = value; }
 }

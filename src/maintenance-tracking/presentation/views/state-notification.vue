@@ -5,10 +5,17 @@ const {t} = useI18n();
 
 const emit = defineEmits(['close']);
 
+/**
+ * Handles the acceptance action and emits a close event.
+ */
 function onAccept() {
   emit('close');
 }
 
+/**
+ * Handles clicks on the backdrop to close the modal if clicked outside the content area.
+ * @param event - The click event object.
+ */
 function onBackdropClick(event) {
   if (event.target === event.currentTarget) {
     emit('close');

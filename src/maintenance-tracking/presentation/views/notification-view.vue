@@ -25,7 +25,6 @@ const {
  */
 const firstMount = ref(false);
 
-
 /**
  * Computed property to determine if the UI should show a loading state
  * @type {import("vue").ComputedRef<boolean>}

@@ -10,7 +10,7 @@ export class NotificationAssembler {
     /**
      * Extracts notification resources from various input formats.
      * @param input - The input which may contain notification data.
-     * @returns {*|*[]|(import('vue').Ref<Notification[]> & any[])} - An array of notification resources.
+     * @returns {Array} - An array of notification resources.
      */
     static #extractResources(input) {
         const data = (input && typeof input === "object" && "data" in input) ? input.data : input;
