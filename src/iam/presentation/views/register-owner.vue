@@ -12,7 +12,7 @@ const { startRegistrationFlow, saveRegisterOwner } = store;
 
 /**
  * Password visibility toggle
- * @type {Ref<UnwrapRef<boolean>, UnwrapRef<boolean> | boolean>} - true if password is visible, false otherwise
+ * @type {import('vue').Ref<UnwrapRef<boolean>, UnwrapRef<boolean> | boolean>} - true if password is visible, false otherwise
  */
 const isPasswordVisible = ref(false);
 
@@ -98,23 +98,23 @@ const formErrors = computed(() => {
 
   return {
     fullName: touchedFields.value.fullName && registerForm.value.fullName.trim().length < 2
-      ? t('register-owner.fullNameRequired') : null,
+      ? t('register-auto-repair-catalog.fullNameRequired') : null,
     username: touchedFields.value.username && registerForm.value.username.trim().length < 2
-      ? t('register-owner.usernameRequired') : null,
+      ? t('register-auto-repair-catalog.usernameRequired') : null,
     dni: touchedFields.value.dni && !isValidDni(trimmedDni)
-      ? t('register-owner.dniPattern') : null,
+      ? t('register-auto-repair-catalog.dniPattern') : null,
     phone_number: touchedFields.value.phone_number && !isValidPhone(trimmedPhone)
-      ? t('register-owner.phonePattern') : null,
+      ? t('register-auto-repair-catalog.phonePattern') : null,
     department: touchedFields.value.department && registerForm.value.department.trim().length < 2
-      ? t('register-owner.departmentRequired') : null,
+      ? t('register-auto-repair-catalog.departmentRequired') : null,
     district: touchedFields.value.district && registerForm.value.district.trim().length < 2
-      ? t('register-owner.districtRequired') : null,
+      ? t('register-auto-repair-catalog.districtRequired') : null,
     address: touchedFields.value.address && registerForm.value.address.trim().length < 5
-      ? t('register-owner.addressRequired') : null,
+      ? t('register-auto-repair-catalog.addressRequired') : null,
     email: touchedFields.value.email && !isValidEmail(trimmedEmail)
-      ? t('register-owner.emailInvalid') : null,
+      ? t('register-auto-repair-catalog.emailInvalid') : null,
     password: touchedFields.value.password && registerForm.value.password.length < 6
-      ? t('register-owner.passwordRequired') : null,
+      ? t('register-auto-repair-catalog.passwordRequired') : null,
   };
 });
 
@@ -152,10 +152,10 @@ function navigateToLogin() {
 }
 
 /**
- * Navigate to plan owner page
+ * Navigate to plan auto-repair-catalog page
  */
 function navigateToPlanOwner() {
-  router.push('/iam/plan-owner');
+  router.push('/iam/plan-auto-repair-catalog');
 }
 
 /**
@@ -185,7 +185,7 @@ function onSubmit() {
     password: registerForm.value.password,
   };
 
-  console.log('✓ Register owner data:', cleanedData);
+  console.log('✓ Register auto-repair-catalog data:', cleanedData);
   startRegistrationFlow('Vehicle Owner');
   saveRegisterOwner(cleanedData);
   navigateToPlanOwner();

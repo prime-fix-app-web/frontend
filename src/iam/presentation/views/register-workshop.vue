@@ -9,9 +9,11 @@ const {t} = useI18n();
 const router = useRouter();
 const store = useIamStore();
 
+const {startRegistrationFlow, saveRegisterWorkshop} = store;
+
 /**
  * Password visibility toggle
- * @type {Ref<UnwrapRef<boolean>, UnwrapRef<boolean> | boolean>} - true if password is visible, false otherwise
+ * @type {import('vue').Ref<UnwrapRef<boolean>, UnwrapRef<boolean> | boolean>} - true if password is visible, false otherwise
  */
 const isPasswordVisible = ref(false);
 
@@ -117,7 +119,10 @@ const formErrors = computed(() => {
   };
 });
 
-// Computed properties for validation
+/**
+ * Check if the form is valid
+ * @return {import('vue').ComputedRef<boolean>} - True if valid, false otherwise
+ */
 const isFormValid = computed(() => {
   const trimmedEmail = registerForm.value.email.trim();
   const trimmedRuc = registerForm.value.ruc.trim();
@@ -184,8 +189,8 @@ function onSubmit() {
   }
 
   console.log('✓ Register workshop data:', cleanedData);
-  store.startRegistrationFlow('Auto Repair Workshop');
-  store.saveRegisterWorkshop(cleanedData);
+  startRegistrationFlow('Auto Repair Workshop');
+  saveRegisterWorkshop(cleanedData);
   navigateToPlanWorkshop();
 }
 

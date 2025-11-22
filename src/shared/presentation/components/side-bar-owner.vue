@@ -5,44 +5,44 @@ import ButtonLogout from "@/shared/presentation/components/button-logout.vue";
 
 const menuItems = [
   {
-    route: '/layout-owner/profile',
+    route: '/layout-vehicle-owner/profile-owner',
     icon: 'user',
     label: 'side-bar-owner.profile'
   },
   {
-    route: '/layout-owner/home-owner',
+    route: '/layout-vehicle-owner/dashboard-owner',
     icon: 'category',
     label: 'side-bar-owner.dashboard'
   },
   {
-    route: '/layout-owner/vehicles',
+    route: '/layout-vehicle-owner/maintenance-tracking/manage-vehicles',
     icon: 'car-suv',
     label: 'side-bar-owner.vehicles'
   },
   {
-    route: '/layout-owner/search-workshop',
+    route: '/layout-vehicle-owner/auto-repair-catalog/searchWorkshop',
     icon: 'tool',
     label: 'side-bar-owner.searchWorkshop'
   },
   {
-    route: '/layout-owner/history',
+    route: '/layout-vehicle-owner/history',
     icon: 'history',
     label: 'side-bar-owner.history'
   },
   {
-    route: '/layout-owner/track-vehicle',
+    route: '/layout-vehicle-owner/maintenance-tracking/track-vehicle',
     icon: 'diamonds',
     label: 'side-bar-owner.track'
   },
   {
-    route: '/layout-owner/settings',
+    route: '/layout-vehicle-owner/settings-owner',
     icon: 'settings-bolt',
     label: 'side-bar-owner.settings'
   },
   {
-    "route": '/layout-owner/notification-view',
-    "icon": 'bell',
-    "label": 'side-bar-owner.notifications'
+    route: '/layout-vehicle-owner/maintenance-tracking/notification-view',
+    icon: 'bell',
+    label: 'side-bar-owner.notifications'
   }
 ];
 
@@ -51,12 +51,9 @@ const router = useRouter()
 const route = useRoute()
 const { t } = useI18n({ useScope: 'global' })
 
-
 function isActive(path) {
   return route.path === path || route.path.startsWith(path + '/')
 }
-
-
 function go(path) {
   if (route.path !== path) router.push(path)
 }
@@ -105,7 +102,8 @@ function go(path) {
   height: 100vh;
   padding: 1.5rem 0;
   flex-shrink: 0;
-  overflow-y: auto;
+  /* Evitar scroll interno innecesario */
+  overflow: hidden;
 }
 
 .user-profile {
@@ -132,7 +130,8 @@ function go(path) {
 
 .sidebar-nav {
   flex: 1;
-  overflow-y: auto;
+  /* Quitar scroll de la sección de navegación */
+  overflow: visible;
 }
 
 .sidebar-nav ul {
@@ -175,7 +174,8 @@ function go(path) {
 
 .sidebar-footer {
   padding: 1rem 1.5rem;
-  margin-bottom: 230px;
+  /* Empujar al fondo sin crear espacio extra que provoque scroll */
+  margin-top: auto;
 }
 
 /* Responsive Design */

@@ -1,4 +1,4 @@
-import {Payment} from "@/iam/domain/model/payment.entity.js";
+import {Payment} from "@/payment-service/domain/model/payment.entity.js";
 
 /**
  * Assembler for converting payment resources to Payment entities.
@@ -11,24 +11,6 @@ export class PaymentAssembler {
      */
     static toEntityFromResource(resource) {
         return new Payment({ ...resource });
-    }
-
-    /**
-     * Converts a Payment entity to a resource object for API requests.
-     * Excludes the id field for create operations.
-     * @param {Payment} entity - The Payment entity to convert.
-     * @returns {Object} - The resource object for the API.
-     */
-    static toResourceFromEntity(entity) {
-        return {
-            id_payment: entity.id,
-            card_number: entity.card_number,
-            card_type: entity.card_type,
-            month: entity.month,
-            year: entity.year,
-            cvv: entity.cvv,
-            id_user_account: entity.id_user_account
-        };
     }
 
     /**

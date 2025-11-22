@@ -1,0 +1,364 @@
+<script setup lang="ts">
+import { ref, computed, onMounted } from "vue";
+import { useRouter } from "vue-router";
+import useIamStore from "@/iam/application/iam.store.js";
+import useTrackingStore from "@/maintenance-tracking/application/tracking.store.js";
+import useDataCollection from "@/data-collection-diagnosis/application/data-collection.js";
+import {useI18n} from "vue-i18n";
+import usePaymentStore from "@/payment-service/application/payment-service.store.js";
+
+const router = useRouter();
+const iamStore = useIamStore();
+const trackingStore = useTrackingStore();
+const dataStore= useDataCollection();
+const { t } = useI18n();
+
+const paymentStore = usePaymentStore()
+
+const selectedMethod = ref<string>("");
+
+const visitsByVehicleId = computed(() =>
+    dataStore.visits.filter(
+        (v) => v.id_vehicle === paymentStore.vehicleIdFilter
+    )
+);
+
+const onPaymentChange = (value: string) => {
+  selectedMethod.value = value;
+};
+
+const onAccept = () => {
+  if (selectedMethod.value === "cash") {
+    router.push("/layout-vehicle-owner/payment-service/payment/done");
+  } else if (selectedMethod.value === "card") {
+    router.push("/layout-vehicle-owner/payment-service/payment/select");
+  }
+};
+
+onMounted(() => {
+  iamStore.fetchUserAccounts();
+  iamStore.fetchUsers();
+  trackingStore.fetchVehicles()
+  dataStore.fetchVisit()
+})
+</script>
+
+<template>
+  <div class="payment-container">
+    <div class="payment-header">
+      <h1 class="payment-title">{{ t("payment.title") }}</h1>
+    </div>
+
+    <div class="payment-content">
+      <div class="payment-card">
+        <h2 class="card-title">{{ t("payment-service.detail") }}</h2>
+
+        <div class="payment-info">
+          <p class="info-item">
+            <strong>{{ t("payment-service.idVisit") }}:</strong>
+            <span>{{ visitsByVehicleId[0]?.id }}</span>
+          </p>
+
+          <p class="info-item">
+            <strong>{{ t("payment-service.visitDate") }}:</strong>
+            <span>{{ visitsByVehicleId[0]?.time_visit }}</span>
+          </p>
+        </div>
+
+        <div class="payment-methods">
+          <h3 class="methods-title">
+            {{ t("payment-service.selectMethod") }}
+          </h3>
+
+          <div class="method-options">
+
+            <label class="method-option">
+              <input
+                  type="radio"
+                  value="cash"
+                  v-model="selectedMethod"
+              />
+              <span class="radio-label">
+                {{ t("payment-service.cash") }}
+              </span>
+            </label>
+
+            <!-- TARJETA -->
+            <label class="method-option">
+              <input
+                  type="radio"
+                  value="card"
+                  v-model="selectedMethod"
+              />
+              <span class="radio-label">
+                {{ t("payment-service.virtualPayment") }}
+              </span>
+            </label>
+          </div>
+        </div>
+
+        <div class="button-container">
+          <button
+              type="button"
+              class="btn-accept"
+              :disabled="!selectedMethod"
+              @click="onAccept"
+          >
+            {{ t("payment-service.btnAccept") }}
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</template>
+
+<style scoped>
+/* Payment Container */
+.payment-container {
+  width: 100%;
+  height: 100%;
+  padding: 2rem;
+  background-color: var(--color-light);
+  overflow-y: auto;
+}
+
+/* Payment Header */
+.payment-header {
+  border-bottom: 3px solid var(--color-primary);
+  margin-bottom: 2rem;
+  padding-bottom: 0.5rem;
+}
+
+.payment-title {
+  font-family: var(--font-bold);
+  font-size: 3rem;
+  color: var(--color-primary);
+  margin: 0;
+}
+
+/* Payment Content */
+.payment-content {
+  background: white;
+  padding: 2.5rem 3rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  max-width: 900px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Payment Card */
+.payment-card {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.card-title {
+  font-family: var(--font-semibold);
+  font-size: 1.8rem;
+  color: var(--color-primary);
+  margin: 0;
+  text-align: center;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--color-tertiary-complementary);
+}
+
+/* Payment Info */
+.payment-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  background: var(--color-second-complementary);
+  padding: 1.5rem;
+  border-radius: 8px;
+}
+
+.info-item {
+  font-family: var(--font-regular);
+  font-size: 1.1rem;
+  color: var(--color-dark);
+  margin: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.info-item strong {
+  font-family: var(--font-semibold);
+  color: var(--color-primary);
+}
+
+.info-item span {
+  color: var(--color-dark);
+}
+
+/* Payment Methods */
+.payment-methods {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.methods-title {
+  font-family: var(--font-semibold);
+  font-size: 1.3rem;
+  color: var(--color-primary);
+  margin: 0;
+  text-align: center;
+}
+
+.method-options {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.method-option {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  background: var(--color-second-complementary);
+  border: 2px solid var(--color-tertiary-complementary);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.method-option:hover {
+  border-color: var(--color-first-complementary);
+  background: #fef9f0;
+}
+
+.method-option input[type="radio"] {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: var(--color-first-complementary);
+}
+
+.radio-label {
+  font-family: var(--font-medium);
+  font-size: 1.1rem;
+  color: var(--color-dark);
+  cursor: pointer;
+  flex: 1;
+}
+
+/* Button Container */
+.button-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.btn-accept {
+  width: 100%;
+  max-width: 400px;
+  padding: 1.25rem 2rem;
+  border: none;
+  border-radius: 12px;
+  background: var(--color-first-complementary);
+  color: var(--color-dark);
+  font-family: var(--font-bold);
+  font-size: 1.2rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  min-height: 60px;
+}
+
+.btn-accept:hover:not(:disabled) {
+  background: #ffb700;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(255, 193, 7, 0.4);
+}
+
+.btn-accept:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.btn-accept:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .payment-container {
+    padding: 1rem;
+  }
+
+  .payment-title {
+    font-size: 2rem;
+  }
+
+  .payment-content {
+    padding: 2rem 1.5rem;
+  }
+
+  .card-title {
+    font-size: 1.5rem;
+  }
+
+  .info-item {
+    font-size: 1rem;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+
+  .methods-title {
+    font-size: 1.2rem;
+  }
+
+  .radio-label {
+    font-size: 1rem;
+  }
+
+  .btn-accept {
+    font-size: 1.1rem;
+    padding: 1.1rem 1.75rem;
+    min-height: 55px;
+  }
+}
+
+@media (max-width: 480px) {
+  .payment-title {
+    font-size: 1.75rem;
+  }
+
+  .payment-content {
+    padding: 1.5rem 1rem;
+  }
+
+  .card-title {
+    font-size: 1.3rem;
+  }
+
+  .payment-info {
+    padding: 1rem;
+  }
+
+  .info-item {
+    font-size: 0.95rem;
+  }
+
+  .method-option {
+    padding: 1rem;
+  }
+
+  .btn-accept {
+    font-size: 1rem;
+    padding: 1rem 1.5rem;
+    min-height: 50px;
+  }
+}
+
+</style>

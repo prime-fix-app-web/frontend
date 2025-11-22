@@ -8,6 +8,9 @@ const registerOwner = () => import('./views/register-owner.vue');
 const registerWorkshop = () => import('./views/register-workshop.vue');
 const userRole = () => import('./views/user-role.vue');
 
+/**
+ * IAM Module Routes
+ */
 const iamRoutes = [
     {
         path: 'login',
@@ -22,7 +25,7 @@ const iamRoutes = [
         meta: { title: 'Payment View' }
     },
     {
-        path: 'plan-owner',
+        path: 'plan-auto-repair-catalog',
         name: 'plan-owner',
         component: planOwner,
         meta: { title: 'Plan Owner' }
@@ -40,7 +43,7 @@ const iamRoutes = [
       meta: { title: 'Forgot Password' }
     },
     {
-        path: 'register-owner',
+        path: 'register-auto-repair-catalog',
         name: 'register-owner',
         component: registerOwner,
         meta: { title: 'Register Owner' }

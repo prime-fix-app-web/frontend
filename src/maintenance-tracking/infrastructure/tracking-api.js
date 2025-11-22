@@ -1,62 +1,136 @@
 import {BaseApi} from "@/shared/infrastructure/http/base-api.js";
 import {BaseEndpoint} from "@/shared/infrastructure/http/base-endpoint.js";
 
-// Environment variables for endpoint paths
+/**
+ * Endpoint path for notifications.
+ */
 const notificationsEndpointPath = import.meta.env.VITE_NOTIFICATIONS_ENDPOINT_PATH;
 
-// Query param keys from environment
-const notificationQueryParamKey = import.meta.env.VITE_NOTIFICATION_QUERY_PARAM_KEY;
+/**
+ * Endpoint path for vehicles
+ */
+const vehiclesEndpointPath = import.meta.env.VITE_VEHICLES_ENDPOINT_PATH;
+
+/**
+ * Query parameter key for notification ID.
+ * @type {string} - The query parameter key for notification ID.
+ */
+const notificationQueryParamKey = String(import.meta.env.VITE_NOTIFICATION_QUERY_PARAM_KEY).toLowerCase();
+
+/**
+ * Query parameter key for a vehicle ID
+ */
+const vehicleQueryParamKey = import.meta.env.VITE_VEHICLE_QUERY_PARAM_KEY;
+
+/**
+ * Flag to determine if query params should be used.
+ * @type {boolean} - True if query params are to be used, false otherwise.
+ */
+const useQueryParams = String(import.meta.env.VITE_USE_PATH_PARAMS).toLowerCase() === 'true';
 
 export class TrackingApi extends BaseApi {
     #notificationsEndpoint;
+    #vehiclesEndpoint;
 
     constructor() {
         super();
-        this.#notificationsEndpoint = new BaseEndpoint(this, notificationsEndpointPath,
-            {  usePathParams: import.meta.env.VITE_USE_PATH_PARAMS, idQueryParamKey: notificationQueryParamKey });
+        this.#notificationsEndpoint = new BaseEndpoint(this, notificationsEndpointPath,{
+           usePathParams:import.meta.env.VITE_USE_PATH_PARAMS,
+           idQueryParamKey: notificationQueryParamKey,
+        });
+        this.#vehiclesEndpoint = new BaseEndpoint(this, vehiclesEndpointPath, {
+            usePathParams: import.meta.env.VITE_USE_PATH_PARAMS, // false en prod
+            idQueryParamKey: import.meta.env.VITE_VEHICLE_QUERY_PARAM_KEY // "id_vehicle"
+        });
     }
 
     /**
      * Get all notifications.
-     * @returns {Promise} - A promise that resolves to the list of notifications.
+     * @returns {Promise<Notification[]>} - A promise that resolves to an array of notifications.
      */
-    getNotifications() {
-        return this.#notificationsEndpoint.getAll();
+    async getNotifications() {
+        const res = await this.#notificationsEndpoint.getAll();
+        return res?.data ?? res;
     }
 
     /**
      * Get a notification by its ID.
-     * @param id - The ID of the notification.
-     * @returns {Promise<import('axios').AxiosReponse>} - A promise that resolves to the notification.
+     * @param id - The ID of the notification to retrieve.
+     * @returns {Promise<Notification>} - A promise that resolves to the notification.
      */
-    getNotificationById(id) {
-        return this.#notificationsEndpoint.getById(id);
+    async getNotificationById(id) {
+        const res = await this.#notificationsEndpoint.getById(id);
+        return res?.data ?? res;
     }
 
     /**
      * Create a new notification.
      * @param resource - The notification resource to create.
-     * @returns {Promise<import('axios').AxiosReponse>} - A promise that resolves to the created notification.
+     * @returns {Promise<Notification>} - A promise that resolves to the created notification.
      */
-    createNotification(resource) {
-        return this.#notificationsEndpoint.create(resource);
+    async createNotification(resource) {
+        const res = await this.#notificationsEndpoint.create(resource);
+        return res?.data ?? res;
     }
 
     /**
      * Update an existing notification.
-     * @param resource - The notification resource to update.
-     * @returns {Promise<import('axios').AxiosReponse>} - A promise that resolves to the updated notification.
+     * @param input - The notification resource to update.
+     * @returns {Promise<Notification>} - A promise that resolves to the updated notification.
      */
-    updateNotification(resource) {
-        return this.#notificationsEndpoint.update(resource.id, resource);
+    async updateNotification(input) {
+        const resource = input;
+
+        const id =
+            input?.id ??
+            input?.id_notification ??
+            resource?.id ??
+            resource?.id_notification;
+
+        if (id === undefined || id === null || id === '') {
+            throw new Error("updateNotification: id required");
+        }
+
+        const res = await this.#notificationsEndpoint.update(id, resource);
+        return res?.data ?? res;
     }
 
     /**
      * Delete a notification by its ID.
-     * @param id - The ID of the notification to delete.
-     * @returns {Promise<import('axios').AxiosReponse>} - A promise that resolves to the deletion result.
+     * @param input - The ID of the notification to delete.
+     * @returns {Promise<Notification>} - A promise that resolves to the deleted notification.
      */
-    deleteNotification(id) {
-        return this.#notificationsEndpoint.delete(id);
+    async deleteNotification(input) {
+        const id = (typeof input === 'string' || typeof input === 'number')
+            ? input
+            : input?.id ?? input?.id_notification;
+
+        if (id === undefined || id === null || id === '') {
+            throw new Error("deleteNotification: id required");
+        }
+        const res = await this.#notificationsEndpoint.delete(id);
+        return res?.data ?? res;
     }
+
+
+    getVehicles(){
+        return this.#vehiclesEndpoint.getAll();
+    }
+
+    getVehiclesById(id){
+        return this.#vehiclesEndpoint.getById(id);
+    }
+
+    createVehicle(vehicle){
+        return this.#vehiclesEndpoint.create(vehicle);
+    }
+
+    updateVehicle(id,vehicle){
+        return this.#vehiclesEndpoint.update(id, vehicle);
+    }
+
+    deleteVehicle(id){
+        return this.#vehiclesEndpoint.delete(id);
+    }
+
 }

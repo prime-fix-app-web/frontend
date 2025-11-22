@@ -10,7 +10,10 @@
     "dev": "vite",
     "dev:prod": "vite --mode production",
     "build": "vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "mock:prep": "node server/server.mjs",
+    "mock:run": "npx json-server server/db.runtime.json --port 3000 --routes server/routes.json",
+    "mock": "npm run mock:prep && npm run mock:run"
   },
   "dependencies": {
     "@primeuix/themes": "^1.2.5",

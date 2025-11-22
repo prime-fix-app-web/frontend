@@ -1,97 +1,69 @@
-<script setup>
-import StateNotification from "@/maintenance-tracking/presentation/views/state-notification.vue";
-import {useI18n} from "vue-i18n";
-import {computed, ref} from "vue";
-import StateError from "@/maintenance-tracking/presentation/components/state-error.vue";
+<script setup lang="ts">
+import { ref, computed, onMounted } from "vue";
+import { useI18n } from "vue-i18n";
+
 import ProgressBar from "@/maintenance-tracking/presentation/components/progress-bar.vue";
+import StateError from "@/maintenance-tracking/presentation/components/state-error.vue";
+import StateNotification from "@/maintenance-tracking/presentation/views/state-notification.vue";
 
-const {t} = useI18n();
+import useTrackingStore from "@/maintenance-tracking/application/tracking.store.js";
+import useIamStore from "@/iam/application/iam.store.js";
 
-/**
- * List of vehicles with their details.
- */
-const vehicles = ref([
-  { id: 'V001', name: 'COMFORTABLE 14', brand: 'Toyota', model: 'Corolla', year: 2020, maintenanceStatus: 0 },
-  { id: 'V002', name: 'SPEED DEMON', brand: 'Honda', model: 'Civic', year: 2019, maintenanceStatus: 3 },
-  { id: 'V003', name: 'CITY RUNNER', brand: 'Nissan', model: 'Sentra', year: 2021, maintenanceStatus: 5 },
-  { id: 'V004', name: 'ZEN 1.0 MT', brand: 'Renault', model: 'Zen', year: 2022, maintenanceStatus: 2 }
-]);
+const trackingStore = useTrackingStore();
+const iamStore = useIamStore();
+const { t } = useI18n();
 
-/**
- * Selected vehicle ID from the dropdown.
- * @type {Ref<string>}
- */
-const selectedVehicleId = ref('');
-
-/**
- * Data of the selected vehicle.
- * @type {Ref<null|{ id: string, name: string, brand: string, model: string, year: number, maintenanceStatus: number }>}
- */
-const selectedVehicleData = ref(null);
-
-/**
- * Flag to show or hide the progress bar.
- * @type {Ref<UnwrapRef<boolean>, UnwrapRef<boolean> | boolean>}
- */
+// UI state
+const selectedVehicle = ref<any | undefined>(undefined);
 const showProgressBar = ref(false);
-
-/**
- * Flag to show or hide the error message.
- * @type {Ref<UnwrapRef<boolean>, UnwrapRef<boolean> | boolean>}
- */
 const showError = ref(false);
-
-/**
- * Flag to show or hide the notification modal.
- * @type {Ref<UnwrapRef<boolean>, UnwrapRef<boolean> | boolean>}
- */
 const showNotificationModal = ref(false);
-
-/**
- * Flag to indicate if there are unread notifications.
- * @type {Ref<UnwrapRef<boolean>, UnwrapRef<boolean> | boolean>}
- */
 const hasNotification = ref(true);
 
-/**
- * Computed property to check if the selected vehicle ID is invalid (empty).
- * @type {ComputedRef<boolean>}
- */
-const isInvalid = computed(() => !selectedVehicleId.value);
+// form
+const trackForm = ref({
+  selectedVehicle: "",
+});
 
-/**
- * Handles the selection of a vehicle from the dropdown.
- * Updates the selected vehicle data and shows/hides the progress bar or error message based on maintenance status.
- */
+
+onMounted(() => {
+  iamStore.restoreSessionFromStorage?.();
+});
+
+const vehiclesByUserId = computed(() => {
+  const userId = iamStore.sessionUserId;
+
+  if (!userId) return [];
+
+  return trackingStore.vehicles.filter((v: any) => v.id_user === userId);
+});
+
+const isInvalid = computed(() => trackForm.value.selectedVehicle.trim().length === 0);
+
 function onSelect() {
-  if (!selectedVehicleId.value) return;
+  if (isInvalid.value) return;
 
-  const selected = vehicles.value.find(v => v.id === selectedVehicleId.value);
-  if (!selected) return;
+  const vehicleId = trackForm.value.selectedVehicle;
 
-  selectedVehicleData.value = selected;
+  selectedVehicle.value = vehiclesByUserId.value.find(
+      (v) => v.id_vehicle === vehicleId
+  );
 
-  // Reset states first
-  showError.value = false;
-  showProgressBar.value = false;
+  if (!selectedVehicle.value) return;
 
-  if (selected.maintenanceStatus === 0) {
+  if (selectedVehicle.value.state_maintenance === 0) {
     showError.value = true;
+    showProgressBar.value = false;
   } else {
+    showError.value = false;
     showProgressBar.value = true;
   }
 }
 
-/**
- * Opens the notification modal.
- */
 function openNotificationModal() {
   showNotificationModal.value = true;
 }
 
-/**
- * Closes the notification modal and marks notifications as read.
- */
 function closeNotificationModal() {
   showNotificationModal.value = false;
   hasNotification.value = false;
@@ -100,81 +72,104 @@ function closeNotificationModal() {
 
 <template>
   <div class="track-vehicle-container">
+    <div class="track-header">
+      <h1 class="track-title">{{ t('track-vehicle.title') }}</h1>
+
+      <button
+          class="notification-button"
+          @click="openNotificationModal"
+          :class="{ 'has-notification': hasNotification }"
+          type="button"
+          aria-label="Notifications"
+      >
+        <svg class="bell-icon">
+          <use href="./assets/icons/sprite.symbol.svg#bell"></use>
+        </svg>
+
+        <span
+            v-if="hasNotification"
+            class="notification-badge"
+        ></span>
+      </button>
+    </div>
+
     <div class="track-content">
-      <div class="header-with-notification">
-        <h1 class="track-title">{{ t('track-vehicle.title') }}</h1>
-        <button
-            class="notification-button"
-            :class="{ 'has-notification': hasNotification }"
-            @click="openNotificationModal"
-            type="button"
-            aria-label="Notifications"
-        >
-          <svg class="bell-icon">
-            <use href="/assets/icons/sprite.symbol.svg#bell"></use>
-          </svg>
-          <span v-if="hasNotification" class="notification-badge"></span>
-        </button>
-      </div>
 
       <form @submit.prevent="onSelect" class="track-form">
         <div class="form-group">
-          <label for="vehicle" class="form-label">{{ t('track-vehicle.selectVehicle') }}</label>
+          <label for="vehicle" class="form-label">
+            {{ t('track-vehicle.selectVehicle') }}
+          </label>
+
           <select
               id="vehicle"
-              v-model="selectedVehicleId"
+              v-model="trackForm.selectedVehicle"
               class="form-select"
-              :class="{ 'is-invalid': isInvalid }"
           >
-            <option value="" disabled selected>{{ t('track-vehicle.selectVehiclePlaceholder') }}</option>
-            <option v-for="vehicle in vehicles" :key="vehicle.id" :value="vehicle.id">
-              {{ vehicle.name }}
+            <option value="" disabled>
+              {{ t('track-vehicle.selectVehiclePlaceholder') }}
+            </option>
+
+            <option
+                v-for="vehicle in vehiclesByUserId"
+                :key="vehicle.id_vehicle"
+                :value="vehicle.id_vehicle"
+            >
+              {{ vehicle.vehicle_brand }} [{{ vehicle.vehicle_plate }}]
             </option>
           </select>
-          <span v-if="isInvalid" class="error-message">
+
+          <span
+              class="error-message"
+              v-if="!trackForm.selectedVehicle"
+          >
             {{ t('track-vehicle.vehicleRequired') }}
           </span>
         </div>
-        <button type="submit" class="select-button" :disabled="!selectedVehicleId">
+
+        <button
+            type="submit"
+            class="select-button"
+            :disabled="!trackForm.selectedVehicle"
+        >
           {{ t('track-vehicle.select') }}
         </button>
       </form>
 
       <div v-if="showError" class="vehicle-info-section">
-        <state-error />
+        <StateError />
       </div>
 
-      <div v-if="showProgressBar && selectedVehicleData" class="vehicle-info-section">
+      <div
+          v-if="showProgressBar && selectedVehicle"
+          class="vehicle-info-section"
+      >
         <div class="vehicle-details">
-          <div class="vehicle-header">
-            <h2 class="vehicle-title">{{ selectedVehicleData.name }}</h2>
-            <div class="vehicle-specs">
-              <p class="vehicle-spec">
-                <span class="spec-label">{{ t('track-vehicle.brand') }}:</span>
-                <span class="spec-value">{{ selectedVehicleData.brand }}</span>
-              </p>
-              <p class="vehicle-spec">
-                <span class="spec-label">{{ t('track-vehicle.model') }}:</span>
-                <span class="spec-value">{{ selectedVehicleData.model }}</span>
-              </p>
-              <p class="vehicle-spec">
-                <span class="spec-label">{{ t('track-vehicle.year') }}:</span>
-                <span class="spec-value">{{ selectedVehicleData.year }}</span>
-              </p>
-            </div>
-          </div>
-          <div class="status-section">
-            <h3 class="status-title">{{ t('track-vehicle.status') }}:</h3>
-          </div>
+          <p class="vehicle-info">
+            <strong>{{ t('track-vehicle.vehicle') }}:</strong>
+            {{ selectedVehicle.vehicle_brand }} [{{ selectedVehicle.vehicle_plate }}]
+          </p>
+
+          <p class="status-info">
+            <strong>{{ t('track-vehicle.status') }}:</strong>
+          </p>
         </div>
-        <div class="progress-section progress-bar-content">
-          <progress-bar :currentStep="selectedVehicleData.maintenanceStatus" />
+
+        <div class="progress-section">
+          <ProgressBar
+              :currentStep="selectedVehicle.state_maintenance || 1"
+              :currentVehicle="selectedVehicle"
+          />
         </div>
       </div>
     </div>
-
-    <state-notification v-if="showNotificationModal" @close="closeNotificationModal"  />
   </div>
+
+  <!-- Notification Modal -->
+  <StateNotification
+      v-if="showNotificationModal"
+      @close="closeNotificationModal"
+  />
 </template>
 
 <style scoped>

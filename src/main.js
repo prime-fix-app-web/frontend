@@ -5,7 +5,19 @@ import App from './App.vue'
 import i18n from "@/i18n.js";
 import Material from '@primeuix/themes/material';
 import PrimeVue from "primevue/config";
-import {ConfirmationService, DialogService, SelectButton, ToastService} from "primevue";
+import {
+    Button,
+    Card,
+    CascadeSelect,
+    ConfirmationService, DatePicker,
+    DialogService,
+    FloatLabel,Select,
+    SelectButton, Textarea,
+    ToastService,
+    Dialog,
+    RadioButton,
+    Dropdown
+} from "primevue";
 import router from "./router.js";
 import pinia from "./pinia.js";
 import useIamStore from "@/iam/application/iam.store.js";
@@ -18,6 +30,16 @@ app.use(i18n)
     .use(DialogService)
     .use(ToastService)
     .component('pv-select-button', SelectButton)
+    .component('pv-card', Card)
+    .component('pv-button', Button)
+    .component('pv-cascade', CascadeSelect)
+    .component('pv-textarea', Textarea)
+    .component('pv-select', Select)
+    .component('pv-dialog', Dialog)
+    .component('pv-floatlabel', FloatLabel)
+    .component('pv-datepicker', DatePicker)
+    .component('pv-radio-button', RadioButton)
+    .component('pv-dropdown',Dropdown)
     .use(router)
     .use(pinia);
 

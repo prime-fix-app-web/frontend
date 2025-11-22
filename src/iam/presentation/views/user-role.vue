@@ -6,20 +6,45 @@ import { useI18n } from 'vue-i18n'
 const router = useRouter()
 const { t } = useI18n()
 
+/**
+ * Form state
+ */
 const submitting = ref(false)
+
+/**
+ * Form data and validation
+ */
 const form = reactive({
   role: ''
 })
+
+/**
+ * Touched state to track if user has interacted with the form
+ */
 const touched = ref(false)
 
+/**
+ * Select role handler
+ * @param role - selected role
+ */
 function selectRole(role: string) {
   form.role = role
   touched.value = true
 }
 
+/**
+ * Computed properties for form validation
+ */
 const formInvalid = computed(() => !form.role)
+
+/**
+ * Role invalid state for error message display
+ */
 const roleInvalid = computed(() => !form.role && touched.value)
 
+/**
+ * Form submission handler
+ */
 function onSubmit() {
   touched.value = true
   if (formInvalid.value || submitting.value) return
@@ -27,7 +52,7 @@ function onSubmit() {
   submitting.value = true
   const target =
       form.role === 'Vehicle Owner'
-          ? '/iam/register-owner'
+          ? '/iam/register-auto-repair-catalog'
           : '/iam/register-workshop'
 
   router.push(target)
