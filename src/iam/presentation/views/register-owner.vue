@@ -12,7 +12,7 @@ const { startRegistrationFlow, saveRegisterOwner } = store;
 
 /**
  * Password visibility toggle
- * @type {Ref<UnwrapRef<boolean>, UnwrapRef<boolean> | boolean>} - true if password is visible, false otherwise
+ * @type {import('vue').Ref<UnwrapRef<boolean>, UnwrapRef<boolean> | boolean>} - true if password is visible, false otherwise
  */
 const isPasswordVisible = ref(false);
 
@@ -197,22 +197,22 @@ function onSubmit() {
     <div class="register-card">
       <div class="register-content">
         <div class="register-form-section">
-          <h1 class="title">{{ $t('register-auto-repair-catalog.title') }}</h1>
+          <h1 class="title">{{ $t('register-owner.title') }}</h1>
           <p class="subtitle">
-            {{ $t('register-auto-repair-catalog.haveAccount') }}
-            <a class="link" @click="navigateToLogin">{{ $t('register-auto-repair-catalog.signIn') }}</a>
+            {{ $t('register-owner.haveAccount') }}
+            <a class="link" @click="navigateToLogin">{{ $t('register-owner.signIn') }}</a>
           </p>
 
           <form @submit.prevent="onSubmit" class="register-form" novalidate>
             <!-- Full Name -->
             <div class="form-group">
-              <label for="fullName" class="label">{{ $t('register-auto-repair-catalog.fullName') }}</label>
+              <label for="fullName" class="label">{{ $t('register-owner.fullName') }}</label>
               <input
                   id="fullName"
                   v-model="registerForm.fullName"
                   @blur="markAsTouched('fullName')"
                   type="text"
-                  :placeholder="$t('register-auto-repair-catalog.fullNamePlaceholder')"
+                  :placeholder="$t('register-owner.fullNamePlaceholder')"
                   class="input"
                   :class="{ error: formErrors.fullName }"
               />
@@ -221,13 +221,13 @@ function onSubmit() {
 
             <!-- Username -->
             <div class="form-group">
-              <label for="username" class="label">{{ $t('register-auto-repair-catalog.username') }}</label>
+              <label for="username" class="label">{{ $t('register-owner.username') }}</label>
               <input
                   id="username"
                   v-model="registerForm.username"
                   @blur="markAsTouched('username')"
                   type="text"
-                  :placeholder="$t('register-auto-repair-catalog.usernamePlaceholder')"
+                  :placeholder="$t('register-owner.usernamePlaceholder')"
                   class="input"
                   :class="{ error: formErrors.username }"
               />
@@ -237,14 +237,14 @@ function onSubmit() {
             <!-- DNI and Phone Number -->
             <div class="form-row">
               <div class="form-group">
-                <label for="dni" class="label">{{ $t('register-auto-repair-catalog.dni') }}</label>
+                <label for="dni" class="label">{{ $t('register-owner.dni') }}</label>
                 <input
                     id="dni"
                     v-model="registerForm.dni"
                     @blur="markAsTouched('dni')"
                     type="text"
                     maxlength="8"
-                    :placeholder="$t('register-auto-repair-catalog.dniPlaceholder')"
+                    :placeholder="$t('register-owner.dniPlaceholder')"
                     class="input"
                     :class="{ error: formErrors.dni }"
                 />
@@ -252,14 +252,14 @@ function onSubmit() {
               </div>
 
               <div class="form-group">
-                <label for="phone_number" class="label">{{ $t('register-auto-repair-catalog.phone_number') }}</label>
+                <label for="phone_number" class="label">{{ $t('register-owner.phone_number') }}</label>
                 <input
                     id="phone_number"
                     v-model="registerForm.phone_number"
                     @blur="markAsTouched('phone_number')"
                     type="text"
                     maxlength="9"
-                    :placeholder="$t('register-auto-repair-catalog.phone_numberPlaceholder')"
+                    :placeholder="$t('register-owner.phone_numberPlaceholder')"
                     class="input"
                     :class="{ error: formErrors.phone_number }"
                 />
@@ -270,13 +270,13 @@ function onSubmit() {
             <!-- Department and District -->
             <div class="form-row">
               <div class="form-group">
-                <label for="department" class="label">{{ $t('register-auto-repair-catalog.department') }}</label>
+                <label for="department" class="label">{{ $t('register-owner.department') }}</label>
                 <input
                     id="department"
                     v-model="registerForm.department"
                     @blur="markAsTouched('department')"
                     type="text"
-                    :placeholder="$t('register-auto-repair-catalog.departmentPlaceholder')"
+                    :placeholder="$t('register-owner.departmentPlaceholder')"
                     class="input"
                     :class="{ error: formErrors.department }"
                 />
@@ -284,13 +284,13 @@ function onSubmit() {
               </div>
 
               <div class="form-group">
-                <label for="district" class="label">{{ $t('register-auto-repair-catalog.district') }}</label>
+                <label for="district" class="label">{{ $t('register-owner.district') }}</label>
                 <input
                     id="district"
                     v-model="registerForm.district"
                     @blur="markAsTouched('district')"
                     type="text"
-                    :placeholder="$t('register-auto-repair-catalog.districtPlaceholder')"
+                    :placeholder="$t('register-owner.districtPlaceholder')"
                     class="input"
                     :class="{ error: formErrors.district }"
                 />
@@ -300,13 +300,13 @@ function onSubmit() {
 
             <!-- Address -->
             <div class="form-group">
-              <label for="address" class="label">{{ $t('register-auto-repair-catalog.address') }}</label>
+              <label for="address" class="label">{{ $t('register-owner.address') }}</label>
               <input
                   id="address"
                   v-model="registerForm.address"
                   @blur="markAsTouched('address')"
                   type="text"
-                  :placeholder="$t('register-auto-repair-catalog.addressPlaceholder')"
+                  :placeholder="$t('register-owner.addressPlaceholder')"
                   class="input"
                   :class="{ error: formErrors.address }"
               />
@@ -315,13 +315,13 @@ function onSubmit() {
 
             <!-- Email -->
             <div class="form-group">
-              <label for="email" class="label">{{ $t('register-auto-repair-catalog.email') }}</label>
+              <label for="email" class="label">{{ $t('register-owner.email') }}</label>
               <input
                   id="email"
                   v-model="registerForm.email"
                   @blur="markAsTouched('email')"
                   type="email"
-                  :placeholder="$t('register-auto-repair-catalog.emailPlaceholder')"
+                  :placeholder="$t('register-owner.emailPlaceholder')"
                   class="input"
                   :class="{ error: formErrors.email }"
               />
@@ -330,14 +330,14 @@ function onSubmit() {
 
             <!-- Password -->
             <div class="form-group">
-              <label for="password" class="label">{{ $t('register-auto-repair-catalog.password') }}</label>
+              <label for="password" class="label">{{ $t('register-owner.password') }}</label>
               <div class="password-container">
                 <input
                     id="password"
                     v-model="registerForm.password"
                     @blur="markAsTouched('password')"
                     :type="isPasswordVisible ? 'text' : 'password'"
-                    :placeholder="$t('register-auto-repair-catalog.passwordPlaceholder')"
+                    :placeholder="$t('register-owner.passwordPlaceholder')"
                     class="input password-input"
                     :class="{ error: formErrors.password }"
                 />
@@ -345,7 +345,7 @@ function onSubmit() {
                     type="button"
                     class="password-toggle"
                     @click="togglePasswordVisibility"
-                    :aria-label="$t('register-auto-repair-catalog.togglePassword')"
+                    :aria-label="$t('register-owner.togglePassword')"
                 >
                   <svg class="icon">
                     <use :href="isPasswordVisible ? '/assets/icons/sprite.symbol.svg#eye-off' : '/assets/icons/sprite.symbol.svg#eye'"></use>
@@ -356,7 +356,7 @@ function onSubmit() {
             </div>
 
             <button type="submit" class="submit" :disabled="!isFormValid">
-              {{ $t('register-auto-repair-catalog.register') }}
+              {{ $t('register-owner.register') }}
             </button>
           </form>
         </div>

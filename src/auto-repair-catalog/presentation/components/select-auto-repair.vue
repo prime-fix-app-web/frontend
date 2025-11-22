@@ -1,11 +1,12 @@
 <script setup>
-import {AutoRepair} from "@/auto-repair-catalog/domain/model/auto-repair.entity.js";
-import {Location} from "@/auto-repair-catalog/domain/model/location.entity.js";
-import IamStore, {useIamStore} from "@/iam/application/iam.store.js";
+import {useIamStore} from "@/iam/application/iam.store.js";
 import {useI18n} from "vue-i18n";
 import {useRouter} from "vue-router";
 import {computed, onMounted} from "vue";
 
+/**
+ * The properties accepted by the AutoRepairCard component.
+ */
 const props = defineProps({
   autoRepair: {
     type: Object,
@@ -22,23 +23,34 @@ const router = useRouter();
 
 const iamStore = useIamStore();
 
+/**
+ * The user account associated with the auto repair shop.
+ */
 const userAccount = computed(() => {
   const idUserAccount =props.autoRepair?.id_user_account;
   return idUserAccount ? iamStore.getUserAccountById(idUserAccount) : undefined;
 });
 
+/**
+ * The username of the user account associated with the auto repair shop.
+ */
 const userAccountName = computed(() => userAccount.value?.username ?? '');
 
+/**
+ * Selects an auto repair shop and navigates to the visit form.
+ * @param id - The ID of the auto repair shop to select.
+ */
 const selectRepair = (id) => {
   router.push({ name: "visitForm", query: { id_auto_repair: id } });
 };
 
+/**
+ * Fetch user accounts and users on component mount.
+ */
 onMounted(async ()=>{
   iamStore.fetchUserAccounts();
   iamStore.fetchUsers();
 })
-
-
 
 </script>
 

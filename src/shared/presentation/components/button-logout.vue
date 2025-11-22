@@ -6,12 +6,14 @@ import useIamStore from "@/iam/application/iam.store.js";
 const { t } = useI18n();
 const router = useRouter();
 const store = useIamStore();
-
 const { logout } = store;
 
+/**
+ * Handles the logout action by invoking the store's logout method
+ */
 const onLogout = () => {
   console.log("Logout");
-  store.logout();
+  logout();
   router.push('/iam/login');
 };
 </script>

@@ -2,7 +2,6 @@
 import {useRouter} from "vue-router";
 import {useI18n} from "vue-i18n";
 import useIamStore from "@/iam/application/iam.store.js";
-import {onMounted} from "vue";
 
 const store = useIamStore();
 const router = useRouter();
@@ -10,12 +9,19 @@ const {t} = useI18n();
 
 const { selectPlan } = store;
 
+/**
+ * Select a plan type and navigate to payment view.
+ * @param planType - The type of plan selected ('3m', '12m', '1m').
+ */
 function selectPlanType(planType) {
   console.log('Plan selected:', planType);
   selectPlan(planType);
   goToPayment();
 }
 
+/**
+ * Navigate to the payment view.
+ */
 function goToPayment() {
   router.push('/iam/payment-view');
 }

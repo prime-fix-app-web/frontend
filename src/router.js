@@ -7,8 +7,8 @@ import autoCatalogRoutes from "@/auto-repair-catalog/presentation/auto-repair-ca
 import dashboardOwner from "@/shared/presentation/views/dashboard-owner.vue";
 import DashboardWorkshop from "@/shared/presentation/views/dashboard-workshop.vue";
 import trackingRoutes from "@/maintenance-tracking/presentation/maintenance-tracking.routes.js";
-import autoRepairRoutes from "@/auto-repair-register/presentation/auto-repair-routes.js";
 import autoRepairRegisterRoutes from "@/auto-repair-register/presentation/auto-repair-routes.js";
+import useIamStore from "@/iam/application/iam.store.js";
 
 const layoutOwner = () => import("./shared/presentation/components/layout-owner.vue");
 const layoutWorkshop = () => import("./shared/presentation/components/layout-workshop.vue");
@@ -160,6 +160,34 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
     console.log(`Navigating from ${from.fullPath} to ${to.fullPath}`);
+
+    const iamStore = useIamStore();
+
+    // Restore session from storage if not already loaded
+    if (!iamStore.sessionUserAccount && typeof window !== "undefined") {
+        iamStore.restoreSessionFromStorage();
+    }
+
+    const isAuthenticated = iamStore.isAuthenticated;
+    const userRole = iamStore.sessionUserAccount?.id_role;
+
+    // If the user is authenticated and tries to access public IAM routes, redirect them to their dashboard
+    if (isAuthenticated && userRole) {
+        const publicPaths = ['/', '/iam/login', '/iam/register', '/iam/register-owner', '/iam/register-workshop'];
+        const isPublicPath = publicPaths.includes(to.path) || to.path.startsWith('/iam');
+
+        if (isPublicPath) {
+            // Determine redirect path based on user role
+            const redirectPath = userRole === VEHICLE_OWNER_ROLE_ID
+                ? '/layout-vehicle-owner/dashboard-owner'
+                : '/layout-workshop/dashboard-workshop';
+
+            console.log(`Usuario autenticado detectado, redirigiendo a ${redirectPath}`);
+            next(redirectPath);
+            return;
+        }
+    }
+
     let baseTitle = 'Prime Fix';
     document.title = `${baseTitle} - ${to.meta['title']}`;
     next();

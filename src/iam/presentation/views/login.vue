@@ -25,34 +25,40 @@ const {paymentsLoaded} = storeToRefs(storePayments);
 
 /**
  * Login form data
- * @type {Ref<UnwrapRef<{email: string, password: string}>, UnwrapRef<{email: string, password: string}> | {email: string, password: string}>} - form data with email and password
+ * @type {import("vue").Ref<UnwrapRef<{email: string, password: string}>>
  */
 const form = ref({ email: '', password: '' });
 /**
- * Password visibility toggle
- * @type {Ref<UnwrapRef<boolean>, UnwrapRef<boolean> | boolean>} - whether the password is visible or not
+ * Password visibility state
+ * @type {import("vue").Ref<UnwrapRef<boolean>, UnwrapRef<boolean> | boolean>}
  */
 const isPasswordVisible = ref(false);
 /**
- * Form submission state
- * @type {Ref<UnwrapRef<boolean>, UnwrapRef<boolean> | boolean>} - whether the form is being submitted or not
+ * Indicates if the form is being submitted
+ * @type {import("vue").Ref<UnwrapRef<boolean>, UnwrapRef<boolean> | boolean>}
  */
 const isSubmitting = ref(false);
-const isAppLoading = ref(false);
+
 /**
- * Form errors
- * @type {Ref<UnwrapRef<{email: null, password: null}>, UnwrapRef<{email: null, password: null}> | {email: null, password: null}>} - form errors for email and password
+ * Indicates if the app is loading
+ * @type {import("vue").Ref<UnwrapRef<boolean>, UnwrapRef<boolean> | boolean>}
+ */
+const isAppLoading = ref(false);
+
+/**
+ * Form validation errors
+ * @type {import("vue").Ref<UnwrapRef<{email: null|string, password: null|string}>, UnwrapRef<{email: null|string, password: null|string}> | {email: null|string, password: null|string}>}
  */
 const errorsForm = ref({ email: null, password: null });
 
 /**
  * Login error message
- * @type {Ref<UnwrapRef<string>, UnwrapRef<string> | string>} - error message to display when login fails
+ * @type {import("vue").Ref<UnwrapRef<string>, UnwrapRef<string> | string>}
  */
 const loginError = ref('');
 
 /**
- * On component mount, fetch user accounts and users if not already loaded
+ * Watch form changes to validate inputs
  */
 onMounted(() => {
   if(!userAccountsLoaded.value) fetchUserAccounts();
@@ -64,13 +70,16 @@ onMounted(() => {
   console.log('isDataReady:', isDataReady.value);
 });
 
-
+/**
+ * Computed property to check if user data is loaded
+ * @type {ComputedRef<unknown>}
+ */
 const isDataReady = computed(() => userAccountsLoaded.value && userLoaded.value);
 
 /**
- * Validate email format
- * @param email - the email string to validate
- * @returns {{invalid: boolean}|null|{required: boolean}} - validation error or null if valid
+ * Validate email
+ * @param email - The email string to validate
+ * @returns {{invalid: boolean}|null|{required: boolean}}
  */
 function validateEmail(email) {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -140,8 +149,9 @@ async function onSubmit() {
   }
 }
 
-
-
+/**
+ * Navigate to user role selection for registration
+ */
 function navigateToUserRole() {
   router.push('/iam/user-role');
 }

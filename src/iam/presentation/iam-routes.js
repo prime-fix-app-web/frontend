@@ -8,6 +8,9 @@ const registerOwner = () => import('./views/register-owner.vue');
 const registerWorkshop = () => import('./views/register-workshop.vue');
 const userRole = () => import('./views/user-role.vue');
 
+/**
+ * IAM Module Routes
+ */
 const iamRoutes = [
     {
         path: 'login',

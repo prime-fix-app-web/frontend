@@ -3,12 +3,15 @@ import {ref, computed, onMounted} from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import useIamStore from "@/iam/application/iam.store.js";
+import {storeToRefs} from "pinia";
 
 const router = useRouter();
 const { t } = useI18n();
 const store = useIamStore();
 
-const { registerUserAccount, finishRegister, resetRegistrationFlow,
+const { registerUserAccount } = storeToRefs(store);
+
+const { finishRegister, resetRegistrationFlow,
   fetchUserAccounts, fetchPayments, fetchLocations, fetchUsers} = store;
 
 /**
@@ -29,12 +32,21 @@ const months = [
   { value: 12, name: t('payment.december') }
 ];
 
+/**
+ * Years for the expiration date dropdown
+ * @type {number[]}
+ */
 const years = Array.from({ length: 10 }, (_, i) => new Date().getFullYear() + i);
+
+/**
+ * Document types for the document type dropdown
+ * @type {string[]}
+ */
 const documentTypes = ['DNI', 'Pasaporte', 'Carné de Extranjería'];
 
 /**
- * Determine the selected plan based on the user's membership
- * @type {ComputedRef<string>}
+ * Determine the selected plan based on the membership ID
+ * @type {import('vue').ComputedRef<string>}
  */
 const planSelected = computed(() => {
 
@@ -58,7 +70,7 @@ const planSelected = computed(() => {
 
 /**
  * Determine the amount to be paid based on the selected membership
- * @type {ComputedRef<string>}
+ * @type {import('vue').ComputedRef<string>}
  */
 const amountSelected = computed(() => {
   if (!registerUserAccount) {
@@ -82,8 +94,9 @@ const amountSelected = computed(() => {
 });
 
 /**
-  * Form state and validation
-  */
+ * Form state
+ * @type {import('vue').Ref<UnwrapRef<Object>, UnwrapRef<Object> | Object>}
+ */
 const form = ref({
   card_number: '',
   month: 1,
@@ -95,13 +108,13 @@ const form = ref({
 
 /**
  * Error state
- * @type {Ref<UnwrapRef<Object>, UnwrapRef<Object> | Object>}
+ * @type {import('vue').Ref<UnwrapRef<Object>, UnwrapRef<Object> | Object>}
  */
 const errors = ref({});
 
 /**
  * Processing state to prevent multiple submissions
- * @type {Ref<UnwrapRef<boolean>, UnwrapRef<boolean> | boolean>}
+ * @type {import('vue').Ref<UnwrapRef<boolean>, UnwrapRef<boolean> | boolean>}
  */
 const isProcessing = ref(false);
 
