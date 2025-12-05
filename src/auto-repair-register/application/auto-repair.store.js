@@ -3,6 +3,16 @@ import { computed, ref } from "vue";
 import {TechnicianAssembler} from "@/auto-repair-register/infrastructure/technician.assembler.js";
 import {TechnicianScheduleAssembler} from "@/auto-repair-register/infrastructure/technician-schedule.assembler.js";
 import {AutoRepairRegisterApi} from "@/auto-repair-register/infrastructure/auto-repair-api.js";
+import { apiConfig } from '@/shared/infrastructure/http/api-config.js';
+
+/**
+ * Check if there is an active JWT token in storage
+ * @returns {boolean}
+ */
+function hasActiveJWT() {
+    const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+    return !!token;
+}
 
 const autoRepairApi = new AutoRepairRegisterApi();
 
@@ -25,20 +35,35 @@ export const useAutoRepairRegisterStore = defineStore('autoRepairRegister', () =
     });
 
     function fetchTechnicians(){
-        autoRepairApi.getTechnicians().then(response =>{
+        // Si estamos usando AWS y no hay JWT, no hacer fetch
+        if (apiConfig.isAwsPrimary && !hasActiveJWT()) {
+            console.log('[AutoRepair Register Store] Skipping fetchTechnicians - No JWT token available');
+            return Promise.resolve();
+        }
+
+        return autoRepairApi.getTechnicians().then(response =>{
             technicians.value = TechnicianAssembler.toEntitiesFromResponse(response);
-            techniciansLoaded.value = false;
+            techniciansLoaded.value = true;
         }).catch(error =>{
+            console.error('[AutoRepair Register Store] fetchTechnicians error:', error);
             errors.value.push(error);
-        })
+        });
     }
+
     function fetchTechnicianSchedule(){
-        autoRepairApi.getTechnicianSchedule().then(response =>{
+        // Si estamos usando AWS y no hay JWT, no hacer fetch
+        if (apiConfig.isAwsPrimary && !hasActiveJWT()) {
+            console.log('[AutoRepair Register Store] Skipping fetchTechnicianSchedule - No JWT token available');
+            return Promise.resolve();
+        }
+
+        return autoRepairApi.getTechnicianSchedule().then(response =>{
             techniciansSchedule.value = TechnicianScheduleAssembler.toEntitiesFromResponse(response);
-            techniciansScheduleLoaded.value = false;
+            techniciansScheduleLoaded.value = true;
         }).catch(error =>{
+            console.error('[AutoRepair Register Store] fetchTechnicianSchedule error:', error);
             errors.value.push(error);
-        })
+        });
     }
 
     const updateTechnician = async (id,technicianData)=>{

@@ -25,9 +25,9 @@ const {paymentsLoaded} = storeToRefs(storePayments);
 
 /**
  * Login form data
- * @type {import("vue").Ref<UnwrapRef<{email: string, password: string}>>
+ * @type {import("vue").Ref<UnwrapRef<{username: string, password: string}>>
  */
-const form = ref({ email: '', password: '' });
+const form = ref({ username: '', password: '' });
 /**
  * Password visibility state
  * @type {import("vue").Ref<UnwrapRef<boolean>, UnwrapRef<boolean> | boolean>}
@@ -47,9 +47,9 @@ const isAppLoading = ref(false);
 
 /**
  * Form validation errors
- * @type {import("vue").Ref<UnwrapRef<{email: null|string, password: null|string}>, UnwrapRef<{email: null|string, password: null|string}> | {email: null|string, password: null|string}>}
+ * @type {import("vue").Ref<UnwrapRef<{username: null|string, password: null|string}>, UnwrapRef<{username: null|string, password: null|string}> | {username: null|string, password: null|string}>}
  */
-const errorsForm = ref({ email: null, password: null });
+const errorsForm = ref({ username: null, password: null });
 
 /**
  * Login error message
@@ -61,10 +61,20 @@ const loginError = ref('');
  * Watch form changes to validate inputs
  */
 onMounted(() => {
+  // Solo hacer fetch si hay JWT token o estamos en modo supabase-only
+  const hasToken = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+
+  if (!hasToken) {
+    console.log('[Login] No JWT token found, skipping data fetch');
+    // Marcar como loaded para evitar el estado de "Cargando..."
+    return;
+  }
+
   if(!userAccountsLoaded.value) fetchUserAccounts();
   if(!userLoaded.value) fetchUsers();
   if(!locationsLoaded.value) fetchLocations();
   if(!paymentsLoaded.value) fetchPayments();
+
   console.log('userAccountsLoaded:', userAccountsLoaded.value);
   console.log('userLoaded:', userLoaded.value);
   console.log('isDataReady:', isDataReady.value);
@@ -72,22 +82,32 @@ onMounted(() => {
 
 /**
  * Computed property to check if user data is loaded
+ * Si no hay token JWT, consideramos que está listo (no necesitamos datos pre-cargados)
  * @type {ComputedRef<unknown>}
  */
-const isDataReady = computed(() => userAccountsLoaded.value && userLoaded.value);
+const isDataReady = computed(() => {
+  const hasToken = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+
+  // Si no hay token, está listo (el login cargará los datos después)
+  if (!hasToken) {
+    return true;
+  }
+
+  // Si hay token, esperar a que los datos estén cargados
+  return userAccountsLoaded.value && userLoaded.value;
+});
 
 /**
- * Validate email
- * @param email - The email string to validate
+ * Validate username
+ * @param username - The username string to validate
  * @returns {{invalid: boolean}|null|{required: boolean}}
  */
-function validateEmail(email) {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!email) {
+function validateUsername(username) {
+  if (!username) {
     return { required: true };
   }
-  if (!emailRegex.test(email)) {
-    return { invalid: true };
+  if (username.length < 3) {
+    return { minLength: true };
   }
   return null;
 }
@@ -113,10 +133,10 @@ function validatePassword(password) {
  */
 const isFormValid = computed(() => {
   return isDataReady.value &&
-         form.value.email &&
+         form.value.username &&
          form.value.password &&
-         form.value.password.length >= 6 &&
-         /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.value.email);
+         form.value.username.length >= 3 &&
+         form.value.password.length >= 6;
 });
 
 /**
@@ -130,10 +150,13 @@ function togglePasswordVisibility() {
  * Handle form submission
  */
 async function onSubmit() {
-  try {
-    const account = await store.login(form.value.email.trim(), form.value.password.trim());
+  isSubmitting.value = true;
+  loginError.value = '';
 
-    console.log(" Login exitoso:", account);
+  try {
+    const account = await login(form.value.username.trim(), form.value.password.trim());
+
+    console.log("✅ Login exitoso:", account);
 
     if (account.role_id === 1) {
       await router.push("/layout-vehicle-owner/dashboard-owner");
@@ -144,8 +167,10 @@ async function onSubmit() {
       await router.push("/iam/login");
     }
   } catch (err) {
-    console.error(" Login fallido:", err);
+    console.error("❌ Login fallido:", err);
     loginError.value = "Credenciales incorrectas";
+  } finally {
+    isSubmitting.value = false;
   }
 }
 
@@ -178,16 +203,16 @@ function navigateToUserRole() {
         <!-- Username Field -->
         <div class="form-group">
           <input
-              type="email"
-              v-model="form.email"
+              type="text"
+              v-model="form.username"
               autocomplete="username"
-              :placeholder="$t('login.email')"
+              :placeholder="$t('login.username')"
               class="form-input"
-              :class="{ error: errorsForm.email }"
+              :class="{ error: errorsForm.username }"
           />
-          <div v-if="errorsForm.email" class="error-message">
-            <span v-if="errorsForm.email.required">{{ $t('login.emailRequired') }}</span>
-            <span v-if="errorsForm.email.invalid && !loginError">{{ $t('login.emailInvalid') }}</span>
+          <div v-if="errorsForm.username" class="error-message">
+            <span v-if="errorsForm.username.required">{{ $t('login.usernameRequired') }}</span>
+            <span v-if="errorsForm.username.minLength && !loginError">{{ $t('login.usernameMinLength') }}</span>
           </div>
         </div>
 

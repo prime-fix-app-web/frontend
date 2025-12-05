@@ -5,6 +5,16 @@ import {VisitAssembler} from "@/data-collection-diagnosis/infrastructure/visit.a
 import {ServiceAssembler} from "@/data-collection-diagnosis/infrastructure/service.assembler.js";
 import {DiagnosticAssembler} from "@/data-collection-diagnosis/infrastructure/diagnostic.assembler.js";
 import {ExpectedVisitAssembler} from "@/data-collection-diagnosis/infrastructure/expected-visit.assembler.js";
+import { apiConfig } from '@/shared/infrastructure/http/api-config.js';
+
+/**
+ * Check if there is an active JWT token in storage
+ * @returns {boolean}
+ */
+function hasActiveJWT() {
+    const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+    return !!token;
+}
 
 const dataApi = new DataApi();
 
@@ -40,36 +50,67 @@ const useDataCollection = defineStore('useDataCollection', ()=>{
     })
 
     function fetchVisit(){
-        dataApi.getVisits().then(response =>{
+        // Si estamos usando AWS y no hay JWT, no hacer fetch
+        if (apiConfig.isAwsPrimary && !hasActiveJWT()) {
+            console.log('[Data Collection Store] Skipping fetchVisit - No JWT token available');
+            return Promise.resolve();
+        }
+
+        return dataApi.getVisits().then(response =>{
             visits.value = VisitAssembler.toEntitiesFromResponse(response);
             visitsLoaded.value = true;
         }).catch(error => {
+            console.error('[Data Collection Store] fetchVisit error:', error);
             errors.value.push(error);
         });
     }
+
     function fetchServices(){
-        dataApi.getServices().then(response =>{
+        // Si estamos usando AWS y no hay JWT, no hacer fetch
+        if (apiConfig.isAwsPrimary && !hasActiveJWT()) {
+            console.log('[Data Collection Store] Skipping fetchServices - No JWT token available');
+            return Promise.resolve();
+        }
+
+        return dataApi.getServices().then(response =>{
             services.value=ServiceAssembler.toEntitiesFromResponse(response);
             servicesLoaded.value = true;
         }).catch(error => {
+            console.error('[Data Collection Store] fetchServices error:', error);
             errors.value.push(error);
-        })
+        });
     }
+
     function fetchDiagnostic(){
-        dataApi.getDiagnostic().then(response =>{
+        // Si estamos usando AWS y no hay JWT, no hacer fetch
+        if (apiConfig.isAwsPrimary && !hasActiveJWT()) {
+            console.log('[Data Collection Store] Skipping fetchDiagnostic - No JWT token available');
+            return Promise.resolve();
+        }
+
+        return dataApi.getDiagnostic().then(response =>{
             diagnostic.value = DiagnosticAssembler.toEntitiesFromResponse(response);
             diagnosticLoaded.value = true;
         }).catch(error=>{
+            console.error('[Data Collection Store] fetchDiagnostic error:', error);
             errors.value.push(error);
-        })
+        });
     }
+
     function fetchExpected(){
-        dataApi.getExpectedVisits().then(response =>{
+        // Si estamos usando AWS y no hay JWT, no hacer fetch
+        if (apiConfig.isAwsPrimary && !hasActiveJWT()) {
+            console.log('[Data Collection Store] Skipping fetchExpected - No JWT token available');
+            return Promise.resolve();
+        }
+
+        return dataApi.getExpectedVisits().then(response =>{
             expectedVisit.value= ExpectedVisitAssembler.toEntitiesFromResponse(response);
             expectedLoaded.value = true;
         }).catch(error => {
+            console.error('[Data Collection Store] fetchExpected error:', error);
             errors.value.push(error);
-        })
+        });
     }
 
     function getVisitsById(id){

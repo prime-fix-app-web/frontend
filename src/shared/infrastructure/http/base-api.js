@@ -1,11 +1,10 @@
 import axios from "axios";
+import { apiConfig } from "./api-config.js";
 import { setupAuthInterceptor } from "./interceptors/auth.interceptor.js";
-
-const baseUrl = import.meta.env.VITE_PRIMEFIX_PLATFORM_API_URL;
-const apiKey = import.meta.env.VITE_PRIMEFIX_PLATFORM_API_KEY;
 
 /**
  * Base API class to handle HTTP requests using Axios
+ * Supports AWS primary with Supabase fallback strategy
  * @class
  */
 export class BaseApi {
@@ -17,13 +16,31 @@ export class BaseApi {
     #http;
 
     /**
+     * @private
+     * Fallback Axios HTTP client instance (for Supabase when AWS fails)
+     * @type {import('axios').AxiosInstance|null}
+     */
+    #httpFallback;
+
+    /**
      * Initializes the Axios HTTP client with the base URL from environment variables
      */
     constructor() {
+        // Primary HTTP client (AWS or json-server in development)
         this.#http = axios.create({
-            baseURL: baseUrl
+            baseURL: apiConfig.currentBaseUrl
         });
-        // Apply external auth interceptor to THIS specific axios instance
+
+        // Fallback HTTP client (Supabase when AWS is primary)
+        if (apiConfig.isAwsPrimary && apiConfig.fallbackUrl) {
+            this.#httpFallback = axios.create({
+                baseURL: apiConfig.fallbackUrl
+            });
+        } else {
+            this.#httpFallback = null;
+        }
+
+        // Apply auth interceptors
         this.#applyAuthInterceptor();
     }
 
@@ -32,19 +49,37 @@ export class BaseApi {
      * @private
      */
     #applyAuthInterceptor() {
+        // Setup interceptor for primary client
         setupAuthInterceptor({
-            apiKey: apiKey,
-            baseUrl: baseUrl,
-            axiosInstance: this.#http
+            apiConfig: apiConfig,
+            axiosInstance: this.#http,
+            isPrimary: true
         });
+
+        // Setup interceptor for fallback client (Supabase)
+        if (this.#httpFallback) {
+            setupAuthInterceptor({
+                apiConfig: apiConfig,
+                axiosInstance: this.#httpFallback,
+                isPrimary: false
+            });
+        }
     }
 
     /**
      * Gets the Axios HTTP client instance
-     * @returns {axios.AxiosInstance}
+     * @returns {import('axios').AxiosInstance}
      */
     get http() {
         return this.#http;
     }
 
+    /**
+     * Gets the fallback Axios HTTP client instance
+     * @returns {import('axios').AxiosInstance|null}
+     */
+    get httpFallback() {
+        return this.#httpFallback;
+    }
 }
+

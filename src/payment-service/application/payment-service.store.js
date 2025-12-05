@@ -3,6 +3,7 @@ import {defineStore} from "pinia";
 import {computed, ref} from "vue";
 import {PaymentAssembler} from "@/payment-service/infrastructure/payment.assembler.js";
 import {RatingAssembler} from "@/payment-service/infrastructure/rating.assembler.js";
+import {apiConfig} from "@/shared/infrastructure/http/api-config.js";
 
 /**
  * Singleton instance of PaymentServiceApi to be used across the store.
@@ -10,6 +11,15 @@ import {RatingAssembler} from "@/payment-service/infrastructure/rating.assembler
  */
 
 const paymentServiceApi = new PaymentServiceApi()
+
+/**
+ * Check if there is an active JWT token in storage
+ * @returns {boolean}
+ */
+function hasActiveJWT() {
+    const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+    return !!token;
+}
 
 const usePaymentStore = defineStore('payment-service',() => {
 
@@ -62,10 +72,17 @@ const usePaymentStore = defineStore('payment-service',() => {
      * @returns {void}
      */
     function fetchPayments() {
-        paymentServiceApi.getPayments().then(response => {
+        // Si estamos usando AWS y no hay JWT, no hacer fetch
+        if (apiConfig.isAwsPrimary && !hasActiveJWT()) {
+            console.log('[Payment Store] Skipping fetchPayments - No JWT token available');
+            return Promise.resolve();
+        }
+
+        return paymentServiceApi.getPayments().then(response => {
             payments.value = PaymentAssembler.toEntitiesFromResponse(response);
             paymentsLoaded.value = true;
         }).catch(error => {
+            console.error('[Payment Store] fetchPayments error:', error);
             errors.value.push(error);
         });
     }

@@ -1,4 +1,5 @@
 import {BaseApiConfig} from "@/shared/infrastructure/http/base-api-config.js";
+import {apiConfig} from "@/shared/infrastructure/http/api-config.js";
 
 /**
  * BaseEndpoint class to handle common API endpoint operations.
@@ -11,14 +12,25 @@ export class BaseEndpoint {
      * @param baseApi - The base API instance.
      * @param endpointPath - The specific endpoint path.
      * @param config - Configuration object for the endpoint.
-     * @param {string} config.usePathParams - Whether to use path params or query params.
+     * @param {boolean} config.usePathParams - Whether to use path params or query params (defaults to apiConfig).
      * @param {string} config.idQueryParamKey - The query parameter key for ID operations.
      */
     constructor(baseApi, endpointPath, config = {}) {
         this.http = baseApi.http;
+        this.httpFallback = baseApi.httpFallback;
         this.endpointPath = endpointPath;
         this.config = new BaseApiConfig(config);
-        this.#idQueryParamKey = 'id';
+        this.#idQueryParamKey = config.idQueryParamKey || 'id';
+    }
+
+    /**
+     * Determines if should use path params for the current request
+     * @param {import('axios').AxiosInstance} httpClient - The HTTP client being used
+     * @returns {boolean}
+     */
+    #shouldUsePathParams(httpClient) {
+        const baseURL = httpClient.defaults.baseURL || '';
+        return apiConfig.shouldUsePathParams(baseURL);
     }
 
     /**
@@ -26,11 +38,14 @@ export class BaseEndpoint {
      * @returns {*} - The list of all resources.
      */
     getAll() {
+        const usePathParams = this.#shouldUsePathParams(this.http);
         let url = this.endpointPath;
-        // When using query params (Supabase style), add select=*
-        if (this.config.usePathParams === false) {
+
+        // Supabase (PostgREST) requires select=* for query params
+        if (!usePathParams) {
             url += '?select=*';
         }
+
         return this.http.get(url);
     }
 
@@ -40,12 +55,17 @@ export class BaseEndpoint {
      * @returns {*} - The fetched resource.
      */
     getById(id) {
+        const usePathParams = this.#shouldUsePathParams(this.http);
         let url = this.endpointPath;
-        if (this.config.usePathParams === false) {
-            url += `?${this.#idQueryParamKey}=eq.${id}`;
-        } else {
+
+        if (usePathParams) {
+            // AWS style: /users/1
             url += `/${id}`;
+        } else {
+            // Supabase (PostgREST) style: /users?id=eq.1
+            url += `?${this.#idQueryParamKey}=eq.${id}`;
         }
+
         return this.http.get(url);
     }
 
@@ -56,8 +76,6 @@ export class BaseEndpoint {
      */
     create(resource) {
         const url = this.endpointPath;
-
-
         return this.http.post(url, resource);
     }
 
@@ -68,19 +86,19 @@ export class BaseEndpoint {
      * @returns {*} - The response from the update operation.
      */
     update(id, resource) {
+        const usePathParams = this.#shouldUsePathParams(this.http);
         let url = this.endpointPath;
-        url += `?${this.#idQueryParamKey}=eq.${id}`;
         const payload = { ...resource };
-        return this.http.patch(url, payload, {
-            headers: {
-                'Prefer': 'return=representation',
-                'Content-Type': 'application/json',
-                ...(this.config.apiKey && {
-                    'apikey': this.config.apiKey,
-                    'Authorization': `Bearer ${this.config.apiKey}`
-                })
-            }
-        });
+
+        if (usePathParams) {
+            // AWS style: PUT/PATCH /users/1
+            url += `/${id}`;
+            return this.http.patch(url, payload);
+        } else {
+            // Supabase (PostgREST) style: PATCH /users?id=eq.1
+            url += `?${this.#idQueryParamKey}=eq.${id}`;
+            return this.http.patch(url, payload);
+        }
     }
 
     /**
@@ -89,14 +107,18 @@ export class BaseEndpoint {
      * @returns {*} - The response from the delete operation.
      */
     delete(id) {
+        const usePathParams = this.#shouldUsePathParams(this.http);
         let url = this.endpointPath;
-        url += `?${this.#idQueryParamKey}=eq.${id}`;
-        return this.http.delete(url, {
-            headers: {
-                apikey: this.config.apiKey,
-                Authorization: `Bearer ${this.config.apiKey}`,
-            }
-        });
+
+        if (usePathParams) {
+            // AWS style: DELETE /users/1
+            url += `/${id}`;
+        } else {
+            // Supabase (PostgREST) style: DELETE /users?id=eq.1
+            url += `?${this.#idQueryParamKey}=eq.${id}`;
+        }
+
+        return this.http.delete(url);
     }
 
 }

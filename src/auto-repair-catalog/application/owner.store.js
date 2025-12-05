@@ -3,6 +3,16 @@ import { ref, computed, watch } from 'vue'
 import { CatalogApi } from '@/auto-repair-catalog/infrastructure/catalog-api.js'
 import { AutoRepairAssembler } from '@/auto-repair-catalog/infrastructure/auto-repair.assembler.js'
 import {LocationAssembler} from "@/auto-repair-catalog/infrastructure/location.assembler.js";
+import { apiConfig } from '@/shared/infrastructure/http/api-config.js';
+
+/**
+ * Check if there is an active JWT token in storage
+ * @returns {boolean}
+ */
+function hasActiveJWT() {
+    const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+    return !!token;
+}
 
 const catalogApi = new CatalogApi()
 
@@ -26,21 +36,35 @@ const useCatalogStore = defineStore('auto-repair-catalog', () => {
   })
 
     function fetchAutoRepairs(){
-        catalogApi.getAutoRepairs().then(response =>{
+        // Si estamos usando AWS y no hay JWT, no hacer fetch
+        if (apiConfig.isAwsPrimary && !hasActiveJWT()) {
+            console.log('[Catalog Store] Skipping fetchAutoRepairs - No JWT token available');
+            return Promise.resolve();
+        }
+
+        return catalogApi.getAutoRepairs().then(response =>{
             autoRepairs.value = AutoRepairAssembler.toEntitiesFromResponse(response);
             autoRepairsLoaded.value = true;
         }).catch(error=>{
+            console.error('[Catalog Store] fetchAutoRepairs error:', error);
             errors.value.push(error);
-        })
+        });
     }
 
   function fetchLocations(){
-      catalogApi.getLocations().then(response =>{
+      // Si estamos usando AWS y no hay JWT, no hacer fetch
+      if (apiConfig.isAwsPrimary && !hasActiveJWT()) {
+          console.log('[Catalog Store] Skipping fetchLocations - No JWT token available');
+          return Promise.resolve();
+      }
+
+      return catalogApi.getLocations().then(response =>{
             locations.value = LocationAssembler.toEntitiesFromResponse(response);
             locationsLoaded.value = true;
       }).catch(error=>{
+          console.error('[Catalog Store] fetchLocations error:', error);
           errors.value.push(error);
-      })
+      });
   }
 
   const updateLocation = async(id,locationData) =>{

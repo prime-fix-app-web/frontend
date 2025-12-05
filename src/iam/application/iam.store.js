@@ -1,4 +1,5 @@
 import {IamApi} from "@/iam/infrastructure/iam-api.js";
+import {AuthApi} from "@/iam/infrastructure/auth-api.js";
 import {defineStore} from "pinia";
 import {computed, ref} from "vue";
 import {UserAccountAssembler} from "@/iam/infrastructure/user-account.assembler.js";
@@ -7,6 +8,7 @@ import {User} from "@/iam/domain/model/user.entity.js";
 import {UserAccount} from "@/iam/domain/model/user-account.entity.js";
 import {Location} from "@/auto-repair-catalog/domain/model/location.entity.js";
 import {Payment} from "@/payment-service/domain/model/payment.entity.js";
+import {apiConfig} from "@/shared/infrastructure/http/api-config.js";
 
 import useCatalogStore from "@/auto-repair-catalog/application/owner.store.js";
 import usePaymentStore from "@/payment-service/application/payment-service.store.js";
@@ -18,10 +20,25 @@ const VEHICLE_OWNER_ROLE_ID = 1;
 const WORKSHOP_ROLE_ID = 2;
 
 /**
+ * Check if there is an active JWT token in storage
+ * @returns {boolean} - true if JWT token exists
+ */
+function hasActiveJWT() {
+    const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+    return !!token;
+}
+
+/**
  * IAM API instance
  * @type {IamApi} - Instance of the IAM API for making requests
  */
 const iamApi = new IamApi();
+
+/**
+ * Auth API instance (for AWS authentication with JWT)
+ * @type {AuthApi} - Instance of the Auth API for sign-in/sign-up
+ */
+const authApi = new AuthApi();
 
 /**
  *
@@ -327,89 +344,169 @@ export const useIamStore = defineStore('iam', () => {
      * Fetch user accounts from the API and store them
      */
     function fetchUserAccounts() {
-        iamApi.getUserAccounts().then(response =>{
+        // Si estamos usando AWS y no hay JWT, no hacer fetch
+        if (apiConfig.isAwsPrimary && !hasActiveJWT()) {
+            console.log('[IAM Store] Skipping fetchUserAccounts - No JWT token available');
+            return Promise.resolve();
+        }
+
+        return iamApi.getUserAccounts().then(response =>{
             userAccounts.value = UserAccountAssembler.toEntitiesFromResponse(response);
             userAccountsLoaded.value = true;
         }).catch(error=>{
-          errors.value.push(error);
-        })
+            console.error('[IAM Store] fetchUserAccounts error:', error);
+            errors.value.push(error);
+        });
     }
 
     /**
      * Fetch users from the API and store them
      */
     function fetchUsers() {
-        iamApi.getUsers().then(response =>{
+        // Si estamos usando AWS y no hay JWT, no hacer fetch
+        if (apiConfig.isAwsPrimary && !hasActiveJWT()) {
+            console.log('[IAM Store] Skipping fetchUsers - No JWT token available');
+            return Promise.resolve();
+        }
+
+        return iamApi.getUsers().then(response =>{
             users.value = UserAssembler.toEntitiesFromResponse(response);
             userLoaded.value = true;
         }).catch(error=>{
+            console.error('[IAM Store] fetchUsers error:', error);
             errors.value.push(error);
-        })
+        });
     }
 
     /**
-     * Login a user with email and password
-     * @param email - The user's email
-     * @param password - The user's password
+     * Login a user with username and password
+     * Uses AWS AuthApi with JWT in production, fallback to Supabase manual validation
+     * @param {string} username - The user's username
+     * @param {string} password - The user's password
      * @returns {Promise<UserAccount>} - The logged-in user account
      */
-    async function login(email, password) {
+    async function login(username, password) {
         loading.value = true;
         errors.value = [];
+
         try {
-            if (!userAccountsLoaded.value) {
-                await fetchUserAccounts();
-            }
-            if (!userLoaded.value) {
-                await fetchUsers();
-            }
-            const account = userAccounts.value.find(a =>
-                a.email?.toLowerCase().trim() === email.toLowerCase().trim()
-            );
+            // Intentar login con AWS (JWT)
+            if (apiConfig.isAwsPrimary) {
+                try {
+                    console.log('[IAM Store] Attempting AWS login with JWT...');
 
-            if (!account) throw new Error("User or password incorrect");
+                    const response = await authApi.signIn(username, password);
 
-            if (account.password.trim() !== password.trim()) {
+                    // Guardar JWT token
+                    localStorage.setItem('authToken', response.token);
+                    console.log('[IAM Store] JWT token saved:', response.token.substring(0, 20) + '...');
+
+                    // Cargar datos del usuario desde AWS/Supabase
+                    await fetchUserAccounts();
+                    await fetchUsers();
+
+                    // Buscar el usuario por ID retornado
+                    const account = userAccounts.value.find(a => a.id === response.id);
+
+                    if (!account) {
+                        throw new Error("User account not found after login");
+                    }
+
+                    const user = users.value.find(u => u.id === account.user_id);
+
+                    if (!user) {
+                        throw new Error("User not found");
+                    }
+
+                    sessionUserAccount.value = account;
+                    sessionUser.value = user;
+
+                    saveSessionToStorage();
+                    console.log('[IAM Store] AWS login successful');
+
+                    return account;
+                } catch (awsError) {
+                    console.warn('[IAM Store] AWS login failed, trying Supabase fallback...', awsError.message);
+                    // Limpiar cualquier token parcial
+                    localStorage.removeItem('authToken');
+                    sessionStorage.removeItem('authToken');
+                    // Continúa al fallback de Supabase
+                }
+            }
+
+            // Fallback: Login con Supabase (comparación manual)
+            console.log('[IAM Store] Using Supabase manual validation...');
+
+            // Hacer fetch directo sin verificar JWT (para el fallback)
+            try {
+                const userAccountsResponse = await iamApi.getUserAccounts();
+                const tempUserAccounts = UserAccountAssembler.toEntitiesFromResponse(userAccountsResponse);
+
+                const usersResponse = await iamApi.getUsers();
+                const tempUsers = UserAssembler.toEntitiesFromResponse(usersResponse);
+
+                // Buscar cuenta por username
+                const account = tempUserAccounts.find(a =>
+                    a.username?.toLowerCase().trim() === username.toLowerCase().trim()
+                );
+
+                if (!account) {
+                    throw new Error("User or password incorrect");
+                }
+
+                // Validar password (comparación simple - Supabase no tiene hash)
+                if (account.password.trim() !== password.trim()) {
+                    throw new Error("User or password incorrect");
+                }
+
+                // Buscar usuario asociado
+                const user = tempUsers.find(u => u.id === account.user_id);
+
+                if (!user) {
+                    throw new Error("User not found");
+                }
+
+                // Actualizar los stores con los datos cargados
+                userAccounts.value = tempUserAccounts;
+                userAccountsLoaded.value = true;
+                users.value = tempUsers;
+                userLoaded.value = true;
+
+                sessionUserAccount.value = account;
+                sessionUser.value = user;
+
+                saveSessionToStorage();
+                console.log('[IAM Store] Supabase login successful');
+
+                return account;
+
+            } catch (supabaseError) {
+                console.error('[IAM Store] Supabase fallback failed:', supabaseError);
                 throw new Error("User or password incorrect");
             }
 
-            const user = users.value.find(u => u.id_user === account.id_user);
-            if (!user) throw new Error("User not found");
-
-            sessionUserAccount.value = account;
-            sessionUser.value = user;
-
-            saveSessionToStorage();
-            return account;
         } catch (err) {
             errors.value.push(formatError(err, "Login failed"));
             throw err;
         } finally {
             loading.value = false;
         }
-        try {
-            try {
-                saveSessionToStorage();
-                console.log("Sesión guardada en localStorage");
-            } catch (e) {
-                console.error("Error guardando sesión:", e);
-            }
-
-            return account;
-        } catch (err) {
-            errors.value.push(formatError(err, "Login failed"));
-            throw err;
-        }
     }
 
     /**
      * Logout the current user and clear session data
+     * Clears JWT token and session storage
      */
     function logout() {
         sessionUserAccount.value = null;
         sessionUser.value = null;
+
+        // Limpiar JWT token
+        localStorage.removeItem('authToken');
+        sessionStorage.removeItem('authToken');
+
         clearSessionStorage();
-        console.log('Logout successful');
+        console.log('[IAM Store] Logout successful - JWT token cleared');
     }
 
     /**

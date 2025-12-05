@@ -3,8 +3,18 @@ import {defineStore} from "pinia";
 import {computed, ref} from "vue";
 import {NotificationAssembler} from "@/maintenance-tracking/infrastructure/notification-assembler.js";
 import {VehicleAssembler} from "@/maintenance-tracking/infrastructure/vehicle.assembler.js";
+import {apiConfig} from "@/shared/infrastructure/http/api-config.js";
 
 const trackingApi = new TrackingApi();
+
+/**
+ * Check if there is an active JWT token in storage
+ * @returns {boolean}
+ */
+function hasActiveJWT() {
+    const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+    return !!token;
+}
 
 const useTrackingStore = defineStore('tracking', () => {
 
@@ -48,11 +58,19 @@ const useTrackingStore = defineStore('tracking', () => {
      * @returns {Promise<void>} - A promise that resolves when notifications are fetched.
      */
     async function fetchNotifications() {
+        // Si estamos usando AWS y no hay JWT, no hacer fetch
+        if (apiConfig.isAwsPrimary && !hasActiveJWT()) {
+            console.log('[Tracking Store] Skipping fetchNotifications - No JWT token available');
+            notificationsLoaded.value = true;
+            return Promise.resolve();
+        }
+
         loading.value = true;
         try {
             const response = await trackingApi.getNotifications();
             notifications.value = NotificationAssembler.toEntitiesFromResponse(response);
         } catch (err) {
+            console.error('[Tracking Store] fetchNotifications error:', err);
             pushError(err);
         } finally {
             notificationsLoaded.value = true;
@@ -119,12 +137,19 @@ const useTrackingStore = defineStore('tracking', () => {
     }
 
     function fetchVehicles(){
-        trackingApi.getVehicles().then((response) => {
+        // Si estamos usando AWS y no hay JWT, no hacer fetch
+        if (apiConfig.isAwsPrimary && !hasActiveJWT()) {
+            console.log('[Tracking Store] Skipping fetchVehicles - No JWT token available');
+            return Promise.resolve();
+        }
+
+        return trackingApi.getVehicles().then((response) => {
             vehicles.value = VehicleAssembler.toEntitiesFromResponse(response);
             vehiclesLoaded.value = true;
         }).catch((err) => {
+            console.error('[Tracking Store] fetchVehicles error:', err);
             pushError(err);
-        })
+        });
     }
 
     function getVehiclesById(id) {
