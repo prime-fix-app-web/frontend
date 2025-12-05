@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useIamStore } from '@/iam/application/iam.store.js';
 import useCatalogStore from "@/auto-repair-catalog/application/owner.store.js";
 import {Location} from "@/auto-repair-catalog/domain/model/location.entity.js";
@@ -13,7 +13,7 @@ const catalogStore = useCatalogStore();
 const sessionUserAccount = computed(() => iamStore.sessionUserAccount);
 const sessionUser = computed(() => iamStore.sessionUser);
 const sessionLocation = computed(() =>
-    catalogStore.getLocationById(sessionUser.value?.id_location)
+    catalogStore.getLocationById(sessionUser.value?.location_id)
 );
 
 // Profile fields
@@ -21,13 +21,28 @@ const profileImage = ref('');
 const usernameToEdit = ref('');
 const addressToEdit = ref('');
 const passwordToEdit = ref('');
+const hasCustomImage = ref(false);
 
 // UI State
 const isEditMode = ref(false);
 const showPassword = ref(false);
 
 // Determine if owner
-const isOwner = computed(() => sessionUserAccount.value?.id_role === 'R001');
+const isOwner = computed(() => sessionUserAccount.value?.role_id === 1);
+
+// Get default image based on role
+const getDefaultImage = () => {
+  return isOwner.value
+      ? '/assets/images/car_owner.png'
+      : '/assets/images/manager_workshop.png';
+};
+
+// Watch for role changes and update default image
+watch(isOwner, () => {
+  if (!hasCustomImage.value) {
+    profileImage.value = getDefaultImage();
+  }
+}, { immediate: true });
 
 // Initialize profile data on mount
 onMounted(() => {
@@ -42,10 +57,6 @@ onMounted(() => {
     const location = catalogStore.getLocationById(sessionUser.value.location_id);
     addressToEdit.value = location?.address || '';
   }
-
-  profileImage.value = isOwner.value
-      ? '/assets/images/car_owner.png'
-      : '/assets/images/manager_workshop.png';
 });
 
 // UI Actions
@@ -87,6 +98,7 @@ const onImageChange = (event) => {
     const reader = new FileReader();
     reader.onload = (e) => {
       profileImage.value = e.target.result;
+      hasCustomImage.value = true;
     };
     reader.readAsDataURL(input.files[0]);
   }
