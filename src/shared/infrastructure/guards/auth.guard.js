@@ -1,11 +1,11 @@
 import useIamStore from "@/iam/application/iam.store.js";
 
-const VEHICLE_OWNER_ROLE_ID = "R001";
-const WORKSHOP_ROLE_ID = "R002";
+const VEHICLE_OWNER_ROLE_ID = 1;
+const WORKSHOP_ROLE_ID = 2;
 
 /**
  * Role-based route guard (adapted from Angular example)
- * @param {Array<string>} allowedRoles - Roles allowed for this route
+ * @param {Array<number>} allowedRoles - Roles allowed for this route
  * @returns {Function} - Vue Router navigation guard
  */
 export function roleGuard(allowedRoles = []) {
@@ -18,7 +18,7 @@ export function roleGuard(allowedRoles = []) {
 
         const sessionUserAccount = iamStore.sessionUserAccount;
         const isAuthenticated = iamStore.isAuthenticated;
-        const userRole = sessionUserAccount?.id_role;
+        const userRole = sessionUserAccount?.role_id;
         const isNew = sessionUserAccount?.is_new;
 
         if (!isAuthenticated) {

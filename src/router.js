@@ -22,8 +22,8 @@ const trackVehicle = () => import("./maintenance-tracking/presentation/views/tra
 const notificationView = () => import("./maintenance-tracking/presentation/views/notification-view.vue");
 const setting =() =>import("./shared/presentation/views/settings.vue");
 const profile=()=>import("./shared/presentation/views/profile.vue");
-const VEHICLE_OWNER_ROLE_ID = "R001";
-const WORKSHOP_ROLE_ID = "R002";
+const VEHICLE_OWNER_ROLE_ID = 1;
+const WORKSHOP_ROLE_ID = 2;
 
 const routes = [
     {
@@ -169,7 +169,7 @@ router.beforeEach((to, from, next) => {
     }
 
     const isAuthenticated = iamStore.isAuthenticated;
-    const userRole = iamStore.sessionUserAccount?.id_role;
+    const userRole = iamStore.sessionUserAccount?.role_id;
 
     // If the user is authenticated and tries to access public IAM routes, redirect them to their dashboard
     if (isAuthenticated && userRole) {

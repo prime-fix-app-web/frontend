@@ -1,13 +1,18 @@
+/**
+ * Represents a Location entity in the Auto Repair Catalog domain.
+ * @class
+ */
 export class Location {
     /**
-     * @param {Object} params
-     * @param {string}[params.id_location]
-     * @param {string}[params.address]
-     * @param {string}[params.district]
-     * @param {string}[params.department]
+     * Creates an instance of Location.
+     * @param {Object} params - Location parameters
+     * @param {?number}[params.id] - Location unique identifier
+     * @param {string}[params.address] - Location address
+     * @param {string}[params.district] - Location district
+     * @param {string}[params.department] - Location department
      */
-    constructor({id_location='', address='', district='', department=''}){
-        this.id_location = id_location;
+    constructor({id=null, address='', district='', department=''}){
+        this.id = id;
         this.address = address;
         this.district = district;
         this.department = department;

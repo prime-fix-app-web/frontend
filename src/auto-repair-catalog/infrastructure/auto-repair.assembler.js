@@ -26,7 +26,7 @@ export class AutoRepairAssembler {
             console.error(`${response.status}, ${response.statusText}`)
             return [];
         }
-        let resources = response.data instanceof Array ? response.data : response.data['auto-repairs'];
+        let resources = response.data instanceof Array ? response.data : response.data['auto_repairs'];
         return resources.map(resource => this.toEntityFromResource(resource));
     }
 }

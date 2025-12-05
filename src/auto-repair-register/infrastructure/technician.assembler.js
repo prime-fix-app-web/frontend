@@ -1,10 +1,23 @@
 import {Technician} from "@/auto-repair-register/domain/model/technician.entity.js";
 
+/**
+ * Assembler for converting Technician resources to Technician entities.
+ */
 export class TechnicianAssembler {
+    /**
+     * Converts a Technician resource to a Technician entity.
+     * @param resource - The Technician resource object.
+     * @returns {Technician} - The corresponding Technician entity.
+     */
     static toEntityFromResource(resource) {
         return new Technician({...resource});
     }
 
+    /**
+     * Converts a response containing multiple Technician resources to an array of Technician entities.
+     * @param response - The response object containing Technician resources.
+     * @returns {Technician[]} - An array of Technician entities.
+     */
     static toEntitiesFromResponse(response){
         if(response.status !==200){
             console.error(`${response.status}, ${response.statusText}`);

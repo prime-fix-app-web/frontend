@@ -1,22 +1,20 @@
 /**
- * Represents a Diagnosis entity
+ * Represents a Diagnosis entity in the Data Collection Bounded Context.
  * @class
  */
 export class Diagnostic {
     /**
      * Creates a new Diagnostic instance
      * @param {Object} params - The parameters for the Diagnostic.
-     * @param [id_diagnostic]
-     * @param [price]
-     * @param [id_vehicle]
-     * @param [diagnosis]
-     * @param [id_expected]
+     * @param {?number} [id] - The unique identifier for the Diagnostic.
+     * @param {number} [price] - The price associated with the Diagnostic.
+     * @param {?number} [vehicle_id] - The identifier for the associated vehicle.
+     * @param {string} [diagnosis] - The diagnosis details.
      */
-    constructor({id_diagnostic='', price=0.0, id_vehicle='', diagnosis='', id_expected=''}){
-        this.id_diagnostic=id_diagnostic;
+    constructor({id=null, price=0.0, vehicle_id=null, diagnosis=''}){
+        this.id=id;
         this.price=price;
-        this.id_vehicle=id_vehicle;
+        this.vehicle_id=vehicle_id;
         this.diagnosis=diagnosis;
-        this.id_expected=id_expected;
     }
 }

@@ -1,20 +1,20 @@
 /**
- * Represents a Expected Visit entity
+ * Represents a Expected Visit entity in the Data Collection Diagnosis Bounded Context.
  * @class
  */
 export class ExpectedVisit {
     /**
      * Creates a new Expected Visit instance
      * @param {Object} params - The parameters for the Expected Visit.
-     * @param id_expected
-     * @param state_visit
-     * @param id_visit
-     * @param is_schedule
+     * @param {?number} [id] - The unique identifier of the expected visit.
+     * @param {string} [state_visit] - The state of the visit.
+     * @param {?number} [visit_id] - The identifier of the visit.
+     * @param {boolean} [is_scheduled] - Indicates if the visit is scheduled.
      */
-    constructor({id_expected='',state_visit='', id_visit='', is_schedule=false}){
-        this.id_expected=id_expected;
+    constructor({id =null,state_visit='', visit_id=null, is_scheduled=false}){
+        this.id = id;
         this.state_visit=state_visit;
-        this.id_visit=id_visit;
-        this.is_schedule=is_schedule;
+        this.visit_id=visit_id;
+        this.is_scheduled=is_scheduled;
     }
 }

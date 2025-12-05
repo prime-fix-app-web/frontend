@@ -8,8 +8,8 @@ export class LocationAssembler{
 
     /**
      * Converts a plain resource object to a Location entities
-     * @param {Object}resource - The resource object representing a services
-     * @returns {Location} The corresponding Services entity
+     * @param {Object} resource - The resource object representing a services
+     * @returns {Location} - The corresponding Services entity
      */
     static toEntityFromResource(resource){
         return new Location({...resource});
@@ -20,7 +20,7 @@ export class LocationAssembler{
      * Handles both array and object response formats
      * Logs an error and return an empty array if the response status is not 200
      * @param {import('axios').AxiosResponse} response - The API response containing service data.
-     * @returns {Location[]} Array of Locations entities.
+     * @returns {Location[]} - Array of Locations entities.
      */
     static toEntitiesFromResponse(response){
         if(response.status !==200){

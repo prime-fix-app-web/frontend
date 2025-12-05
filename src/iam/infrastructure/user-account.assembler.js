@@ -21,13 +21,14 @@ export class UserAccountAssembler {
      */
     static toResourceFromEntity(entity) {
         return {
-            id_user_account: entity.id,
+            id: entity.id,
             username: entity.username,
             email: entity.email,
-            id_user: entity.id_user,
-            id_role: entity.id_role,
-            id_membership: entity.id_membership,
-            password: entity.password
+            user_id: entity.user_id,
+            role_id: entity.role_id,
+            membership_id: entity.membership_id,
+            password: entity.password,
+            is_new: entity.is_new,
         };
     }
 

@@ -6,7 +6,6 @@ import { Notification } from "@/maintenance-tracking/domain/model/notification.e
  */
 export class NotificationAssembler {
 
-
     /**
      * Extracts notification resources from various input formats.
      * @param input - The input which may contain notification data.
@@ -28,10 +27,10 @@ export class NotificationAssembler {
      */
     static toEntityFromResource(resource) {
         return new Notification({
-            id_notification: resource.id_notification,
+            id: resource.id,
             message: resource.message,
             read: resource.read,
-            id_vehicle: resource.id_vehicle,
+            vehicle_id: resource.vehicle_id,
             sent: resource.sent,
         });
     }
@@ -39,14 +38,14 @@ export class NotificationAssembler {
     /**
      * Converts a Notification entity to a resource object.
      * @param entity - The Notification entity to convert.
-     * @returns {{id_notification, message, read: boolean, id_vehicle, sent}|null} - The resulting resource object.
+     * @returns {{id, message, read: boolean, vehicle_id, sent}|null} - The resulting resource object.
      */
     static toResourceFromEntity(entity) {
         return {
-            id_notification: entity.id_notification,
+            id: entity.id,
             message: entity.message,
             read: !!entity.read,
-            id_vehicle: entity.id_vehicle,
+            vehicle_id: entity.vehicle_id,
             sent: entity.sent
         };
     }

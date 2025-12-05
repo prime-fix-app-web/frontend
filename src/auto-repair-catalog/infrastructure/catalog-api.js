@@ -79,7 +79,7 @@ export class CatalogApi extends BaseApi {
   }
 
     /**
-     * Deletes a auto repair by its ID
+     * Deletes an auto repair by its ID
      * @param id - The ID of the autoRepair to delete
      * @returns {Promise<import('axios').AxiosReponse>} - A promise that resolves to the API response.
      */

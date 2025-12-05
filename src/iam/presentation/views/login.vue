@@ -135,9 +135,9 @@ async function onSubmit() {
 
     console.log(" Login exitoso:", account);
 
-    if (account.id_role === "R001") {
+    if (account.role_id === 1) {
       await router.push("/layout-vehicle-owner/dashboard-owner");
-    } else if (account.id_role === "R002") {
+    } else if (account.role_id === 2) {
       await router.push("/layout-workshop/dashboard-workshop");
     } else {
       console.warn("Rol desconocido, redirigiendo a login");

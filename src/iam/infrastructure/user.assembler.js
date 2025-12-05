@@ -21,12 +21,12 @@ export class UserAssembler {
      */
     static toResourceFromEntity(entity) {
         return {
-            id_user: entity.id,
+            id: entity.id,
             name: entity.name,
             last_name: entity.last_name,
             dni: entity.dni,
             phone_number: entity.phone_number,
-            id_location: entity.id_location
+            location_id: entity.location_id
         };
     }
 
