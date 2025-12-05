@@ -1,5 +1,4 @@
-import Login from "@/iam/presentation/views/login.vue";
-
+const login = () => import('./views/login.vue');
 const forgotPassword = () => import('./views/forgot-password.vue');
 const paymentView = () => import('./views/payment-view.vue');
 const planOwner = () => import('./views/plan-owner.vue');
@@ -15,7 +14,7 @@ const iamRoutes = [
     {
         path: 'login',
         name: 'login',
-        component: Login,
+        component: login,
         meta: { title: 'Login' }
     },
     {

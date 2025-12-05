@@ -15,13 +15,9 @@ const layoutWorkshop = () => import("./shared/presentation/components/layout-wor
 const homeOwner = () => import("./shared/presentation/views/home-owner.vue");
 const homeWorkshop = () => import("./shared/presentation/views/home-workshop.vue");
 const pageNotFound = () => import("./shared/presentation/views/page-not-found.vue");
-const visitHistory =() =>import("./data-collection-diagnosis/presentation/views/visit-history.vue");
-
-
-const trackVehicle = () => import("./maintenance-tracking/presentation/views/track-vehicle.vue");
-const notificationView = () => import("./maintenance-tracking/presentation/views/notification-view.vue");
-const setting =() =>import("./shared/presentation/views/settings.vue");
-const profile=()=>import("./shared/presentation/views/profile.vue");
+const visitHistory = () => import("./data-collection-diagnosis/presentation/views/visit-history.vue");
+const setting = () => import("./shared/presentation/views/settings.vue");
+const profile = () => import("./shared/presentation/views/profile.vue");
 const VEHICLE_OWNER_ROLE_ID = 1;
 const WORKSHOP_ROLE_ID = 2;
 
@@ -56,18 +52,6 @@ const routes = [
                 meta:{title: 'Profile Owner'}
             },
             {
-                path: 'track-vehicle',
-                name: 'track-vehicle',
-                component: trackVehicle,
-                meta: { title: 'Track Vehicle' }
-            },
-            {
-                path: 'notification-view',
-                name: 'notification-view',
-                component: notificationView,
-                meta: { title: 'Notifications' }
-            },
-            {
                 path:'settings-owner',
                 component:setting,
                 meta:{title: 'Settings'}
@@ -79,7 +63,7 @@ const routes = [
             },
             {
                 path:'visit',
-                name: 'visit',
+                name: 'visit-owner',
                 children: dataRoutes,
             },
             {
@@ -119,13 +103,13 @@ const routes = [
                 meta:{title: 'Dashboard Workshop'}
             },
             {
-              path:'profile',
-              component:profile,
-              meta: {title: 'Profile Workshop'}
+                path:'profile',
+                component:profile,
+                meta: {title: 'Profile Workshop'}
             },
             {
                 path:'visit',
-                name: 'visit',
+                name: 'visit-workshop',
                 children: dataRoutes,
             },
             {
