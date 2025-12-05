@@ -4,8 +4,7 @@ import { useIamStore } from '@/iam/application/iam.store.js';
 import useCatalogStore from "@/auto-repair-catalog/application/owner.store.js";
 import {Location} from "@/auto-repair-catalog/domain/model/location.entity.js";
 import {UserAccount} from "@/iam/domain/model/user-account.entity.js";
-import carOwnerImg from "@/../public/assets/images/car_owner.png"
-import managerWorkshopImg from "@/../public/assets/images/manager_workshop.png"
+
 // Stores
 const iamStore = useIamStore();
 const catalogStore = useCatalogStore();
@@ -32,13 +31,21 @@ const isOwner = computed(() => sessionUserAccount.value?.id_role === 'R001');
 
 // Initialize profile data on mount
 onMounted(() => {
-  usernameToEdit.value = sessionUserAccount.value?.username || '';
-  addressToEdit.value = sessionLocation.value?.address || '';
-  passwordToEdit.value = sessionUserAccount.value?.password || '';
+  if (sessionUserAccount.value) {
+    usernameToEdit.value = sessionUserAccount.value.username || '';
+    passwordToEdit.value = sessionUserAccount.value.password || '';
+  }
+
+  if (sessionLocation.value) {
+    addressToEdit.value = sessionLocation.value.address || '';
+  } else if (sessionUser.value?.location_id) {
+    const location = catalogStore.getLocationById(sessionUser.value.location_id);
+    addressToEdit.value = location?.address || '';
+  }
 
   profileImage.value = isOwner.value
-      ? 'assets/images/car_owner.png'
-      : 'assets/images/manager_workshop.png';
+      ? '/assets/images/car_owner.png'
+      : '/assets/images/manager_workshop.png';
 });
 
 // UI Actions
@@ -85,19 +92,6 @@ const onImageChange = (event) => {
   }
 };
 
-onMounted(() => {
-  if (sessionUserAccount.value) {
-    usernameToEdit.value = sessionUserAccount.value.username || '';
-    passwordToEdit.value = sessionUserAccount.value.password || '';
-
-    if (sessionUser.value?.location_id) {
-      const location = catalogStore.getLocationById(sessionUser.value.location_id);
-      addressToEdit.value = location?.address || '';
-    }
-  }
-
-  profileImage.value = isOwner.value ? carOwnerImg : managerWorkshopImg;
-});
 
 </script>
 
