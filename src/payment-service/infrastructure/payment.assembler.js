@@ -14,6 +14,23 @@ export class PaymentAssembler {
     }
 
     /**
+     * Converts a Payment entity to a resource object for API requests.
+     * @param {Payment} entity - The Payment entity to convert.
+     * @returns {Object} - The resource object for the API.
+     */
+    static toResourceFromEntity(entity) {
+        return {
+            id: entity.id,
+            card_number: entity.card_number,
+            card_type: entity.card_type,
+            month: entity.month,
+            year: entity.year,
+            cvv: entity.cvv,
+            user_account_id: entity.user_account_id
+        };
+    }
+
+    /**
      * Converts an array of resource objects to an array of Payment entities.
      * @param response - The API response containing payment data.
      * @returns {Payment[]} - An array of Payment entities.

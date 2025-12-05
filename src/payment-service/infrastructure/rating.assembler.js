@@ -14,6 +14,22 @@ export class RatingAssembler {
     }
 
     /**
+     * Converts a Rating entity to a resource object for API requests.
+     * @param {Rating} entity - The Rating entity to convert.
+     * @returns {Object} - The resource object for the API.
+     */
+    static toResourceFromEntity(entity) {
+        return {
+            id: entity.id,
+            star_rating: entity.star_rating,
+            comment: entity.comment,
+            time_rating: entity.time_rating,
+            auto_repair_id: entity.auto_repair_id,
+            user_account_id: entity.user_account_id
+        };
+    }
+
+    /**
      * Converts an array of resource objects to an array of Rating entities.
      * @param response - The API response containing payment data.
      * @returns {Rating[]} - An array of Rating entities.

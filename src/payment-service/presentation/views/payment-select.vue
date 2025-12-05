@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
+import { storeToRefs } from "pinia";
 import useIamStore from "@/iam/application/iam.store.js";
 import usePaymentServiceStore from "@/payment-service/application/payment-service.store.js";
 
@@ -8,17 +9,32 @@ const router = useRouter();
 const iamStore = useIamStore();
 const paymentStore = usePaymentServiceStore();
 
+// Valores reactivos usando storeToRefs
+const {
+  sessionUserAccount,
+} = storeToRefs(iamStore);
+
+const {
+  payments,
+  paymentsLoaded,
+} = storeToRefs(paymentStore);
+
+// Funciones/acciones mediante destructuración directa
+const {
+  fetchPayments,
+} = paymentStore;
+
 const selectedPayment = ref(null);
-const idUserAccount = iamStore.sessionUserAccount?.id ?? null;
+const idUserAccount = sessionUserAccount.value?.id ?? null;
 
 // Cargar los pagos del usuario logeado
 onMounted(() => {
-  if (!paymentStore.paymentsLoaded) paymentStore.fetchPayments();
+  if (!paymentsLoaded.value) fetchPayments();
 });
 
 // Filtrar los métodos del usuario actual
 const userPayments = computed(() =>
-    paymentStore.payments.filter(p => p.id_user_account === idUserAccount)
+    payments.value.filter(p => p.user_account_id === idUserAccount)
 );
 
 // Opciones para el combobox

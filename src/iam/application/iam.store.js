@@ -14,8 +14,8 @@ import usePaymentStore from "@/payment-service/application/payment-service.store
 import {MembershipChoice} from "@/data-collection-diagnosis/domain/types/membership-choice.js";
 import {RoleChoicesType} from "@/data-collection-diagnosis/domain/types/role-choice.js";
 
-const VEHICLE_OWNER_ROLE_ID = 'R001';
-const WORKSHOP_ROLE_ID = 'R002';
+const VEHICLE_OWNER_ROLE_ID = 1;
+const WORKSHOP_ROLE_ID = 2;
 
 /**
  * IAM API instance
@@ -146,15 +146,15 @@ export const useIamStore = defineStore('iam', () => {
 
     /**
      * Get the current session user ID
-     * @type {import("vue").ComputedRef<string|null>} - The user ID or null if not logged in
+     * @type {import("vue").ComputedRef<number|null>} - The user ID or null if not logged in
      */
-    const sessionUserId = computed(() => sessionUser.value?.id_user ?? null);
+    const sessionUserId = computed(() => sessionUser.value.id ?? null);
 
     /**
      * Get the current session user account ID
-     * @type {import("vue").ComputedRef<string|null>} - The user account ID or null if not logged in
+     * @type {import("vue").ComputedRef<number|null>} - The user account ID or null if not logged in
      */
-    const sessionUserAccountId = computed(() => sessionUserAccount.value?.id_user_account ?? null);
+    const sessionUserAccountId = computed(() => sessionUserAccount.value.id ?? null);
 
     /**
      * Check if the given user ID matches the current session user ID
@@ -164,7 +164,7 @@ export const useIamStore = defineStore('iam', () => {
     function isCurrentUser(userId) {
         const current = sessionUserId.value;
         if (!current || !userId) return false;
-        return String(current) === String(userId);
+        return Number(current) === Number(userId);
     }
 
     /**
@@ -175,7 +175,7 @@ export const useIamStore = defineStore('iam', () => {
     function isCurrentUserAccount(accountId) {
         const current = sessionUserAccountId.value;
         if (!current || !accountId) return false;
-        return String(current) === String(accountId);
+        return Number(current) === Number(accountId);
     }
 
 
@@ -288,15 +288,15 @@ export const useIamStore = defineStore('iam', () => {
                 const parsed = JSON.parse(sessionData);
                 const {userAccount: rawUserAccount, user: rawUser} = parsed;
 
-                // Lógica de validación
-                const isOwner = rawUserAccount?.id_role === VEHICLE_OWNER_ROLE_ID;
-                const isWorkshop = rawUserAccount?.id_role === WORKSHOP_ROLE_ID;
+                // Validar los datos restaurados
+                const isOwner = rawUserAccount?.role_id === VEHICLE_OWNER_ROLE_ID;
+                const isWorkshop = rawUserAccount?.role_id === WORKSHOP_ROLE_ID;
 
                 const hasUserAccountData = rawUserAccount
-                    && typeof rawUserAccount.id_role === 'string'
+                    && typeof rawUserAccount.role_id === 'number'
                     && (isOwner || isWorkshop);
                 const hasUserData = rawUser
-                    && typeof rawUser.id_user === 'string'
+                    && typeof rawUser.id === 'number'
                     && rawUser.id_user.length > 0;
 
                 if (hasUserAccountData && hasUserData) {
@@ -306,10 +306,10 @@ export const useIamStore = defineStore('iam', () => {
                     sessionUserAccount.value = userAccount;
                     sessionUser.value = user;
 
-                    // Usando RoleChoicesType para obtener el nombre legible
+                    // Log restored session details
                     const roleName = isOwner ? RoleChoicesType.VEHICLE_OWNER : RoleChoicesType.AUTO_REPAIR_WORKSHOP;
 
-                    console.log(`Session restored: User ${userAccount.username || userAccount.email || user.name || 'Unknown'} with role ${userAccount.id_role} (${roleName})`);
+                    console.log(`Session restored: User ${userAccount.username || userAccount.email || user.name || 'Unknown'} with role ${userAccount.role_id} (${roleName})`);
                 } else {
                     console.error('NOT LOGGED - Corrupted session detected and cleared.');
                     clearSessionStorage();
@@ -593,11 +593,11 @@ export const useIamStore = defineStore('iam', () => {
         })
 
         const newUserAccount = new UserAccount({
-            id_user_account: 'UA' + (userAccounts.value.length + 1).toString(),
+            id: th,
             username: form.username.trim(),
             email: form.email.trim(),
-            id_user: newUser.id_user,
-            id_role: VEHICLE_OWNER_ROLE_ID,
+            user_id: newUser.id_user,
+            role_id: VEHICLE_OWNER_ROLE_ID,
             id_membership: '',
             password: form.password,
             is_new: true
@@ -615,28 +615,28 @@ export const useIamStore = defineStore('iam', () => {
      */
     function saveRegisterWorkshop(form) {
         const newLocation = new Location({
-            id_location: 'L0' + (locationCount + 1).toString(),
+            id: 0, // Backend will assign ID
             department: form.department,
             district: form.district,
             address: form.address
         })
 
         const newUser = new User({
-            id_user: 'U0' + (users.value.length + 1).toString(),
+            id: 0, // Backend will assign ID
             name: form.name,
             last_name: '',
             dni: form.ruc,
             phone_number: form.phone_number,
-            id_location: newLocation.id_location,
+            location_id: newLocation.id,
         })
 
         const newUserAccount = new UserAccount({
-            id_user_account: 'UA' + (userAccounts.value.length + 1).toString(),
+            id: 0, // Backend will assign ID
             username: form.username.trim(),
             email: form.email.trim(),
-            id_user: newUser.id_user,
-            id_role: WORKSHOP_ROLE_ID,
-            id_membership: '',
+            user_id: newUser.id,
+            role_id: WORKSHOP_ROLE_ID,
+            membership_id: 0, // Default membership
             password: form.password,
             is_new: true
         });

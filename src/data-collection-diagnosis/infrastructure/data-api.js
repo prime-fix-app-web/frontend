@@ -1,16 +1,10 @@
 import {BaseApi} from "@/shared/infrastructure/http/base-api.js";
 import {BaseEndpoint} from "@/shared/infrastructure/http/base-endpoint.js";
 
-
 const visitsEndpointPath = import.meta.env.VITE_VISITS_ENDPOINT_PATH;
 const serviceEndpointPath = import.meta.env.VITE_SERVICES_ENDPOINT_PATH;
 const diagnosticEndpointPath = import.meta.env.VITE_DIAGNOSTIC_ENDPOINT_PATH;
 const expectedVisitEndpointPath = import.meta.env.VITE_EXPECTED_ENDPOINT_PATH;
-
-const visitsQueryParamKey = import.meta.env.VITE_VISIT_QUERY_PARAM_KEY;
-const serviceQueryParamKey = import.meta.env.VITE_SERVICE_QUERY_PARAM_KEY;
-const diagnosticQueryParamKey =import.meta.env.VITE_DIAGNOSTIC_QUERY_KEY;
-const expectedQueryParamKey = import.meta.env.VITE_EXPECTED_QUERY_KEY;
 
 /**
  * DataApi class to handle API operations for Data manipulation and recollection context.
@@ -43,19 +37,15 @@ export class DataApi extends BaseApi{
         super();
         this.#visitsEndpoint = new BaseEndpoint(this,visitsEndpointPath,{
             usePathParams:import.meta.env.VITE_USE_PATH_PARAMS,
-            idQueryParamKey:visitsQueryParamKey,
         });
         this.#serviceEndpoint = new BaseEndpoint(this,serviceEndpointPath,{
             usePathParams:import.meta.env.VITE_USE_PATH_PARAMS,
-            idQueryParamKey:serviceQueryParamKey,
         });
         this.#diagnosticEndpoint = new BaseEndpoint(this,diagnosticEndpointPath,{
             usePathParams:import.meta.env.VITE_USE_PATH_PARAMS,
-            idQueryParamKey:diagnosticQueryParamKey,
         });
         this.#expectedEndpoint = new BaseEndpoint(this,expectedVisitEndpointPath,{
             usePathParams:import.meta.env.VITE_USE_PATH_PARAMS,
-            idQueryParamKey:expectedQueryParamKey,
         })
     }
 

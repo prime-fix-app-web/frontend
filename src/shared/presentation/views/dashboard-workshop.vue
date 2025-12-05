@@ -58,9 +58,9 @@ function getVisitByExpectedVisitId(id_expected_visit) {
     const expectedVisits = dataCollectionStore.expectedVisit || [];
     const visits = dataCollectionStore.visits || [];
 
-    const expectedVisit = expectedVisits.find(ev => ev.id_expected === id_expected_visit);
+    const expectedVisit = expectedVisits.find(ev => ev.id === id_expected_visit);
     if (!expectedVisit) return null;
-    return visits.find(v => v.id_visit === expectedVisit.id_visit) || null;
+    return visits.find(v => v.id === expectedVisit.visit_id) || null;
   });
 }
 
@@ -69,20 +69,20 @@ function getUserFullNameByVisitId(id_visit) {
   const vehicles = trackingStore.vehicles || [];
   const users = iamStore.users || [];
 
-  const visit = visits.find(v => v.id_visit === id_visit);
+  const visit = visits.find(v => v.id === id_visit);
   if (!visit) return 'Unknown User';
 
-  const vehicle = vehicles.find(veh => veh.id_vehicle === visit.id_vehicle);
+  const vehicle = vehicles.find(veh => veh.id === visit.vehicle_id);
   if (!vehicle) return 'Unknown User';
 
-  const user = users.find(u => u.id_user === vehicle.id_user);
+  const user = users.find(u => u.id === vehicle.user_id);
   return user ? `${user.name} ${user.last_name}` : 'Unknown User';
 }
 
-function getVehicleByVehicleId(id_vehicle) {
+function getVehicleByVehicleId(vehicle_id) {
   return computed(() => {
     const vehicles = trackingStore.vehicles || [];
-    return vehicles.find(v => v.id_vehicle === id_vehicle) || null;
+    return vehicles.find(v => v.id === vehicle_id) || null;
   });
 }
 
@@ -213,14 +213,14 @@ onMounted(async () => {
         <div class="detail-group">
           <label class="detail-label">{{ $t('dashboard-workshop.customerName') }}</label>
           <p class="detail-value">
-            {{ getUserFullNameByVisitId(selectedExpectedVisitAndVisit.expectedVisit.id_visit) }}
+            {{ getUserFullNameByVisitId(selectedExpectedVisitAndVisit.expectedVisit.visit_id) }}
           </p>
         </div>
 
         <div class="detail-group">
           <label class="detail-label">{{ $t('dashboard-workshop.vehicleModel') }}</label>
           <p class="detail-value">
-            {{ getVehicleByVehicleId(selectedExpectedVisitAndVisit.visit.id_vehicle).value?.model }}
+            {{ getVehicleByVehicleId(selectedExpectedVisitAndVisit.visit.vehicle_id).value?.model }}
           </p>
         </div>
 

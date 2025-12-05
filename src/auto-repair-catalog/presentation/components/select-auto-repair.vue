@@ -109,7 +109,7 @@ onMounted(async ()=>{
     </div>
 
     <div class="card-footer">
-      <button type="button" class="btn-select" @click="selectRepair(autoRepair.id_auto_repair)">
+      <button type="button" class="btn-select" @click="selectRepair(autoRepair.id)">
         {{ t('search-auto-repair.auto-repair-card.selectButton') }}
       </button>
     </div>

@@ -33,7 +33,7 @@ onMounted(async () => {
 
 const myVisits = computed(() => {
   const myIds = new Set(store.myVehicles.map(v => v.id))
-  return store.visits.filter(v => myIds.has(v.id_vehicle))
+  return store.visits.filter(v => myIds.has(v.vehicle_id))
 })
 
 function workshopName(id) { return `Taller ${id}` }

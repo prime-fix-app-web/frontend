@@ -19,8 +19,8 @@ export class Rating {
         this.star_rating = star_rating;
         this.comment = comment;
         this.time_rating = time_rating;
-        this.id_auto_repair = auto_repair_id;
-        this.id_user_account = user_account_id;
+        this.auto_repair_id = auto_repair_id;
+        this.user_account_id = user_account_id;
     }
 
 }

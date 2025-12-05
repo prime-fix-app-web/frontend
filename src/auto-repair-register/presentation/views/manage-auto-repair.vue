@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
+import { storeToRefs } from "pinia";
 import { AutoRepair } from "@/auto-repair-catalog/domain/model/auto-repair.entity.js";
 import { User } from "@/iam/domain/model/user.entity.js";
 import { Location } from "@/auto-repair-catalog/domain/model/location.entity.js";
@@ -18,25 +19,43 @@ const router = useRouter();
 
 const { t } = useI18n();
 
+// Valores reactivos usando storeToRefs
+const {
+  sessionUserAccount,
+  sessionUser,
+} = storeToRefs(iamStore);
+
+const {
+  autoRepairs,
+} = storeToRefs(catalogStore);
+
+// Funciones/acciones mediante destructuración directa
+const {
+  getLocationById,
+  updateAutoRepair,
+  updateLocation,
+} = catalogStore;
+
+const {
+  updateUser,
+} = iamStore;
+
 const isLoading = ref(false);
 const successMessage = ref(null);
 const errorMessage = ref(null);
 
-const sessionUserAccount = computed(() => iamStore.sessionUserAccount);
-const sessionUser = computed(() => iamStore.sessionUser);
-
 const currentAutoRepair = computed(() => {
-  const userAccountId = sessionUserAccount.value?.id_user_account;
+  const userAccountId = sessionUserAccount.value?.id;
   if (!userAccountId) return undefined;
-  return catalogStore.autoRepairs.find(
-      (ar) => ar.id_user_account === userAccountId
+  return autoRepairs.value.find(
+      (ar) => ar.user_account_id === userAccountId
   );
 });
 
 const currentLocation = computed(() => {
   const user = sessionUser.value;
   if (!user) return undefined;
-  return catalogStore.getLocationById(user.id_location);
+  return getLocationById(user.location_id);
 });
 
 const autoRepairForm = ref({
@@ -117,31 +136,31 @@ function onSaveChanges() {
 
   try {
     const updatedUser = new User({
-      id_user: user.id_user,
+      id: user.id,
       name: form.workshopName,
       last_name: "",
       dni: form.ruc,
       phone_number: form.phoneNumber,
-      id_location: location.id_location,
+      location_id: location.id,
     });
-    iamStore.updateUser(updatedUser);
+    updateUser(updatedUser);
 
     const updatedLocation = new Location({
-      id_location: location.id_location,
+      id: location.id,
       department: form.department,
       district: form.district,
       address: form.address,
     });
-    iamStore.updateLocation(updatedLocation);
+    updateLocation(updatedLocation);
 
     const updatedAutoRepair = new AutoRepair({
-      id_auto_repair: autoRepair.id_auto_repair,
+      id: autoRepair.id,
       ruc: form.ruc,
       contact_email: form.email,
       technicians_count: autoRepair.technicians_count,
-      id_user_account: autoRepair.id_user_account,
+      user_account_id: autoRepair.user_account_id,
     });
-    catalogStore.updateAutoRepair(updatedAutoRepair.id_auto_repair, updatedAutoRepair);
+    updateAutoRepair(updatedAutoRepair.id, updatedAutoRepair);
 
     setTimeout(() => {
       isLoading.value = false;

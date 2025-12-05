@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
 import { useI18n } from "vue-i18n";
+import { storeToRefs } from "pinia";
 
 import ProgressBar from "@/maintenance-tracking/presentation/components/progress-bar.vue";
 import StateError from "@/maintenance-tracking/presentation/components/state-error.vue";
@@ -12,6 +13,18 @@ import useIamStore from "@/iam/application/iam.store.js";
 const trackingStore = useTrackingStore();
 const iamStore = useIamStore();
 const { t } = useI18n();
+
+const {
+  vehicles,
+} = storeToRefs(trackingStore);
+
+const {
+  sessionUserId,
+} = storeToRefs(iamStore);
+
+const {
+  restoreSessionFromStorage,
+} = iamStore;
 
 // UI state
 const selectedVehicle = ref<any | undefined>(undefined);
@@ -27,15 +40,15 @@ const trackForm = ref({
 
 
 onMounted(() => {
-  iamStore.restoreSessionFromStorage?.();
+  restoreSessionFromStorage?.();
 });
 
 const vehiclesByUserId = computed(() => {
-  const userId = iamStore.sessionUserId;
+  const userId = sessionUserId.value;
 
   if (!userId) return [];
 
-  return trackingStore.vehicles.filter((v: any) => v.id_user === userId);
+  return vehicles.value.filter((v: any) => v.user_id === userId);
 });
 
 const isInvalid = computed(() => trackForm.value.selectedVehicle.trim().length === 0);
@@ -46,12 +59,12 @@ function onSelect() {
   const vehicleId = trackForm.value.selectedVehicle;
 
   selectedVehicle.value = vehiclesByUserId.value.find(
-      (v) => v.id_vehicle === vehicleId
+      (v) => v.id === vehicleId
   );
 
   if (!selectedVehicle.value) return;
 
-  if (selectedVehicle.value.state_maintenance === 0) {
+  if (selectedVehicle.value.maintenance_status === 0) {
     showError.value = true;
     showProgressBar.value = false;
   } else {
@@ -112,8 +125,8 @@ function closeNotificationModal() {
 
             <option
                 v-for="vehicle in vehiclesByUserId"
-                :key="vehicle.id_vehicle"
-                :value="vehicle.id_vehicle"
+                :key="vehicle.id"
+                :value="vehicle.id"
             >
               {{ vehicle.vehicle_brand }} [{{ vehicle.vehicle_plate }}]
             </option>

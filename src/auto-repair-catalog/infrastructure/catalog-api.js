@@ -4,18 +4,12 @@ import { BaseEndpoint } from '@/shared/infrastructure/http/base-endpoint.js'
 const autoRepairsEndpointPath = import.meta.env.VITE_AUTOREPAIRS_ENDPOINT_PATH;
 const locationEndpointPath = import.meta.env.VITE_LOCATIONS_ENDPOINT_PATH;
 
-const autoRepairsQueryParamKey = import.meta.env.VITE_AUTOREPAIR_QUERY_PARAM_KEY;
-const locationsQueryParamKey = import.meta.env.VITE_LOCATION_QUERY_PARAM_KEY;
-
-
 /**
- * Catalog class to handle API operations for Catalog manipulation and recollection context.
- * Extends BaseApi and provides CRUD operations for categories and tutorials
+ * Catalog API class to handle API operations for Auto Repairs and Locations.
+ * Extends BaseApi and provides CRUD operations for auto repairs and locations.
  *
  * @class
  * @extends BaseApi
- * @example
- * const dataApi = new CatalogApi();
  */
 export class CatalogApi extends BaseApi {
     /**
@@ -36,11 +30,9 @@ export class CatalogApi extends BaseApi {
       super();
       this.#autoRepairsEndpoint = new BaseEndpoint(this, autoRepairsEndpointPath,{
           usePathParams: import.meta.env.VITE_USE_PATH_PARAMS,
-          idQueryParamKey: autoRepairsQueryParamKey
       });
       this.#locationsEndpoint = new BaseEndpoint(this, locationEndpointPath,{
           usePathParams: import.meta.env.VITE_USE_PATH_PARAMS,
-          idQueryParamKey: locationsQueryParamKey
       })
     }
 
@@ -119,7 +111,7 @@ export class CatalogApi extends BaseApi {
      * @returns {Promise<import('axios').AxiosReponse>} - A promise that resolves to the API response.
      */
     updateLocation(location){
-      return this.#locationsEndpoint.update(location.id_location, location);
+      return this.#locationsEndpoint.update(location.id, location);
   }
 
     /**

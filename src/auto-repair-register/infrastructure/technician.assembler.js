@@ -14,6 +14,20 @@ export class TechnicianAssembler {
     }
 
     /**
+     * Converts a Technician entity to a resource object for API requests.
+     * @param {Technician} entity - The Technician entity to convert.
+     * @returns {Object} - The resource object for the API.
+     */
+    static toResourceFromEntity(entity) {
+        return {
+            id: entity.id,
+            name: entity.name,
+            last_name: entity.last_name,
+            auto_repair_id: entity.auto_repair_id
+        };
+    }
+
+    /**
      * Converts a response containing multiple Technician resources to an array of Technician entities.
      * @param response - The response object containing Technician resources.
      * @returns {Technician[]} - An array of Technician entities.

@@ -4,9 +4,6 @@ import {BaseEndpoint} from "@/shared/infrastructure/http/base-endpoint.js";
 const technicianEndpointPath = import.meta.env.VITE_TECHNICIANS_ENDPOINT_PATH;
 const technicianScheduleEndpointPath = import.meta.env.VITE_TECHNICIANS_SCHEDULE_ENDPOINT_PATH;
 
-const technicianQueryKey = import.meta.env.VITE_TECHNICIANS_QUERY_KEY;
-const technicianScheduleQueryKey = import.meta.env.VITE_TECHNICIANS_SCHEDULE_QUERY_KEY;
-
 export class AutoRepairRegisterApi extends BaseApi {
     #techniciansEndpoint;
     #technicianScheduleEndpoint;
@@ -15,11 +12,9 @@ export class AutoRepairRegisterApi extends BaseApi {
         super();
         this.#techniciansEndpoint = new BaseEndpoint(this, technicianEndpointPath,{
             usePathParams:import.meta.env.VITE_USE_PATH_PARAMS,
-            idQueryParamKey:technicianQueryKey
         })
         this.#technicianScheduleEndpoint = new BaseEndpoint(this, technicianScheduleEndpointPath,{
             usePathParams:import.meta.env.VITE_USE_PATH_PARAMS,
-            idQueryParamKey: technicianScheduleQueryKey
         })
     }
 

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
+import { storeToRefs } from "pinia";
 import useIamStore from "@/iam/application/iam.store.js";
 import useTrackingStore from "@/maintenance-tracking/application/tracking.store.js";
 import useDataCollection from "@/data-collection-diagnosis/application/data-collection.js";
@@ -10,16 +11,38 @@ import usePaymentStore from "@/payment-service/application/payment-service.store
 const router = useRouter();
 const iamStore = useIamStore();
 const trackingStore = useTrackingStore();
-const dataStore= useDataCollection();
+const dataStore = useDataCollection();
 const { t } = useI18n();
+const paymentStore = usePaymentStore();
 
-const paymentStore = usePaymentStore()
+// Valores reactivos usando storeToRefs
+const {
+  vehicleFilter,
+} = storeToRefs(paymentStore);
+
+const {
+  visits,
+} = storeToRefs(dataStore);
+
+// Funciones/acciones mediante destructuración directa
+const {
+  fetchUserAccounts,
+  fetchUsers,
+} = iamStore;
+
+const {
+  fetchVehicles,
+} = trackingStore;
+
+const {
+  fetchVisit,
+} = dataStore;
 
 const selectedMethod = ref<string>("");
 
 const visitsByVehicleId = computed(() =>
-    dataStore.visits.filter(
-        (v) => v.id_vehicle === paymentStore.vehicleIdFilter
+    visits.value.filter(
+        (v) => v.vehicle_id === vehicleFilter.value
     )
 );
 
@@ -36,10 +59,10 @@ const onAccept = () => {
 };
 
 onMounted(() => {
-  iamStore.fetchUserAccounts();
-  iamStore.fetchUsers();
-  trackingStore.fetchVehicles()
-  dataStore.fetchVisit()
+  fetchUserAccounts();
+  fetchUsers();
+  fetchVehicles();
+  fetchVisit();
 })
 </script>
 

@@ -12,17 +12,6 @@ const notificationsEndpointPath = import.meta.env.VITE_NOTIFICATIONS_ENDPOINT_PA
 const vehiclesEndpointPath = import.meta.env.VITE_VEHICLES_ENDPOINT_PATH;
 
 /**
- * Query parameter key for notification ID.
- * @type {string} - The query parameter key for notification ID.
- */
-const notificationQueryParamKey = String(import.meta.env.VITE_NOTIFICATION_QUERY_PARAM_KEY).toLowerCase();
-
-/**
- * Query parameter key for a vehicle ID
- */
-const vehicleQueryParamKey = import.meta.env.VITE_VEHICLE_QUERY_PARAM_KEY;
-
-/**
  * Flag to determine if query params should be used.
  * @type {boolean} - True if query params are to be used, false otherwise.
  */
@@ -36,11 +25,9 @@ export class TrackingApi extends BaseApi {
         super();
         this.#notificationsEndpoint = new BaseEndpoint(this, notificationsEndpointPath,{
            usePathParams:import.meta.env.VITE_USE_PATH_PARAMS,
-           idQueryParamKey: notificationQueryParamKey,
         });
         this.#vehiclesEndpoint = new BaseEndpoint(this, vehiclesEndpointPath, {
             usePathParams: import.meta.env.VITE_USE_PATH_PARAMS, // false en prod
-            idQueryParamKey: import.meta.env.VITE_VEHICLE_QUERY_PARAM_KEY // "id_vehicle"
         });
     }
 
@@ -83,9 +70,7 @@ export class TrackingApi extends BaseApi {
 
         const id =
             input?.id ??
-            input?.id_notification ??
-            resource?.id ??
-            resource?.id_notification;
+            resource?.id
 
         if (id === undefined || id === null || id === '') {
             throw new Error("updateNotification: id required");

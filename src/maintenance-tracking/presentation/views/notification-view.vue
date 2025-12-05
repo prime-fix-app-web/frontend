@@ -5,19 +5,20 @@ import useTrackingStore from "@/maintenance-tracking/application/tracking.store.
 import {storeToRefs} from "pinia";
 
 const { t } = useI18n();
-const store = useTrackingStore();
+const trackingStore = useTrackingStore();
+
 const {
   notifications,
   notificationsLoaded,
   errors,
   notificationsCount,
   loading,
-} = storeToRefs(store);
+} = storeToRefs(trackingStore);
 
 const {
   fetchNotifications,
   updateNotification,
-} = store;
+} = trackingStore;
 
 /**
  * Flag to indicate if it's the first mount of the component
@@ -298,7 +299,7 @@ function dismissError() {
                   <p class="notification-message">{{ notification.message }}</p>
                   <div class="notification-meta">
                     <span class="notification-time">{{ formatDate(notification.sent) }}</span>
-                    <span class="notification-vehicle">{{ t('notification-view.vehicle') }} {{ notification.id_vehicle }}</span>
+                    <span class="notification-vehicle">{{ t('notification-view.vehicle') }} {{ notification.vehicle_id }}</span>
                   </div>
                 </div>
               </div>
@@ -326,7 +327,7 @@ function dismissError() {
                   <p class="notification-message">{{ notification.message }}</p>
                   <div class="notification-meta">
                     <span class="notification-time">{{ formatDate(notification.sent) }}</span>
-                    <span class="notification-vehicle">{{ t('notification-view.vehicle') }} {{ notification.id_vehicle }}</span>
+                    <span class="notification-vehicle">{{ t('notification-view.vehicle') }} {{ notification.vehicle_id }}</span>
                   </div>
                 </div>
               </div>

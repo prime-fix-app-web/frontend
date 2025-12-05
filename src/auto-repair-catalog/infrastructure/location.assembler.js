@@ -16,6 +16,20 @@ export class LocationAssembler{
     }
 
     /**
+     * Converts a Location entity to a resource object for API requests.
+     * @param {Location} entity - The Location entity to convert.
+     * @returns {Object} - The resource object for the API.
+     */
+    static toResourceFromEntity(entity) {
+        return {
+            id: entity.id,
+            address: entity.address,
+            district: entity.district,
+            department: entity.department
+        };
+    }
+
+    /**
      * Converts an API response to an array of Locations entities
      * Handles both array and object response formats
      * Logs an error and return an empty array if the response status is not 200

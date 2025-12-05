@@ -15,6 +15,21 @@ export class AutoRepairAssembler {
     }
 
     /**
+     * Converts an AutoRepair entity to a resource object for API requests.
+     * @param {AutoRepair} entity - The AutoRepair entity to convert.
+     * @returns {Object} - The resource object for the API.
+     */
+    static toResourceFromEntity(entity) {
+        return {
+            id: entity.id,
+            contact_email: entity.contact_email,
+            technicians_count: entity.technicians_count,
+            ruc: entity.ruc,
+            user_account_id: entity.user_account_id
+        };
+    }
+
+    /**
      *  Converts an API response to an array of AutoRepairs entities
      *  Handles both array and object response formats
      *  Logs an error and return an empty array if the response status is not 200

@@ -3,9 +3,6 @@ import {BaseEndpoint} from "@/shared/infrastructure/http/base-endpoint.js";
 
 const paymentsEndpointPath = import.meta.env.VITE_PAYMENTS_ENDPOINT_PATH;
 const ratingsEndpointPath = import.meta.env.VITE_RATINGS_ENDPOINT_PATH;
-
-const ratingQueryParamKey =import.meta.env.VITE_RATING_QUERY_PARAM_KEY;
-const paymentQueryParamKey =import.meta.env.VITE_PAYMENT_QUERY_PARAM_KEY;
 /**
  * PaymentServiceApi class to handle API operations for Payment-Service context.
  * Extends BaseApi and provides CRUD operations for categories and tutorials.
@@ -35,11 +32,9 @@ export class PaymentServiceApi extends BaseApi {
         super();
         this.#paymentsEndpoint = new BaseEndpoint(this, paymentsEndpointPath,{
             usePathParams:import.meta.env.VITE_USE_PATH_PARAMS,
-            idQueryParamKey:paymentQueryParamKey
         });
         this.#ratingsEndpoint = new BaseEndpoint(this, ratingsEndpointPath,{
             usePathParams:import.meta.env.VITE_USE_PATH_PARAMS,
-            idQueryParamKey:ratingQueryParamKey
         });
     }
 

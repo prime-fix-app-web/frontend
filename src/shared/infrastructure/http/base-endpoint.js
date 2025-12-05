@@ -18,7 +18,7 @@ export class BaseEndpoint {
         this.http = baseApi.http;
         this.endpointPath = endpointPath;
         this.config = new BaseApiConfig(config);
-        this.#idQueryParamKey = config.idQueryParamKey || 'id';
+        this.#idQueryParamKey = 'id';
     }
 
     /**
@@ -28,7 +28,7 @@ export class BaseEndpoint {
     getAll() {
         let url = this.endpointPath;
         // When using query params (Supabase style), add select=*
-        if (this.config.usePathParams === 'true') {
+        if (this.config.usePathParams === false) {
             url += '?select=*';
         }
         return this.http.get(url);
@@ -41,7 +41,7 @@ export class BaseEndpoint {
      */
     getById(id) {
         let url = this.endpointPath;
-        if (this.config.usePathParams === 'true') {
+        if (this.config.usePathParams === false) {
             url += `?${this.#idQueryParamKey}=eq.${id}`;
         } else {
             url += `/${id}`;
@@ -56,6 +56,8 @@ export class BaseEndpoint {
      */
     create(resource) {
         const url = this.endpointPath;
+
+
         return this.http.post(url, resource);
     }
 

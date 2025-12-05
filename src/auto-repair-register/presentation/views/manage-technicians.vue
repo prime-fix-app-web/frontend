@@ -21,7 +21,7 @@ const autoRepair = computed(() => {
   const userAccount = sessionUserAccount;
   if (!userAccount) return undefined;
   const autoRepairs = catalogStore.autoRepairs;
-  return autoRepairs.find(ar => ar.id_user_account === userAccount.id_user_account);
+  return autoRepairs.find(ar => ar.id_user_account === userAccount.id);
 });
 
 const technicians = computed(() => {

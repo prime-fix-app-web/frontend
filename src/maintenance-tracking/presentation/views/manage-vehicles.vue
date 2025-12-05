@@ -1,5 +1,6 @@
 <script setup>
 import {ref, computed, reactive, onMounted} from 'vue';
+import {storeToRefs} from 'pinia';
 import useTrackingStore from "@/maintenance-tracking/application/tracking.store.js";
 import useIamStore from "@/iam/application/iam.store.js";
 import {Vehicle} from "@/maintenance-tracking/domain/model/vehicle.entity.js";
@@ -7,7 +8,20 @@ import {Vehicle} from "@/maintenance-tracking/domain/model/vehicle.entity.js";
 const trackingStore = useTrackingStore();
 const iamStore = useIamStore();
 
-const sessionUser = computed(() => iamStore.sessionUser);
+const {
+  vehicles,
+} = storeToRefs(trackingStore);
+
+const {
+  fetchVehicles,
+  deleteVehicle,
+  updateVehicle,
+  addVehicle,
+} = trackingStore;
+
+const {
+  sessionUser,
+} = storeToRefs(iamStore);
 
 /**
  * Indicates whether the vehicle modal is visible.
@@ -33,34 +47,34 @@ const selectedVehicleId = ref(null);
  */
 const vehiclesByUserId = computed(() => {
   const currentUser = iamStore.sessionUser;
-  if (!currentUser || !currentUser.id_user) return [];
+  if (!currentUser || !currentUser.id) return [];
   if (!trackingStore.vehicles || !Array.isArray(trackingStore.vehicles)) return [];
 
   // Filter vehicles by current user's ID and active maintenance state
   return trackingStore.vehicles.filter(
-      (v) => v.id_user === currentUser.id_user && v.state_maintenance !== -1
+      (v) => v.user_id === currentUser.id && v.maintenance_status !== -1
   );
 });
 
 /**
  * Deletes a vehicle by its ID.
- * @param id_vehicle - The ID of the vehicle to delete.
+ * @param vehicle_id - The ID of the vehicle to delete.
  * @returns {Promise<void>} - A promise that resolves when the vehicle is deleted.
  */
-async function deleteVehicleById(id_vehicle) {
+async function deleteVehicleById(vehicle_id) {
   try {
-    if (!id_vehicle) throw new Error("Id del vehículo requerido");
+    if (!vehicle_id) throw new Error("Id del vehículo requerido");
 
 
-    const res = await trackingStore.deleteVehicle(id_vehicle);
+    const res = await deleteVehicle(vehicle_id);
 
 
-    const index = trackingStore.vehicles.findIndex(v => v.id_vehicle === id_vehicle);
+    const index = vehicles.value.findIndex(v => v.id === vehicle_id);
     if (index !== -1) {
-      trackingStore.vehicles.splice(index, 1);
+      vehicles.value.splice(index, 1);
     }
 
-    console.log(`Vehículo ${id_vehicle} eliminado correctamente`);
+    console.log(`Vehículo ${vehicle_id} eliminado correctamente`);
     return res;
   } catch (error) {
     console.error("Error al eliminar vehículo:", error);
@@ -131,20 +145,20 @@ const onEditVehicle = (vehicle) => {
   showModal.value = true;
 };
 
-/*+
-  * Handles the deletion of a vehicle.
+/**
+ * Handles the deletion of a vehicle.
  */
 const onDeleteVehicle = async (vehicle) => {
-  if (!vehicle?.id_vehicle) return;
+  if (!vehicle?.id) return;
 
   try {
-    await trackingStore.updateVehicle(vehicle.id_vehicle, {
-      state_maintenance: -1
+    await updateVehicle(vehicle.id, {
+      maintenance_status: -1
     });
 
     alert("Vehículo marcado como inactivo");
 
-    trackingStore.fetchVehicles();
+    fetchVehicles();
   } catch (error) {
     console.error("Error al desactivar el vehículo:", error);
   }
@@ -204,8 +218,8 @@ const onSubmit = () => {
  * Fetches vehicles on component mount if a user session exists.
  */
 onMounted(async () => {
-  if (sessionUser.value?.id_user) {
-    await trackingStore.fetchVehicles();
+  if (sessionUser.value?.id) {
+    await fetchVehicles();
   }
 });
 
@@ -223,7 +237,7 @@ onMounted(async () => {
     </div>
 
     <div class="vehicles-list">
-      <div v-for="vehicle in vehiclesByUserId" :key="vehicle.id_vehicle" class="vehicle-card">
+      <div v-for="vehicle in vehiclesByUserId" :key="vehicle.id" class="vehicle-card">
         <div class="vehicle-info">
           <h3 class="vehicle-model">{{ $t('manage-vehicles.vehicleModel') }}: {{ vehicle.model }}</h3>
           <p class="vehicle-detail">
@@ -243,7 +257,7 @@ onMounted(async () => {
           <button class="btn-edit" @click="onEditVehicle(vehicle)">
             {{ $t('manage-vehicles.edit') }}
           </button>
-          <button class="btn-delete" @click="deleteVehicleById(vehicle.id_vehicle)">
+          <button class="btn-delete" @click="deleteVehicleById(vehicle.id)">
             {{ $t('manage-vehicles.delete') }}
           </button>
         </div>

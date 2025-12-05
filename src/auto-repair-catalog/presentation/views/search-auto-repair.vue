@@ -43,13 +43,13 @@ const filteredAutoRepairs = computed(() => {
 
   const mappedAutoRepairs = autoRepairs
       .map(autoRepair => {
-        const userAccount = userAccounts.find(ua => ua.id === autoRepair.id_user_account)
+        const userAccount = userAccounts.find(ua => ua.id === autoRepair.user_account_id)
         if (!userAccount) return null
 
-        const user = users.find(u => u.id === userAccount.id_user)
+        const user = users.find(u => u.id === userAccount.user_id)
         if (!user) return null
 
-        const location = locations.find(loc => loc.id_location === user.id_location)
+        const location = locations.find(loc => loc.id === user.location_id)
         if (!location) return null
 
         return { autoRepair, location }
@@ -57,9 +57,9 @@ const filteredAutoRepairs = computed(() => {
       .filter(Boolean)
 
   autoRepairs.forEach(autoRepair => {
-    const userAccount = userAccounts.find(ua => ua.id === autoRepair.id_user_account)
-    const user = userAccount ? users.find(u => u.id === userAccount.id_user) : null
-    const location = user ? locations.find(l => l.id === user.id_location) : null
+    const userAccount = userAccounts.find(ua => ua.id === autoRepair.user_account_id)
+    const user = userAccount ? users.find(u => u.id === userAccount.user_id) : null
+    const location = user ? locations.find(l => l.id === user.location_id) : null
   })
 
   return mappedAutoRepairs.filter(item => {

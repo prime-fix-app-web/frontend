@@ -17,7 +17,7 @@ const showAddPaymentModal = ref(false);
 const paymentByUserAccountId = computed(() => {
   const userAccount = sessionUserAccount.value;
   if (!userAccount) return [];
-  return paymentsStore.payments.filter(p => p.id_user_account === userAccount.id_user_account);
+  return paymentsStore.payments.filter(p => p.user_account_id === userAccount.id);
 });
 
 // Subscription info based on membership
@@ -25,13 +25,13 @@ const subscriptionInfo = computed(() => {
   const userAccount = sessionUserAccount.value;
   if (!userAccount) return null;
 
-  const membershipId = userAccount.id_membership;
+  const membershipId = userAccount.membership_id;
   let months = 0;
   let price = '0.00';
 
-  if (membershipId === 'M001') { months = 1; price = '39.00'; }
-  else if (membershipId === 'M002') { months = 3; price = '99.00'; }
-  else if (membershipId === 'M003') { months = 12; price = '349.00'; }
+  if (membershipId === 1) { months = 1; price = '39.00'; }
+  else if (membershipId === 2) { months = 3; price = '99.00'; }
+  else if (membershipId === 3) { months = 12; price = '349.00'; }
 
   return { months, price };
 });

@@ -62,15 +62,15 @@ const saveChanges = () => {
     id_user_account: sessionUserAccount.value?.id,
     username: usernameToEdit.value,
     email: sessionUserAccount.value?.email,
-    id_user: sessionUserAccount.value?.id_user,
-    id_role: sessionUserAccount.value?.id_role,
-    id_membership: sessionUserAccount.value?.id_membership,
+    user_id: sessionUserAccount.value?.user_id,
+    role_id: sessionUserAccount.value?.role_id,
+    membership_id: sessionUserAccount.value?.membership_id,
     password: passwordToEdit.value,
     is_new: sessionUserAccount.value?.is_new
   });
 
   iamStore.updateLocation(locationEdit);
-  iamStore.updateUserAccount(updatedUserAccount.id_user_account, updatedUserAccount);
+  iamStore.updateUserAccount(updatedUserAccount.id, updatedUserAccount);
   isEditMode.value = false;
 };
 
@@ -90,8 +90,8 @@ onMounted(() => {
     usernameToEdit.value = sessionUserAccount.value.username || '';
     passwordToEdit.value = sessionUserAccount.value.password || '';
 
-    if (sessionUser.value?.id_location) {
-      const location = catalogStore.getLocationById(sessionUser.value.id_location);
+    if (sessionUser.value?.location_id) {
+      const location = catalogStore.getLocationById(sessionUser.value.location_id);
       addressToEdit.value = location?.address || '';
     }
   }

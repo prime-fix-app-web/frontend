@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from "vue";
 import { useRouter } from "vue-router";
+import { storeToRefs } from "pinia";
 import useIamStore from "@/iam/application/iam.store.js";
 import usePaymentServiceStore from "@/payment-service/application/payment-service.store.js";
 
@@ -8,12 +9,22 @@ const router = useRouter();
 const iamStore = useIamStore();
 const paymentStore = usePaymentServiceStore();
 
-// Obtenemos el id_user_account del usuario logeado
-const idUserAccount = iamStore.sessionUserAccount?.id ?? null;
+// Valores reactivos usando storeToRefs
+const {
+  sessionUserAccount,
+} = storeToRefs(iamStore);
+
+// Funciones/acciones mediante destructuración directa
+const {
+  addRating,
+} = paymentStore;
+
+// Obtenemos el id del usuario logeado
+const idUserAccount = sessionUserAccount.value?.id ?? null;
 
 // Obtenemos la visita actual (V001 en este caso)
 const currentVisit = "V001";
-const idAutoRepair = currentVisit?.id_auto_repair ?? null;
+const idAutoRepair = currentVisit?.auto_repair_id ?? null;
 
 // Estado local
 const selectedRating = ref(null);
@@ -33,12 +44,12 @@ async function submitRating() {
     id_rating: "RT" + Math.floor(Math.random() * 1000), // ID simulado
     star_rating: selectedRating.value,
     comment: comment.value || "Sin comentarios",
-    id_auto_repair: idAutoRepair,
-    id_user_account: idUserAccount
+    auto_repair_id: idAutoRepair,
+    user_account_id: idUserAccount
   };
 
   try {
-    await paymentStore.addRating(newRating);
+    await addRating(newRating);
     console.log("Rating enviado:", newRating);
     router.push("/layout-vehicle-owner/payment-service/rating/done");
   } catch (err) {
