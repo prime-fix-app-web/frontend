@@ -100,16 +100,20 @@ const usePaymentStore = defineStore('payment-service',() => {
     /**
      * Adds a new payment.
      * @param payment - The payment to add.
-     * @return {void}
+     * @return {Promise<Payment>}
      */
-    function addPayment(payment) {
-        paymentServiceApi.createPayment(payment).then(response => {
+    async function addPayment(payment) {
+        try {
+            const response = await paymentServiceApi.createPayment(payment);
             const resource = response.data;
             const newPayment = PaymentAssembler.toEntityFromResource(resource);
             payments.value.push(newPayment);
-        }).catch(error => {
+            return newPayment;
+        } catch (error) {
+            console.error('[Payment Store] addPayment error:', error);
             errors.value.push(error);
-        })
+            throw error;
+        }
     }
 
     /**
@@ -131,15 +135,18 @@ const usePaymentStore = defineStore('payment-service',() => {
     /**
      * Deletes a payment.
      * @param payment - The payment to delete.
-     * @return {void}
+     * @return {Promise<void>}
      */
-    function deletePayment(payment) {
-        paymentServiceApi.deletePayment(payment.id).then(() => {
+    async function deletePayment(payment) {
+        try {
+            await paymentServiceApi.deletePayment(payment.id);
             const index = payments.value.findIndex(pay => pay.id === payment.id);
             if (index !== -1) payments.value.splice(index, 1);
-        }).catch(error => {
+        } catch (error) {
+            console.error('[Payment Store] deletePayment error:', error);
             errors.value.push(error);
-        })
+            throw error;
+        }
     }
 
     /**

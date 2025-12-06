@@ -2,6 +2,7 @@
 import {ref, reactive, computed, onMounted} from 'vue';
 import useIamStore from '@/iam/application/iam.store.js';
 import usePaymentStore from "@/payment-service/application/payment-service.store.js";
+import {Payment} from "@/payment-service/domain/model/payment.entity.js";
 
 // Stores
 const iamStore = useIamStore();
@@ -57,10 +58,10 @@ const validatePasswordForm = () => {
 
 // Payment form
 const paymentForm = reactive({
-  card_number: 0,
+  card_number: '',
   month: 1,
   year: new Date().getFullYear(),
-  cvv: 0,
+  cvv: '',
   card_type: 'Visa'
 });
 
@@ -73,11 +74,46 @@ const paymentErrors = reactive({
 });
 
 const validatePaymentForm = () => {
-  paymentErrors.card_number = !paymentForm.card_number ? 'Requerido' : null;
-  paymentErrors.month = !paymentForm.month ? 'Requerido' : null;
-  paymentErrors.year = !paymentForm.year ? 'Requerido' : null;
-  paymentErrors.cvv = !paymentForm.cvv ? 'Requerido' : null;
-  paymentErrors.card_type = !paymentForm.card_type ? 'Requerido' : null;
+  // Validate card_number (string, required)
+  if (!paymentForm.card_number || paymentForm.card_number.trim() === '') {
+    paymentErrors.card_number = 'Número de tarjeta requerido';
+  } else if (paymentForm.card_number.length < 13 || paymentForm.card_number.length > 19) {
+    paymentErrors.card_number = 'Número de tarjeta inválido (13-19 dígitos)';
+  } else {
+    paymentErrors.card_number = null;
+  }
+
+  // Validate month (1-12)
+  if (!paymentForm.month || paymentForm.month < 1 || paymentForm.month > 12) {
+    paymentErrors.month = 'Mes inválido';
+  } else {
+    paymentErrors.month = null;
+  }
+
+  // Validate year (> 2000)
+  if (!paymentForm.year || paymentForm.year <= 2000) {
+    paymentErrors.year = 'Año debe ser mayor a 2000';
+  } else {
+    paymentErrors.year = null;
+  }
+
+  // Validate CVV (3-4 digits)
+  const cvvStr = paymentForm.cvv.toString();
+  if (!paymentForm.cvv || cvvStr === '') {
+    paymentErrors.cvv = 'CVV requerido';
+  } else if (cvvStr.length < 3 || cvvStr.length > 4) {
+    paymentErrors.cvv = 'CVV debe tener 3 o 4 dígitos';
+  } else {
+    paymentErrors.cvv = null;
+  }
+
+  // Validate card_type
+  if (!paymentForm.card_type || paymentForm.card_type.trim() === '') {
+    paymentErrors.card_type = 'Tipo de tarjeta requerido';
+  } else {
+    paymentErrors.card_type = null;
+  }
+
   return !Object.values(paymentErrors).some(e => e);
 };
 
@@ -89,10 +125,16 @@ const months = [
   { value: 10, name: 'Octubre' }, { value: 11, name: 'Noviembre' }, { value: 12, name: 'Diciembre' }
 ];
 
-const years = Array.from({ length: 10 }, (_, i) => new Date().getFullYear() + i);
+const years = computed(() => {
+  const currentYear = new Date().getFullYear();
+  const yearList = [];
+  for (let y = 2001; y <= currentYear + 20; y++) {
+    yearList.push(y);
+  }
+  return yearList;
+});
 
 // Methods
-
 const onSavePassword = () => {
   if (!validatePasswordForm()) return;
   if (passwordForm.newPassword !== passwordForm.repeatPassword) {
@@ -102,12 +144,18 @@ const onSavePassword = () => {
   console.log('Cambiar contraseña:', passwordForm.newPassword);
   passwordForm.newPassword = '';
   passwordForm.repeatPassword = '';
-  showPasswordFields.value = false;
 };
 
-const onDeletePayment = (paymentId) => {
+const onDeletePayment = async (payment) => {
   if (confirm('¿Está seguro de eliminar este método de pago?')) {
-    iamStore.deletePayment(paymentId);
+    try {
+      await paymentsStore.deletePayment(payment);
+      alert('Método de pago eliminado exitosamente');
+      await paymentsStore.fetchPayments();
+    } catch (error) {
+      console.error('Error al eliminar método de pago:', error);
+      alert('Error al eliminar el método de pago. Por favor, intente nuevamente.');
+    }
   }
 };
 
@@ -117,17 +165,48 @@ const onAddPaymentMethod = () => {
 
 const onClosePaymentModal = () => {
   showAddPaymentModal.value = false;
-  paymentForm.card_number = 0;
+  paymentForm.card_number = '';
   paymentForm.month = 1;
   paymentForm.year = new Date().getFullYear();
-  paymentForm.cvv = 0;
+  paymentForm.cvv = '';
   paymentForm.card_type = 'Visa';
+  // Reset errors
+  Object.keys(paymentErrors).forEach(key => {
+    paymentErrors[key] = null;
+  });
 };
 
-const onSubmitPayment = () => {
-  if (!validatePaymentForm()) return;
-  console.log('Añadir método de pago:', { ...paymentForm });
-  onClosePaymentModal();
+const onSubmitPayment = async () => {
+  if (!validatePaymentForm()) {
+    alert('Por favor, corrija los errores en el formulario.');
+    return;
+  }
+
+  const userAccount = sessionUserAccount.value;
+  if (!userAccount || !userAccount.id) {
+    alert('No se pudo identificar el usuario. Por favor, inicie sesión nuevamente.');
+    return;
+  }
+
+  const newPayment = new Payment({
+    card_number: paymentForm.card_number.toString(),
+    card_type: paymentForm.card_type,
+    month: Number(paymentForm.month),
+    year: Number(paymentForm.year),
+    cvv: Number(paymentForm.cvv),
+    user_account_id: userAccount.id
+  });
+
+  try {
+    await paymentsStore.addPayment(newPayment);
+    alert('Método de pago añadido exitosamente');
+    onClosePaymentModal();
+    // Refrescar la lista de pagos
+    await paymentsStore.fetchPayments();
+  } catch (error) {
+    console.error('Error al añadir método de pago:', error);
+    alert('Error al añadir el método de pago. Por favor, intente nuevamente.');
+  }
 };
 
 const onRenewSubscription = () => {
@@ -146,8 +225,8 @@ const formatCardNumber = (cardNumber) => {
 };
 
 onMounted(async () => {
-  await iamStore.fetchUserAccounts();// o cómo cargues el usuario
-  await paymentsStore.fetchPayments(); // carga los pagos desde el backend
+  await iamStore.fetchUserAccounts();
+  await paymentsStore.fetchPayments();
   await iamStore.fetchUsers()
 });
 </script>
@@ -214,7 +293,7 @@ onMounted(async () => {
             <p class="payment-number">{{ $t('settings-view.cardNumber') }}: {{ formatCardNumber(payment.card_number) }}</p>
             <p class="payment-expiry">{{ $t('settings-view.expirationDate') }}: {{ payment.month }}/{{ payment.year }}</p>
           </div>
-          <button class="btn-delete" @click="onDeletePayment(payment.id)">
+          <button class="btn-delete" @click="onDeletePayment(payment)">
             {{ $t('settings-view.deletePaymentMethod') }}
           </button>
         </div>
@@ -246,12 +325,27 @@ onMounted(async () => {
           <div class="form-row">
             <div class="form-group">
               <label for="cardNumber" class="form-label">{{ $t('payment.cardNumber') }}</label>
-              <input type="number" id="cardNumber" v-model.number="paymentForm.card_number" class="form-input" placeholder="1149849846611161" />
+              <input
+                type="text"
+                id="cardNumber"
+                v-model="paymentForm.card_number"
+                class="form-input"
+                placeholder="1149849846611161"
+                maxlength="19"
+              />
+              <span v-if="paymentErrors.card_number" class="error-message">{{ paymentErrors.card_number }}</span>
             </div>
 
             <div class="form-group">
               <label for="cardType" class="form-label">{{ $t('payment.cardType') }}</label>
-              <input type="text" id="cardType" v-model="paymentForm.card_type" class="form-input" placeholder="Visa/Mastercard" />
+              <input
+                type="text"
+                id="cardType"
+                v-model="paymentForm.card_type"
+                class="form-input"
+                placeholder="Visa/Mastercard"
+              />
+              <span v-if="paymentErrors.card_type" class="error-message">{{ paymentErrors.card_type }}</span>
             </div>
           </div>
 
@@ -261,6 +355,7 @@ onMounted(async () => {
               <select id="month" v-model.number="paymentForm.month" class="form-select">
                 <option v-for="m in months" :key="m.value" :value="m.value">{{ m.name }}</option>
               </select>
+              <span v-if="paymentErrors.month" class="error-message">{{ paymentErrors.month }}</span>
             </div>
 
             <div class="form-group">
@@ -268,11 +363,21 @@ onMounted(async () => {
               <select id="year" v-model.number="paymentForm.year" class="form-select">
                 <option v-for="y in years" :key="y" :value="y">{{ y }}</option>
               </select>
+              <span v-if="paymentErrors.year" class="error-message">{{ paymentErrors.year }}</span>
             </div>
 
             <div class="form-group">
               <label for="cvv" class="form-label">{{ $t('payment.cvv') }}</label>
-              <input type="number" id="cvv" v-model.number="paymentForm.cvv" class="form-input" placeholder="333" />
+              <input
+                type="text"
+                id="cvv"
+                v-model="paymentForm.cvv"
+                class="form-input"
+                placeholder="333"
+                maxlength="4"
+                pattern="[0-9]*"
+              />
+              <span v-if="paymentErrors.cvv" class="error-message">{{ paymentErrors.cvv }}</span>
             </div>
           </div>
 
@@ -365,6 +470,13 @@ onMounted(async () => {
 .form-select:focus {
   border-color: var(--color-first-complementary);
   box-shadow: 0 0 0 3px rgba(242, 170, 31, 0.1);
+}
+
+.error-message {
+  color: #e74c3c;
+  font-size: 0.875rem;
+  font-family: var(--font-regular), sans-serif;
+  margin-top: -0.25rem;
 }
 
 .password-input-wrapper {
