@@ -78,8 +78,14 @@ export class BaseEndpoint {
         const url = this.endpointPath;
         const usePathParams = this.#shouldUsePathParams(this.http);
 
+        // Clean payload: remove id if it's null or undefined
+        const payload = { ...resource };
+        if (payload.id === null || payload.id === undefined) {
+            delete payload.id;
+        }
+
         try {
-            const response = await this.http.post(url, resource);
+            const response = await this.http.post(url, payload);
 
             // Handle response based on provider
             if (usePathParams) {
@@ -125,9 +131,9 @@ export class BaseEndpoint {
         const payload = { ...resource };
 
         if (usePathParams) {
-            // AWS style: PUT/PATCH /users/1
+            // AWS style: PUT /users/1
             url += `/${id}`;
-            return this.http.patch(url, payload);
+            return this.http.put(url, payload);
         } else {
             // Supabase (PostgREST) style: PATCH /users?id=eq.1
             url += `?${this.#idQueryParamKey}=eq.${id}`;

@@ -153,6 +153,20 @@ function removeScheduleRow(index) {
   }
 }
 
+// Helper function to ensure time is in HH:mm:ss format
+function ensureTimeFormat(time) {
+  if (!time) return time;
+  // If time is already in HH:mm:ss format, return as is
+  if (time.length === 8 && time.split(':').length === 3) {
+    return time;
+  }
+  // If time is in HH:mm format, add :00 for seconds
+  if (time.length === 5 && time.split(':').length === 2) {
+    return `${time}:00`;
+  }
+  return time;
+}
+
 function onSubmit() {
   const autoRepairData = autoRepair.value;
   if (!autoRepairData) {
@@ -191,8 +205,8 @@ async function handleCreateTechnician(autoRepairId) {
         id: null, // El backend generará el ID
         technician_id: createdTechnician.id, // Usar el ID real del backend
         day_of_week: schedule.day_of_week,
-        start_time: schedule.start_time,
-        end_time: schedule.end_time,
+        start_time: ensureTimeFormat(schedule.start_time),
+        end_time: ensureTimeFormat(schedule.end_time),
         is_active: true,
       });
       await addTechnicianSchedule(newSchedule);
@@ -238,21 +252,19 @@ function handleUpdateTechnician(autoRepairId) {
       id: s.id,
       technician_id: id,
       day_of_week: s.day_of_week,
-      start_time: s.start_time,
-      end_time: s.end_time,
+      start_time: ensureTimeFormat(s.start_time),
+      end_time: ensureTimeFormat(s.end_time),
       is_active: true,
     });
     updateTechnicianSchedule(updated.id, updated);
   });
 
-  const base = Date.now();
-  schedulesToAdd.forEach((s, i) => {
+  schedulesToAdd.forEach((s) => {
     const newSchedule = new TechnicianSchedule({
-      id: `TS${base}_${i}`,
       technician_id: id,
       day_of_week: s.day_of_week,
-      start_time: s.start_time,
-      end_time: s.end_time,
+      start_time: ensureTimeFormat(s.start_time),
+      end_time: ensureTimeFormat(s.end_time),
       is_active: true,
     });
     addTechnicianSchedule(newSchedule);

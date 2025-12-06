@@ -98,18 +98,18 @@ onMounted(async () => {
 
       <!-- Lista de schedules -->
       <div v-else class="schedule-list">
-        <div
-            v-for="schedule in sortedSchedules || []"
-            :key="schedule.id"
-            v-if="schedule.is_active"
-            class="schedule-item"
-        >
-          <span class="schedule-day">{{ translateDay(schedule.day_of_week).value }}</span>
-          <span class="schedule-time">
-            {{ schedule.start_time.split(':').slice(0,2).join(':') }} -
-            {{ schedule.end_time.split(':').slice(0,2).join(':') }}
-          </span>
-        </div>
+        <template v-for="schedule in sortedSchedules" :key="schedule?.id">
+          <div
+              v-if="schedule && schedule.is_active"
+              class="schedule-item"
+          >
+            <span class="schedule-day">{{ translateDay(schedule.day_of_week).value }}</span>
+            <span class="schedule-time">
+              {{ schedule.start_time.split(':').slice(0,2).join(':') }} -
+              {{ schedule.end_time.split(':').slice(0,2).join(':') }}
+            </span>
+          </div>
+        </template>
       </div>
     </div>
 
