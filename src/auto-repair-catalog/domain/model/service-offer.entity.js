@@ -11,7 +11,7 @@ export class ServiceOffer {
      * @param {boolean} [params.is_active=false] - Indicates whether the offer is currently active.
      * @param {number} [params.duration_hour=0] - The estimated duration of the service in hours.
      */
-    constructor({id=0, service_id=0, auto_repair_id=0, price=0,is_active=false, duration_hour=0}) {
+    constructor({id=null, service_id=null, auto_repair_id=null, price=null,is_active=false, duration_hour=0}) {
         this.id = id;
         this.service_id = service_id;
         this.auto_repair_id = auto_repair_id;

@@ -12,7 +12,10 @@ export class ServiceAssembler {
      * @returns {Service} The corresponding Services entity
      */
     static toEntityFromResource(resource) {
-        return new Service({...resource});
+        console.log('[ServiceAssembler] toEntityFromResource input:', resource);
+        const entity = new Service({...resource});
+        console.log('[ServiceAssembler] toEntityFromResource output:', entity);
+        return entity;
     }
 
     /**
@@ -24,13 +27,17 @@ export class ServiceAssembler {
      * @returns {Service[]} Array of Services entities.
      */
     static toEntitiesFromResponse(response) {
+        console.log('[ServiceAssembler] toEntitiesFromResponse response:', response);
         if (response.status !== 200) {
             console.error(`${response.status}, ${response.statusText}`);
             return [];
         }
         let resources = response.data instanceof Array ? response.data : response.data['services'];
+        console.log('[ServiceAssembler] toEntitiesFromResponse resources:', resources);
 
-        return resources.map(resource => this.toEntityFromResource(resource));
+        const entities = resources.map(resource => this.toEntityFromResource(resource));
+        console.log('[ServiceAssembler] toEntitiesFromResponse entities:', entities);
+        return entities;
     }
 
 }

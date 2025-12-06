@@ -18,6 +18,7 @@ const pageNotFound = () => import("./shared/presentation/views/page-not-found.vu
 const visitHistory = () => import("./data-collection-diagnosis/presentation/views/visit-history.vue");
 const setting = () => import("./shared/presentation/views/settings.vue");
 const profile = () => import("./shared/presentation/views/profile.vue");
+const serviceForm = () => import("./auto-repair-catalog/presentation/views/service-form.vue");
 const VEHICLE_OWNER_ROLE_ID = 1;
 const WORKSHOP_ROLE_ID = 2;
 
@@ -118,7 +119,11 @@ const routes = [
                 ...route,
                 path: `auto-repair-register/${route.path}`,
             })),
-
+            {
+                path: 'auto-repair-catalog/service-form',
+                component: serviceForm,
+                meta: { title: 'Service Form' }
+            }
         ]
     },
     {

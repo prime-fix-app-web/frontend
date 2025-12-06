@@ -26,6 +26,8 @@ const useTrackingStore = defineStore('tracking', () => {
 
     const vehicles = ref([]);
 
+    const visits = ref([]);
+
     /**
      * List of errors.
      * @type {import('vue').Ref<Error[]>}
@@ -165,6 +167,15 @@ const useTrackingStore = defineStore('tracking', () => {
         return vehicles.value.find((vehicle) => vehicle.id === id);
     }
 
+    /**
+     * Get all visits for a specific vehicle
+     * @param {number|string} vehicleId - The ID of the vehicle
+     * @returns {Array} - Array of visits for the vehicle
+     */
+    function visitsByVehicle(vehicleId) {
+        return visits.value.filter((visit) => visit.vehicle_id === vehicleId);
+    }
+
     function addVehicle (vehicle){
         trackingApi.createVehicle(vehicle).then((response) => {
             // Handle both AWS (single object) and Supabase (array) responses
@@ -186,22 +197,37 @@ const useTrackingStore = defineStore('tracking', () => {
         loading.value = true;
         errors.value = [];
         try {
-            const vehicleId = String(id).trim();
+            const vehicleId = id;
 
-            const response = await trackingApi.updateVehicle(vehicleId, vehicleData);
+            console.log('[Tracking Store] updateVehicle called with:', { id, vehicleData });
 
-            const index = vehicles.value.findIndex(v => v.id === vehicleId);
+            // Use assembler to convert entity to resource if vehicleData is an entity
+            const resource = vehicleData.constructor.name === 'Vehicle'
+                ? VehicleAssembler.toResourceFromEntity(vehicleData)
+                : vehicleData;
+
+            console.log('[Tracking Store] Payload to send:', resource);
+            console.log('[Tracking Store] Vehicle ID:', vehicleId);
+
+            const response = await trackingApi.updateVehicle(vehicleId, resource);
+            console.log('[Tracking Store] Update response:', response);
+
+            // Update the vehicle in the store with the response data
+            const index = vehicles.value.findIndex(v => String(v.id) === String(vehicleId));
             if (index !== -1) {
-                vehicles.value[index] = {
+                // Use the response data or fall back to merging with existing
+                const updatedData = response.data || resource;
+                vehicles.value[index] = VehicleAssembler.toEntityFromResource({
                     ...vehicles.value[index],
-                    ...vehicleData,
+                    ...updatedData,
                     id: vehicleId,
-                };
+                });
             }
 
             loading.value = false;
             return response;
         } catch (error) {
+            console.error('[Tracking Store] updateVehicle error:', error);
             pushError(error);
             loading.value = false;
             throw error;
@@ -230,6 +256,7 @@ const useTrackingStore = defineStore('tracking', () => {
     return {
         notifications,
         vehicles,
+        visits,
         errors,
         notificationsLoaded,
         vehiclesLoaded,
@@ -245,6 +272,7 @@ const useTrackingStore = defineStore('tracking', () => {
         updateVehicle,
         deleteVehicle,
         getVehiclesById,
+        visitsByVehicle,
     }
 });
 

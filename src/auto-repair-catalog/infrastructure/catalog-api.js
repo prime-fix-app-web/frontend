@@ -166,12 +166,11 @@ export class CatalogApi extends BaseApi {
 
     /**
      * Fetches all Service Offers associated with a specific Auto Repair center ID.
-     * Uses BaseEndpoint.getAll() and relies on endpointPath filter.
+     * Uses BaseEndpoint.getByField() to support both AWS and Supabase.
      * @param {number|string} autoRepairId
      */
     getServiceOffersByAutoRepairsId(autoRepairId){
-        const filter = `?auto_repair_id=eq.${autoRepairId}&select=*`;
-        return this.http.get(`${serviceOfferEndpointPath}${filter}`);
+        return this.#serviceOfferEndpoint.getByField('auto_repair_id', autoRepairId);
     }
 
     /**

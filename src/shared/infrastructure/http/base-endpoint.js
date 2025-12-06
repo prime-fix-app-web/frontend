@@ -70,6 +70,27 @@ export class BaseEndpoint {
     }
 
     /**
+     * Fetches resources filtered by a specific field value.
+     * @param {string} fieldName - The name of the field to filter by
+     * @param {*} value - The value to filter for
+     * @returns {*} - The fetched resources matching the filter
+     */
+    getByField(fieldName, value) {
+        const usePathParams = this.#shouldUsePathParams(this.http);
+        let url = this.endpointPath;
+
+        if (usePathParams) {
+            // AWS style: /service_offers?auto_repair_id=1
+            url += `?${fieldName}=${value}`;
+        } else {
+            // Supabase (PostgREST) style: /service_offers?auto_repair_id=eq.1&select=*
+            url += `?${fieldName}=eq.${value}&select=*`;
+        }
+
+        return this.http.get(url);
+    }
+
+    /**
      * Creates a new resource.
      * @param resource - The resource data to create.
      * @returns {*} - The created resource.
@@ -78,9 +99,9 @@ export class BaseEndpoint {
         const url = this.endpointPath;
         const usePathParams = this.#shouldUsePathParams(this.http);
 
-        // Clean payload: remove id if it's null or undefined
+        // Clean payload: remove id if it's null, undefined, or 0
         const payload = { ...resource };
-        if (payload.id === null || payload.id === undefined) {
+        if (payload.id === null || payload.id === undefined || payload.id === 0) {
             delete payload.id;
         }
 
@@ -128,15 +149,22 @@ export class BaseEndpoint {
     update(id, resource) {
         const usePathParams = this.#shouldUsePathParams(this.http);
         let url = this.endpointPath;
-        const payload = { ...resource };
+        let payload = { ...resource };
+
+        console.log('[BaseEndpoint] update called with:', { id, resource, usePathParams });
+        console.log('[BaseEndpoint] endpointPath:', this.endpointPath);
 
         if (usePathParams) {
             // AWS style: PUT /users/1
             url += `/${id}`;
+            console.log('[BaseEndpoint] AWS PUT URL:', url);
+            console.log('[BaseEndpoint] Payload to send:', payload);
             return this.http.put(url, payload);
         } else {
             // Supabase (PostgREST) style: PATCH /users?id=eq.1
             url += `?${this.#idQueryParamKey}=eq.${id}`;
+            console.log('[BaseEndpoint] Supabase PATCH URL:', url);
+            console.log('[BaseEndpoint] Payload to send:', payload);
             return this.http.patch(url, payload);
         }
     }

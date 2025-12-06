@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, watch } from "vue";
 import { useRouter } from "vue-router";
 import { storeToRefs } from "pinia";
 import { AutoRepair } from "@/auto-repair-catalog/domain/model/auto-repair.entity.js";
@@ -10,7 +10,6 @@ import useIamStore from "@/iam/application/iam.store.js";
 import useTrackingStore from "@/maintenance-tracking/application/tracking.store.js";
 import useCatalogStore from "@/auto-repair-catalog/application/owner.store.js";
 import {useI18n} from "vue-i18n";
-import * as serviceOffers from "@primeuix/themes/aura/knob";
 
 const registerStore = useAutoRepairRegisterStore();
 const trackingStore = useTrackingStore();
@@ -39,6 +38,7 @@ const {
   getLocationById,
   updateAutoRepair,
   updateLocation,
+  fetchServiceOffers,
 } = catalogStore;
 
 const {
@@ -73,17 +73,29 @@ const autoRepairForm = ref({
   email: "",
 });
 
-onMounted(() => {
+onMounted(async () => {
+  // Fetch all required data first
+  await Promise.all([
+    iamStore.fetchUsers(),
+    iamStore.fetchUserAccounts(),
+    catalogStore.fetchAutoRepairs(),
+    catalogStore.fetchLocations(),
+    catalogStore.fetchServices()
+  ]);
+
+  // Load current data after fetches complete
   loadCurrentData();
-  iamStore.fetchUsers()
-  iamStore.fetchUserAccounts()
-  catalogStore.fetchAutoRepairs()
 
-
+  // Fetch service offers if we have an auto repair
   if(currentAutoRepair.value?.id){
-    catalogStore.getServiceOfferById(currentAutoRepair.value.id)
+    fetchServiceOffers(currentAutoRepair.value.id);
   }
 });
+
+// Watch for changes in the data and reload form
+watch([sessionUser, currentLocation, currentAutoRepair], () => {
+  loadCurrentData();
+}, { deep: true });
 
 function loadCurrentData() {
   const user = sessionUser.value;
@@ -134,8 +146,6 @@ function onSaveChanges() {
 
   const user = sessionUser.value;
   const location = currentLocation.value;
-  const autoRepairOffers = computed(() => serviceOffers.value);
-  const isOffersLoading = computed(() => loading.value);
   const autoRepair = currentAutoRepair.value;
 
   if (!user || !location || !autoRepair) {

@@ -48,15 +48,30 @@ watch([isLoading, () => catalogStore.errors], ([loading, errors]) => {
   }
 });
 
-onMounted(() => {
-  serviceId.value = route.params.id;
-  if (serviceId.value) {
-    currentService.value = catalogStore.getServiceById(serviceId.value);
-    if (!currentService.value) {
-      errorMessage.value = t('service-offer.service-not-found');
-    }
-  } else {
-    onBackToServiceList();
+onMounted(async () => {
+  const rawId = route.params.id;
+  console.log('[ServiceOfferForm] Route params.id:', rawId);
+
+  // Validate the ID from route params
+  if (!rawId || rawId === 'null' || rawId === 'undefined' || rawId === '0') {
+    console.error('[ServiceOfferForm] Invalid service ID from route:', rawId);
+    errorMessage.value = t('service-offer.service-not-found') || 'Invalid service ID. Redirecting...';
+    setTimeout(() => onBackToServiceList(), 2000);
+    return;
+  }
+
+  serviceId.value = rawId;
+  console.log('[ServiceOfferForm] Looking for service with ID:', serviceId.value);
+
+  // Ensure services are loaded
+  await catalogStore.fetchServices();
+
+  currentService.value = catalogStore.getServiceById(serviceId.value);
+  console.log('[ServiceOfferForm] Found service:', currentService.value);
+
+  if (!currentService.value) {
+    console.error('[ServiceOfferForm] Service not found in catalog for ID:', serviceId.value);
+    errorMessage.value = t('service-offer.service-not-found') || 'Service not found';
   }
 });
 

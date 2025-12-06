@@ -11,7 +11,7 @@ export class Service {
      * @param {string}[params.name=''] - The name of the service.
      * @param {string}[params.description=''] - The description of the service.
      */
-    constructor({id=0,name='',description=''}) {
+    constructor({id=null,name='',description=''}) {
         this.id=id;
         this.name=name;
         this.description=description;

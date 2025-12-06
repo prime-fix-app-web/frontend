@@ -20,13 +20,12 @@ export class VehicleAssembler {
      */
     static toResourceFromEntity(entity) {
         return {
-            id: entity.id,
+            color: entity.color,
             model: entity.model,
             user_id: entity.user_id,
             vehicle_brand: entity.vehicle_brand,
             vehicle_plate: entity.vehicle_plate,
             vehicle_type: entity.vehicle_type,
-            color: entity.color,
             maintenance_status: entity.maintenance_status
         };
     }

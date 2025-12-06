@@ -1,13 +1,19 @@
 <script setup >
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import useCatalogStore from "@/auto-repair-catalog/application/owner.store.js";
 import { useI18n } from 'vue-i18n';
 import {Service} from "@/auto-repair-catalog/domain/model/service.entity.js";
+import useIamStore from "@/iam/application/iam.store.js";
+import { storeToRefs } from "pinia";
 
 const router = useRouter();
 const catalogStore = useCatalogStore();
+const iamStore = useIamStore();
 const { t } = useI18n();
+
+const { sessionUserAccount } = storeToRefs(iamStore);
+const { autoRepairs } = storeToRefs(catalogStore);
 
 const isLoading = computed(() => catalogStore.loading);
 
@@ -24,23 +30,45 @@ const serviceForm = ref(new Service({
   description:''
 }));
 
+const currentAutoRepair = computed(() => {
+  const userAccountId = sessionUserAccount.value?.id;
+  if (!userAccountId) return undefined;
+  return autoRepairs.value.find(
+      (ar) => ar.user_account_id === userAccountId
+  );
+});
+
+onMounted(async () => {
+  // Fetch all required data first
+  await Promise.all([
+    catalogStore.fetchServices(),
+    catalogStore.fetchAutoRepairs()
+  ]);
+
+  // Fetch service offers if we have an auto repair
+  if(currentAutoRepair.value?.id){
+    catalogStore.fetchServiceOffers(currentAutoRepair.value.id);
+  }
+});
+
 
 const displayedServices = computed(() => {
   return isFilteringByRecent.value
       ? (recentlyCreatedService.value ? [recentlyCreatedService.value] : [])
       : allServices.value;
 });
+
 const servicesWithOffers = computed(() => {
-  const services = catalogStore.fetchServices() || []; 
-  return services.map(o => o.id);
+  const offers = catalogStore.serviceOffers || [];
+  return offers.map(o => o.service_id);
 });
 
 const availableServices = computed(() =>
-    allServices.value.filter(s => !servicesWithOffers.value.includes(String(s.id)))
+    allServices.value.filter(s => !servicesWithOffers.value.includes(s.id))
 );
 
 function hasOffer(serviceId) {
-  return servicesWithOffers.value.includes(String(serviceId));
+  return servicesWithOffers.value.includes(serviceId);
 }
 
 async function onCreateService() {
@@ -81,6 +109,16 @@ async function onCreateService() {
 
 function onConfigureOffer(serviceId) {
   if (isLoading.value) return;
+
+  // Validate serviceId before navigation
+  if (!serviceId || serviceId === 0 || serviceId === null || serviceId === undefined) {
+    console.error('[ServiceForm] Invalid serviceId for offer configuration:', serviceId);
+    errorMessage.value = 'Error: Invalid service ID. Please try reloading the page.';
+    setTimeout(() => (errorMessage.value = null), 5000);
+    return;
+  }
+
+  console.log('[ServiceForm] Navigating to offer-form with serviceId:', serviceId);
   router.push(`/layout-workshop/auto-repair-catalog/offer-form/${serviceId}`);
 }
 
@@ -198,7 +236,7 @@ function onBackToWorkshop() {
               @click="selectedServiceId = service.id"
           >
             <div class="service-header">
-              <span class="service-name">({{ service.service_id }}) {{ service.name }}</span>
+              <span class="service-name">({{ service.id }}) {{ service.name }}</span>
               <span
                   class="status-badge"
                   :class="hasOffer(service.id) ? 'status-configured' : 'status-pending'"

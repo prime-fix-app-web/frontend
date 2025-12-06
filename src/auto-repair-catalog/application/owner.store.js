@@ -84,26 +84,26 @@ const useCatalogStore = defineStore('auto-repair-catalog', () => {
       }
 
       return catalogApi.getServices().then(response =>{
+            console.log('[Catalog Store] fetchServices response:', response);
+            console.log('[Catalog Store] fetchServices response.data:', response.data);
             services.value=ServiceAssembler.toEntitiesFromResponse(response);
+            console.log('[Catalog Store] services after assembler:', services.value);
             servicesLoaded.value = true;
         }).catch(error => {
+            console.error('[Catalog Store] fetchServices error:', error);
             errors.value.push(error);
         })
     }
 
-  const updateLocation = async(id,locationData) =>{
+  const updateLocation = async(locationData) =>{
       loading.value = true;
       errors.value =[];
       try{
-          const locationId = id;
+          const locationId = locationData.id;
           const response = await catalogApi.updateLocation(locationData);
           const index = locations.value.findIndex(l => l.id === locationId)
           if(index !==-1){
-              locations.value[index] ={
-                  ...locations.value[index],
-                  ...locationData,
-                  id: locationId
-              };
+              locations.value[index] = LocationAssembler.toEntityFromResource(response.data);
           }
           loading.value = false;
           return response;
@@ -114,7 +114,7 @@ const useCatalogStore = defineStore('auto-repair-catalog', () => {
       }
   }
 
-  const updateAutoRepair = async (id,autoRepairData)=>{
+  const updateAutoRepair = async (id, autoRepairData)=>{
       loading.value = true;
       errors.value =[];
       try {
@@ -123,11 +123,7 @@ const useCatalogStore = defineStore('auto-repair-catalog', () => {
           const index = autoRepairs.value.findIndex(v =>Number(v.id) === autoRepairId);
 
           if(index !== -1){
-              autoRepairs.value[index] = {
-                  ...autoRepairs.value[index],
-                  ...autoRepairData,
-                  id: autoRepairId
-              };
+              autoRepairs.value[index] = AutoRepairAssembler.toEntityFromResource(response.data);
           }
           loading.value = false;
           return response;
@@ -199,6 +195,9 @@ const useCatalogStore = defineStore('auto-repair-catalog', () => {
 
             const response = await catalogApi.createService(payload);
 
+            console.log('[Catalog Store] addService response:', response);
+            console.log('[Catalog Store] response.data:', response.data);
+
             // Handle both AWS (single object) and Supabase (array) responses
             let resource = response.data;
 
@@ -207,12 +206,17 @@ const useCatalogStore = defineStore('auto-repair-catalog', () => {
                 resource = resource[0];
             }
 
+            console.log('[Catalog Store] resource after extraction:', resource);
+
             const newService = ServiceAssembler.toEntityFromResource(resource);
+
+            console.log('[Catalog Store] newService created:', newService);
 
             services.value.push(newService);
 
             return newService;
         } catch (error) {
+            console.error('[Catalog Store] addService error:', error);
             errors.value.push(error);
             throw error;
         }
