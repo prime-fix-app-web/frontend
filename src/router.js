@@ -9,6 +9,7 @@ import DashboardWorkshop from "@/shared/presentation/views/dashboard-workshop.vu
 import trackingRoutes from "@/maintenance-tracking/presentation/maintenance-tracking.routes.js";
 import autoRepairRegisterRoutes from "@/auto-repair-register/presentation/auto-repair-routes.js";
 import useIamStore from "@/iam/application/iam.store.js";
+import autoRepairCatalogRoutes from "@/auto-repair-catalog/presentation/auto-repair-catalog-routes.js";
 
 const layoutOwner = () => import("./shared/presentation/components/layout-owner.vue");
 const layoutWorkshop = () => import("./shared/presentation/components/layout-workshop.vue");
@@ -121,6 +122,10 @@ const routes = [
                 path:'auto-repair-register',
                 name: 'auto-repair-register',
                 children: autoRepairRegisterRoutes,
+            },
+            {
+                path: 'auto-repair-catalog',
+                children: autoRepairCatalogRoutes,
             }
 
         ]

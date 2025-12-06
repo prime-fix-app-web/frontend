@@ -3,6 +3,9 @@ import { BaseEndpoint } from '@/shared/infrastructure/http/base-endpoint.js'
 
 const autoRepairsEndpointPath = import.meta.env.VITE_AUTOREPAIRS_ENDPOINT_PATH;
 const locationEndpointPath = import.meta.env.VITE_LOCATIONS_ENDPOINT_PATH;
+const serviceOfferEndpointPath = import.meta.env.VITE_SERVICEOFFER_ENDPOINT_PATH;
+const serviceEndpointPath = import.meta.env.VITE_SERVICES_ENDPOINT_PATH;
+
 
 /**
  * Catalog API class to handle API operations for Auto Repairs and Locations.
@@ -24,6 +27,18 @@ export class CatalogApi extends BaseApi {
     #locationsEndpoint;
 
     /**
+     * @type {BaseEndpoint}
+     * @private
+     */
+    #serviceOfferEndpoint;
+
+    /**
+     * @type {BaseEndpoint}
+     * @private
+     */
+    #serviceEndpoint;
+
+    /**
      * Initializes endpoints for Auto Repairs and Locations
      */
     constructor() {
@@ -33,6 +48,12 @@ export class CatalogApi extends BaseApi {
       });
       this.#locationsEndpoint = new BaseEndpoint(this, locationEndpointPath,{
           usePathParams: import.meta.env.VITE_USE_PATH_PARAMS,
+      });
+      this.#serviceEndpoint = new BaseEndpoint(this, serviceEndpointPath,{
+          usePathParams: import.meta.env.VITE_USE_PATH_PARAMS,
+      });
+      this.#serviceOfferEndpoint = new BaseEndpoint(this, serviceOfferEndpointPath,{
+          usePathParams: import.meta.env.VITE_USE_PATH_PARAMS
       })
     }
 
@@ -41,8 +62,15 @@ export class CatalogApi extends BaseApi {
      * @returns {Promise<import('axios').AxiosResponse>} Promise resolving to the created AutoRepair response.     */
     getAutoRepairs() {
       return this.#autoRepairsEndpoint.getAll();
-  }
+    }
 
+    /**
+     * Fetches all Services.
+     * @returns {Promise<import('axios').AxiosResponse>} Promise resolving to the services response.
+     */
+    getServices(){
+        return this.#serviceEndpoint.getAll();
+    }
     /**
      * Fetches a auto repair by its ID
      * @param id - The ID of the AutoRepair to fetch
@@ -122,5 +150,50 @@ export class CatalogApi extends BaseApi {
     deleteLocation(id){
       return this.#locationsEndpoint.delete(id);
   }
+
+    /**
+     * Adds a new Service Offer to a specific Auto Repair center.
+     * Uses BaseEndpoint.create()
+     * @param {number|string} id - AutoRepair ID
+     * @param {object} offer - Offer data
+     */
+    addServiceOffer(id, offer){
+        return this.#serviceOfferEndpoint.create({
+            ...offer,
+            auto_repair_id: id
+        });
+    }
+
+    /**
+     * Fetches all Service Offers associated with a specific Auto Repair center ID.
+     * Uses BaseEndpoint.getAll() and relies on endpointPath filter.
+     * @param {number|string} autoRepairId
+     */
+    getServiceOffersByAutoRepairsId(autoRepairId){
+        const filter = `?auto_repair_id=eq.${autoRepairId}&select=*`;
+        return this.http.get(`${serviceOfferEndpointPath}${filter}`);
+    }
+
+    /**
+     * Deletes a specific Service Offer from an Auto Repair center.
+     * Uses BaseEndpoint.delete()
+     * @param {number|string} autoRepairId
+     * @param {number|string} serviceOfferId
+     */
+    deleteServiceOffer(autoRepairId, serviceOfferId) {
+        return this.#serviceOfferEndpoint.delete(serviceOfferId);
+    }
+
+    deleteService(id){
+        return this.#serviceEndpoint.delete(id);
+    }
+
+    createService(resource){
+        return this.#serviceEndpoint.create(resource);
+    }
+
+    updateService(id,resource){
+        return this.#serviceEndpoint.update(id, resource);
+    }
 
 }

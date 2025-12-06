@@ -480,7 +480,10 @@
     "email": "Email",
     "emailPlaceholder": "autorepairs@gmail.com",
     "back": "Back",
-    "saveChanges": "Save changes"
+    "saveChanges": "Save changes",
+    "catalogTitle": "Service Catalog",
+    "noOffers": "No services registered",
+    "addService": "Add Service"
   },
   "manage-technicians": {
     "title": "Manage Technicians",
@@ -623,5 +626,51 @@
       "availableTechnicians": "Available technicians:",
       "selectButton": "Select workshop"
     }
+  },
+  "general": {
+    "view-all-services": "All Service registered",
+    "back-to-workshop": "Taller",
+    "view-recently-created": "Recently created",
+    "cancel": "Cancel",
+    "loadingCatalog": "Loading Catalog",
+    "delete": "Delete"
+  },
+  "manage-services": {
+    "service-title": "Manages Services",
+    "create-new": "Create new service",
+    "service-name": "Service name:",
+    "name-placeholder": "Name",
+    "service-description": "Description",
+    "description-placeholder": "Description",
+    "create-service-btn": "Add Service",
+    "existing-services": "Services Created",
+    "pending": "Assigned",
+    "configured": "Configured",
+    "configure-offer-btn": "Assign Service",
+    "recently-created": "Service Recently created",
+    "no-services-yet": "Empty",
+    "name-required": "Name required",
+    "description-required": "Description Required",
+    "create-form-error": "Error creating service",
+    "service-created-success": "Created service",
+    "confirm-delete": "Delete service?",
+    "service-deleted-success": "Service removed"
+  },
+  "service-offer": {
+    "title": "Service Details",
+    "service-not-found": "Service not Found",
+    "price": "Price of the Service",
+    "price-placeholder": "Price",
+    "price-required": "Price required",
+    "duration": "Duration of the service",
+    "duration-placeholder": "Duration",
+    "duration-required": "Duration required",
+    "save-config-btn": "Save Service"
+  },
+  "visit-alert": {
+    "title": "Search Workshop",
+    "message-title": "Waiting",
+    "message-description": "We are waiting for the workshop's response",
+    "go-to-dashboard": "Go to dashboard"
   }
 }

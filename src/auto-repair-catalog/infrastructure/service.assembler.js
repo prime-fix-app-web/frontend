@@ -1,4 +1,4 @@
-import {Service} from "@/data-collection-diagnosis/domain/model/service.entity.js";
+import {Service} from "@/auto-repair-catalog/domain/model/service.entity.js";
 
 /**
  * Assembler for converting API resources to Services entities

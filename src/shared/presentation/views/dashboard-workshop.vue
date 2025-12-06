@@ -105,7 +105,7 @@ function getStars(rating) {
 onMounted(async () => {
   await Promise.all([
     dataCollectionStore.fetchVisit(),
-    dataCollectionStore.fetchServices(),
+    catalogStore.fetchServices(),
     dataCollectionStore.fetchDiagnostic(),
     dataCollectionStore.fetchExpected(),
 

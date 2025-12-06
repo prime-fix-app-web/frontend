@@ -4,6 +4,8 @@ import { CatalogApi } from '@/auto-repair-catalog/infrastructure/catalog-api.js'
 import { AutoRepairAssembler } from '@/auto-repair-catalog/infrastructure/auto-repair.assembler.js'
 import {LocationAssembler} from "@/auto-repair-catalog/infrastructure/location.assembler.js";
 import { apiConfig } from '@/shared/infrastructure/http/api-config.js';
+import {ServiceAssembler} from "@/auto-repair-catalog/infrastructure/service.assembler.js";
+import {ServiceOfferAssembler} from "@/auto-repair-catalog/infrastructure/service-offer.assembler.js";
 
 /**
  * Check if there is an active JWT token in storage
@@ -20,16 +22,24 @@ const useCatalogStore = defineStore('auto-repair-catalog', () => {
 
   const autoRepairs = ref([]);
   const locations = ref([]);
+  const serviceOffers = ref([]);
+  const services = ref([]);
 
   const loading = ref(false)
   const errors = ref([])
 
   const autoRepairsLoaded = ref(false);
   const locationsLoaded = ref(false);
+  const serviceOfferLoaded = ref(false);
+  const servicesLoaded = ref(false);
 
   const autoRepairsCount = computed(()=>{
       return autoRepairsLoaded ? autoRepairs.value.length : 0;
   })
+
+    const serviceCount = computed(()=>{
+        return serviceOfferLoaded ? serviceOffers.value.length :0;
+    })
 
   const locationsCount = computed(()=>{
       return locationsLoaded ? locations.value.length : 0;
@@ -66,6 +76,20 @@ const useCatalogStore = defineStore('auto-repair-catalog', () => {
           errors.value.push(error);
       });
   }
+
+    function fetchServices(){
+      if(apiConfig.isAwsPrimary && !hasActiveJWT()){
+          console.log('[Catalog Store] Skipping fetchServices - No JWT toke available');
+          return Promise.resolve();
+      }
+
+      return catalogApi.getServices().then(response =>{
+            services.value=ServiceAssembler.toEntitiesFromResponse(response);
+            servicesLoaded.value = true;
+        }).catch(error => {
+            errors.value.push(error);
+        })
+    }
 
   const updateLocation = async(id,locationData) =>{
       loading.value = true;
@@ -162,10 +186,113 @@ const useCatalogStore = defineStore('auto-repair-catalog', () => {
       })
   }
 
+    function getServiceById(id){
+        return services.value.find((visit) => visit.id === id);
+    }
+
+    async function addService(service) {
+        try {
+            const payload = {
+                name: service.name,
+                description: service.description
+            };
+
+            const response = await catalogApi.createService(payload);
+            const resource = response.data;
+            const newService = ServiceAssembler.toEntityFromResource(resource);
+
+            services.value.push(newService);
+
+            return newService;
+        } catch (error) {
+            errors.value.push(error);
+            throw error;
+        }
+    }
+    async function deleteService(service_id) {
+        if (!service_id) return;
+
+        loading.value = true;
+        errors.value = [];
+
+        try {
+            await catalogApi.deleteService(service_id);
+            const index = services.value.findIndex(v => v.id === service_id);
+            if (index !== -1) services.value.splice(index, 1);
+
+            loading.value = false;
+            return true;
+        } catch (error) {
+            errors.value.push(error);
+            loading.value = false;
+            throw error;
+        }
+    }
+
+    function fetchServiceOffers(autoRepairId) {
+        if (!autoRepairId) return;
+        loading.value = true;
+        serviceOfferLoaded.value = false;
+
+        catalogApi.getServiceOffersByAutoRepairsId(autoRepairId)
+            .then(response => {
+                const offers = ServiceOfferAssembler.toEntityFromResource(response);
+                serviceOffers.value = Array.isArray(offers) ? offers : [offers];
+                serviceOfferLoaded.value = true;
+                loading.value = false;
+            })
+            .catch(error => {
+                errors.value.push(error);
+                loading.value = false;
+            });
+    }
+
+    async function addServiceOffer(autoRepairId, payload) {
+        if (loading.value) return;
+        loading.value = true;
+        errors.value = [];
+
+        try {
+            const response = await catalogApi.addServiceOffer(autoRepairId, payload);
+            const newOffer = ServiceOfferAssembler.toEntityFromResource(response);
+            if (!Array.isArray(serviceOffers.value)) {
+                serviceOffers.value = [];
+            }
+            const exists = serviceOffers.value.some(
+                offer => offer.id === newOffer.id
+            );
+            if (!exists) {
+                serviceOffers.value.push(newOffer);
+            }
+            serviceOffers.value.push(newOffer);
+            loading.value = false;
+            return newOffer;
+        } catch (error) {
+            errors.value.push(error);
+            loading.value = false;
+            throw error;
+        }
+    }
+
+    function deleteServiceOffer(autoRepairId, serviceOfferId) {
+        if (!autoRepairId || !serviceOfferId) return;
+        catalogApi.deleteServiceOffer(autoRepairId, serviceOfferId).then(() => {
+            const index = serviceOffers.value.findIndex(o => o.id === serviceOfferId);
+            if (index !== -1) serviceOffers.value.splice(index, 1);
+        }).catch(error => {
+            errors.value.push(error);
+        });
+    }
+
+    function getServiceOfferById(id) {
+        return serviceOffers.value.find((offer) => offer.id === id);
+    }
+
   return {
       autoRepairs,
       locations,
       errors,
+      loading,
       autoRepairsLoaded,
       locationsLoaded,
       autoRepairsCount,
@@ -179,7 +306,20 @@ const useCatalogStore = defineStore('auto-repair-catalog', () => {
       getAutoRepairById,
       getLocationById,
       deleteLocation,
-      deleteAutoRepair
+      deleteAutoRepair,
+      services,
+      servicesLoaded,
+      serviceCount,
+      getServiceById,
+      addService,
+      deleteService,
+      fetchServices,
+      serviceOffers,
+      serviceOfferLoaded,
+      fetchServiceOffers,
+      addServiceOffer,
+      deleteServiceOffer,
+      getServiceOfferById
   };
 })
 
