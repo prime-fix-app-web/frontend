@@ -19,7 +19,7 @@ const loading = ref(false);
 const error = ref(null);
 
 // Stores
-const dataStore = useDataCollection()
+const dataStore = useDataCollection();
 const iamStore = useIamStore()
 const trackingStore = useTrackingStore()
 const catalogStore = useCatalogStore()
@@ -67,13 +67,13 @@ onMounted(() => {
  * Sum of diagnostic prices for a visit
  */
 function countPriceDiagnosticByExpectedVisitId(visitId) {
-  return computed(() => {
-    const expectedVisit = dataStore.expectedVisit.find(ev => ev.visit_id === visitId)
+  const visit = dataStore.visits.find(v => v.id === visitId)
+  if (!visit) return 0
 
-    return dataStore.expectedVisit
-        .filter(d => d.id === expectedVisit?.id)
-        .reduce((sum, d) => sum + d.price, 0)
-  })
+  const vehicleId = visit.vehicle_id
+  return dataStore.diagnostic
+    .filter(d => d.vehicle_id === vehicleId)
+    .reduce((sum, d) => sum + (Number(d.price) || 0), 0)
 }
 
 /**
@@ -90,38 +90,43 @@ function closeCancelModal() {
   selectedVisitId.value = null
 }
 
-function confirmCancelVisit() {
+async function confirmCancelVisit() {
   const visitId = selectedVisitId.value
   if (!visitId) return
 
   modalLoading.value = true
 
-  const expectedVisit = dataStore.expectedVisit.find(v => v.visit_id === visitId)
-  if (!expectedVisit) {
+  try {
+    const expectedVisit = dataStore.expectedVisit.find(v => v.visit_id === visitId)
+    if (!expectedVisit) {
+      console.warn('[VisitList] Expected visit not found for visitId:', visitId)
+      return
+    }
+
+    const updateData = {
+      state_visit: 'CANCELLED_VISIT',
+      visit_id: visitId,
+      is_scheduled: false,
+      vehicle_id: expectedVisit.vehicle_id
+    }
+
+    await dataStore.updateExpected(expectedVisit.id, updateData)
+    console.log('[VisitList] Visit cancelled successfully')
+  } catch (error) {
+    console.error('[VisitList] Error cancelling visit:', error)
+    error.value = t('visit_list.cancelModal.error')
+  } finally {
     modalLoading.value = false
     closeCancelModal()
-    return
   }
-
-  dataStore.updateExpected(expectedVisit.id, {
-    state_visit: 'CANCELLED_VISIT',
-    visit_id: visitId,
-    is_scheduled: false,
-    vehicle_id: expectedVisit.vehicle_id,
-  })
-
-  setTimeout(() => {
-    modalLoading.value = false
-    closeCancelModal()
-  }, 500)
 }
 
 /**
  * Cancelled check
  */
 function isVisitCancelled(visitId) {
-  const expectedVisit = dataStore.expectedVisit.find(v => v.id === visitId)
-  return expectedVisit?.state_visit === 'CANCELLED_VISIT' && !expectedVisit.is_scheduled
+  const expectedVisit = dataStore.expectedVisit.find(v => v.visit_id === visitId)
+  return expectedVisit?.state_visit === 'CANCELLED_VISIT' && !expectedVisit?.is_scheduled
 }
 
 /**

@@ -2,14 +2,11 @@
 import { ref, computed } from 'vue'
 import useDataCollection from "@/data-collection-diagnosis/application/data-collection.js";
 import useIamStore from "@/iam/application/iam.store.js";
-import useAutoRepairRegisterStore from "@/auto-repair-register/application/auto-repair.store.js";
-import {ExpectedVisit} from "@/data-collection-diagnosis/domain/model/expected-visit.entity.js";
 import useCatalogStore from "@/auto-repair-catalog/application/owner.store.js";
 import useTrackingStore from "@/maintenance-tracking/application/tracking.store.js";
 
 const dataCollectionStore = useDataCollection()
 const iamStore = useIamStore()
-const registerStore = useAutoRepairRegisterStore()
 const catalogStore = useCatalogStore()
 const trackingStore = useTrackingStore()
 
@@ -75,26 +72,40 @@ function onCloseModal() {
   selectedExpectedVisitAndVisit.value = null
 }
 
-function onAcceptExpectedVisit(expectedVisit) {
-  const newExpectedVisit = new ExpectedVisit({
-    id: expectedVisit.id,
-    state_visit: 'SCHEDULED_VISIT',
-    visit_id: expectedVisit.visit_id,
-    is_scheduled: true,
-    vehicle_id: expectedVisit.vehicle_id
-  })
-  dataCollectionStore.updateExpected(newExpectedVisit.id, newExpectedVisit)
+async function onAcceptExpectedVisit(expectedVisit) {
+  isLoading.value = true
+  try {
+    const updateData = {
+      state_visit: 'SCHEDULED_VISIT',
+      visit_id: expectedVisit.visit_id,
+      is_scheduled: true,
+      vehicle_id: expectedVisit.vehicle_id
+    }
+    await dataCollectionStore.updateExpected(expectedVisit.id, updateData)
+    console.log('[ManageRequest] Expected visit accepted successfully')
+  } catch (error) {
+    console.error('[ManageRequest] Error accepting expected visit:', error)
+  } finally {
+    isLoading.value = false
+  }
 }
 
-function onRejectExpectedVisit(expectedVisit) {
-  const newExpectedVisit = new ExpectedVisit({
-    id: expectedVisit.id,
-    state_visit: 'CANCELLED_VISIT',
-    visit_id: expectedVisit.visit_id,
-    is_scheduled: false,
-    vehicle_id: expectedVisit.vehicle_id
-  })
-  dataCollectionStore.updateExpected(newExpectedVisit.id, newExpectedVisit)
+async function onRejectExpectedVisit(expectedVisit) {
+  isLoading.value = true
+  try {
+    const updateData = {
+      state_visit: 'CANCELLED_VISIT',
+      visit_id: expectedVisit.visit_id,
+      is_scheduled: false,
+      vehicle_id: expectedVisit.vehicle_id
+    }
+    await dataCollectionStore.updateExpected(expectedVisit.id, updateData)
+    console.log('[ManageRequest] Expected visit rejected successfully')
+  } catch (error) {
+    console.error('[ManageRequest] Error rejecting expected visit:', error)
+  } finally {
+    isLoading.value = false
+  }
 }
 
 </script>
