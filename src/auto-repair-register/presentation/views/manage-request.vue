@@ -35,7 +35,7 @@ const pendingExpectedVisits = computed(() => {
       ev =>
           visitsByAutoRepair.some(v => v.id === ev.visit_id) &&
           !ev.is_scheduled &&
-          ev.state_visit === 'Pending Visit'
+          ev.state_visit === 'PENDING_VISIT'
   )
 })
 
@@ -78,7 +78,7 @@ function onCloseModal() {
 function onAcceptExpectedVisit(expectedVisit) {
   const newExpectedVisit = new ExpectedVisit({
     id: expectedVisit.id,
-    state_visit: 'Scheduled visit',
+    state_visit: 'SCHEDULED_VISIT',
     visit_id: expectedVisit.visit_id,
     is_scheduled: true
   })
@@ -88,7 +88,7 @@ function onAcceptExpectedVisit(expectedVisit) {
 function onRejectExpectedVisit(expectedVisit) {
   const newExpectedVisit = new ExpectedVisit({
     id: expectedVisit.id,
-    state_visit: 'Visit cannot be scheduled',
+    state_visit: 'CANCELLED_VISIT',
     visit_id: expectedVisit.visit_id,
     is_scheduled: false
   })

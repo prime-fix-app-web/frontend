@@ -105,7 +105,7 @@ function confirmCancelVisit() {
 
   dataStore.updateExpected({
     id: expectedVisit.id,
-    state_visit: 'Visit Cancelled',
+    state_visit: 'CANCELLED_VISIT',
     visit_id: visitId,
     is_scheduled: false,
     vehicle_id: expectedVisit.vehicle_id,
@@ -122,7 +122,7 @@ function confirmCancelVisit() {
  */
 function isVisitCancelled(visitId) {
   const expectedVisit = dataStore.expectedVisit.find(v => v.id === visitId)
-  return expectedVisit?.state_visit === 'Visit Cancelled' && !expectedVisit.is_scheduled
+  return expectedVisit?.state_visit === 'CANCELLED_VISIT' && !expectedVisit.is_scheduled
 }
 
 /**
