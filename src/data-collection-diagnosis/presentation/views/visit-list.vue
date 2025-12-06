@@ -52,8 +52,8 @@ const filteredVisits = computed(() => {
 
     // Filter by maintenance state
     return isScheduled
-        ? vehicle.state_maintenance < 6
-        : vehicle.state_maintenance === 6
+        ? vehicle.maintenance_status < 6
+        : vehicle.maintenance_status === 6
   })
 })
 
