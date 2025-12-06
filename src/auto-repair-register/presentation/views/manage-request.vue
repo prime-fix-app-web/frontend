@@ -80,7 +80,8 @@ function onAcceptExpectedVisit(expectedVisit) {
     id: expectedVisit.id,
     state_visit: 'SCHEDULED_VISIT',
     visit_id: expectedVisit.visit_id,
-    is_scheduled: true
+    is_scheduled: true,
+    vehicle_id: expectedVisit.vehicle_id
   })
   dataCollectionStore.updateExpected(newExpectedVisit.id, newExpectedVisit)
 }
@@ -90,7 +91,8 @@ function onRejectExpectedVisit(expectedVisit) {
     id: expectedVisit.id,
     state_visit: 'CANCELLED_VISIT',
     visit_id: expectedVisit.visit_id,
-    is_scheduled: false
+    is_scheduled: false,
+    vehicle_id: expectedVisit.vehicle_id
   })
   dataCollectionStore.updateExpected(newExpectedVisit.id, newExpectedVisit)
 }

@@ -136,62 +136,73 @@ const useDataCollection = defineStore('useDataCollection', ()=>{
         errors.value = [];
         try {
             const visitId = Number(id);
-            const response = await dataApi.updateVisit(visitId, visitData);
+            // Remove id from payload as it's in the URL path
+            const { id: _, ...payload } = visitData;
+            const response = await dataApi.updateVisit(visitId, payload);
             const index = visits.value.findIndex(v => Number(v.id) === visitId);
             if (index !== -1) {
                 visits.value[index] = {
                     ...visits.value[index],
-                    ...visitData,
+                    ...payload,
                     id: visitId
                 };
             }
             loading.value = false;
             return response;
         } catch (error) {
+            console.error('[Data Collection Store] updateVisit error:', error);
             errors.value.push(error);
             loading.value = false;
             throw error;
         }
     };
-    const updateExpected = async (id,expectedData) =>{
+
+    const updateExpected = async (id, expectedData) => {
         loading.value = true;
         errors.value = [];
-        try{
+        try {
             const expectedId = Number(id);
-            const response = await dataApi.updateExpectedVisit(expectedId, expectedData);
-            const index =expectedVisit.value.findIndex(v => Number(v.id) === expectedId);
-            if(index !== -1){
-                expectedData.value[index] ={
+            // Remove id from payload as it's in the URL path
+            const { id: _, ...payload } = expectedData;
+            const response = await dataApi.updateExpectedVisit(expectedId, payload);
+            const index = expectedVisit.value.findIndex(v => Number(v.id) === expectedId);
+            if (index !== -1) {
+                expectedVisit.value[index] = {
                     ...expectedVisit.value[index],
-                    ...expectedData,
-                    id:expectedId
+                    ...payload,
+                    id: expectedId
                 };
             }
             loading.value = false;
             return response;
-        } catch (error){
+        } catch (error) {
+            console.error('[Data Collection Store] updateExpected error:', error);
             errors.value.push(error);
             loading.value = false;
             throw error;
         }
     }
-    const updateDiagnostic = async(id,diagnosticData)=>{
-        loading.value=true;
+
+    const updateDiagnostic = async (id, diagnosticData) => {
+        loading.value = true;
         errors.value = [];
-        try{
-            const diagnosticId=Number(id);
-            const response = await dataApi.updateDiagnostic(diagnosticId, diagnosticData);
-            const index = diagnostic.value.findIndex(v => Number(v.id)===diagnosticId);
-            if(index !== -1){
-                diagnosticData.value[index] ={
+        try {
+            const diagnosticId = Number(id);
+            // Remove id from payload as it's in the URL path
+            const { id: _, ...payload } = diagnosticData;
+            const response = await dataApi.updateDiagnostic(diagnosticId, payload);
+            const index = diagnostic.value.findIndex(v => Number(v.id) === diagnosticId);
+            if (index !== -1) {
+                diagnostic.value[index] = {
                     ...diagnostic.value[index],
-                    ...diagnosticData,
-                    id:diagnosticId
+                    ...payload,
+                    id: diagnosticId
                 };
             }
             loading.value = false;
             return response;
-        }catch (error){
+        } catch (error) {
+            console.error('[Data Collection Store] updateDiagnostic error:', error);
             errors.value.push(error);
             loading.value = false;
             throw error;
