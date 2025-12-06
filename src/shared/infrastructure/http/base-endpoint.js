@@ -74,9 +74,43 @@ export class BaseEndpoint {
      * @param resource - The resource data to create.
      * @returns {*} - The created resource.
      */
-    create(resource) {
+    async create(resource) {
         const url = this.endpointPath;
-        return this.http.post(url, resource);
+        const usePathParams = this.#shouldUsePathParams(this.http);
+
+        try {
+            const response = await this.http.post(url, resource);
+
+            // Handle response based on provider
+            if (usePathParams) {
+                // AWS: Response is typically the created object directly
+                // response.data = { id: 1, color: "red", ... }
+                return response;
+            } else {
+                // Supabase (PostgREST): Response is an array with the created object
+                // response.data = [{ id: 1, color: "red", ... }]
+                // We need to wrap it to maintain consistency
+                if (Array.isArray(response.data) && response.data.length > 0) {
+                    // Already in correct format
+                    return response;
+                } else if (response.data && !Array.isArray(response.data)) {
+                    // Single object, wrap it in an array for consistency
+                    return {
+                        ...response,
+                        data: [response.data]
+                    };
+                }
+                return response;
+            }
+        } catch (error) {
+            // Try fallback if primary fails (only if fallback is available)
+            if (this.httpFallback && error.response?.status >= 500) {
+                console.warn(`Primary POST failed, trying fallback for ${url}`);
+                // Supabase fallback returns array
+                return await this.httpFallback.post(url, resource);
+            }
+            throw error;
+        }
     }
 
     /**

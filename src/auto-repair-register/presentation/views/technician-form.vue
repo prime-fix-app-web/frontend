@@ -1,19 +1,41 @@
 <script setup>
-import { ref, computed, onMounted, watch } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useI18n } from "vue-i18n";
+import { storeToRefs } from "pinia";
 import useAutoRepairRegisterStore from "@/auto-repair-register/application/auto-repair.store.js";
 import useIamStore from "@/iam/application/iam.store.js";
+import useCatalogStore from "@/auto-repair-catalog/application/owner.store.js";
 import { Technician } from "@/auto-repair-register/domain/model/technician.entity.js";
 import { TechnicianSchedule } from "@/auto-repair-register/domain/model/technician-schedule.entity.js";
-import useCatalogStore from "@/auto-repair-catalog/application/owner.store.js";
 
 const router = useRouter();
 const route = useRoute();
-const { t, locale } = useI18n();
+const { t } = useI18n();
+
+// Stores
 const registerStore = useAutoRepairRegisterStore();
 const iamStore = useIamStore();
 const catalogStore = useCatalogStore();
+
+// State reactivo usando storeToRefs
+const { technicians, techniciansSchedule } = storeToRefs(registerStore);
+const { sessionUserAccount } = storeToRefs(iamStore);
+const { autoRepairs } = storeToRefs(catalogStore);
+
+// Funciones del store (sin storeToRefs)
+const {
+  addTechnician,
+  addTechnicianSchedule,
+  updateTechnician,
+  updateTechnicianSchedule,
+  deleteTechnicianSchedule,
+  getTechnicianById,
+  fetchTechnicians,
+  fetchTechnicianSchedule
+} = registerStore;
+
+const { fetchAutoRepairs } = catalogStore;
 
 const isEdit = ref(false);
 const technicianId = ref(null);
@@ -60,14 +82,21 @@ function translateDay(day) {
 }
 
 const autoRepair = computed(() => {
-  const userAccount = iamStore.sessionUserAccount;
+  const userAccount = sessionUserAccount.value;
   if (!userAccount) return undefined;
-  return catalogStore.autoRepairs.find(
-      (ar) => ar.id_user_account === userAccount.id_user_account
+  return autoRepairs.value.find(
+      (ar) => ar.user_account_id === userAccount.id
   );
 });
 
-onMounted(() => {
+onMounted(async () => {
+  // Cargar datos necesarios
+  await Promise.all([
+    fetchAutoRepairs(),
+    fetchTechnicians(),
+    fetchTechnicianSchedule()
+  ]);
+
   const id = route.params.id;
   if (id) {
     isEdit.value = true;
@@ -79,7 +108,7 @@ onMounted(() => {
 });
 
 function loadTechnicianData(id) {
-  const technician = registerStore.getTechnicianById(id);
+  const technician = getTechnicianById(id);
   if (!technician) {
     console.error("Technician not found");
     router.push("/layout-workshop/auto-repair-register/technicians");
@@ -90,9 +119,9 @@ function loadTechnicianData(id) {
   form.value.name = technician.name;
   form.value.last_name = technician.last_name;
 
-  const allSchedules = registerStore.techniciansSchedule;
+  const allSchedules = techniciansSchedule.value;
   const technicianSchedules = allSchedules.filter(
-      (s) => s.id_technician === id && s.is_active
+      (s) => s.technician_id === id && s.is_active
   );
 
   const sortedSchedules = technicianSchedules.sort((a, b) => {
@@ -101,7 +130,7 @@ function loadTechnicianData(id) {
 
   form.value.schedules = sortedSchedules.length
       ? sortedSchedules.map((s) => ({
-        id_schedule: s.id_schedule,
+        id: s.id,
         day_of_week: s.day_of_week,
         start_time: s.start_time,
         end_time: s.end_time,
@@ -111,7 +140,7 @@ function loadTechnicianData(id) {
 
 function addScheduleRow() {
   form.value.schedules.push({
-    id_schedule: null,
+    id: null,
     day_of_week: "Monday",
     start_time: "09:00",
     end_time: "17:00",
@@ -137,89 +166,96 @@ function onSubmit() {
   }
 
   if (isEdit.value) {
-    updateTechnician(autoRepairData.id_auto_repair);
+    handleUpdateTechnician(autoRepairData.id);
   } else {
-    createTechnician(autoRepairData.id_auto_repair);
+    handleCreateTechnician(autoRepairData.id);
   }
 }
 
-function createTechnician(autoRepairId) {
-  const technicianIdValue = `T${Date.now()}`;
-  const technician = new Technician({
-    id_technician: technicianIdValue,
-    name: form.value.name,
-    last_name: form.value.last_name,
-    id_auto_repair: autoRepairId,
-  });
-
-  registerStore.addTechnician(technician);
-
-  form.value.schedules.forEach((schedule, index) => {
-    const newSchedule = new TechnicianSchedule({
-      id_schedule: `TS${Date.now()}_${index}`,
-      id_technician: technicianIdValue,
-      day_of_week: schedule.day_of_week,
-      start_time: schedule.start_time,
-      end_time: schedule.end_time,
-      is_active: true,
+async function handleCreateTechnician(autoRepairId) {
+  try {
+    // Crear técnico sin ID temporal
+    const technician = new Technician({
+      id: null, // El backend generará el ID
+      name: form.value.name,
+      last_name: form.value.last_name,
+      auto_repair_id: autoRepairId,
     });
-    registerStore.addTechnicianSchedule(newSchedule);
-  });
 
-  router.push("/layout-workshop/auto-repair-register/technicians");
+    // Esperar a que se cree el técnico y obtener el técnico con ID real
+    const createdTechnician = await addTechnician(technician);
+
+    // Usar el ID real del backend para crear los schedules
+    for (const schedule of form.value.schedules) {
+      const newSchedule = new TechnicianSchedule({
+        id: null, // El backend generará el ID
+        technician_id: createdTechnician.id, // Usar el ID real del backend
+        day_of_week: schedule.day_of_week,
+        start_time: schedule.start_time,
+        end_time: schedule.end_time,
+        is_active: true,
+      });
+      await addTechnicianSchedule(newSchedule);
+    }
+
+    router.push("/layout-workshop/auto-repair-register/technicians");
+  } catch (error) {
+    console.error('Error creating technician:', error);
+    alert('Error al crear el técnico. Por favor, intenta de nuevo.');
+  }
 }
 
-function updateTechnician(autoRepairId) {
+function handleUpdateTechnician(autoRepairId) {
   const id = technicianId.value;
   if (!id) return;
 
   const updatedTechnician = new Technician({
-    id_technician: id,
+    id: id,
     name: form.value.name,
     last_name: form.value.last_name,
-    id_auto_repair: autoRepairId,
+    auto_repair_id: autoRepairId,
   });
-  registerStore.updateTechnician(updatedTechnician.id_technician, updatedTechnician);
+  updateTechnician(updatedTechnician.id, updatedTechnician);
 
-  const existingSchedules = registerStore.techniciansSchedule.filter(
-      (s) => s.id_technician === id
+  const existingSchedules = techniciansSchedule.value.filter(
+      (s) => s.technician_id === id
   );
 
   const formSchedules = form.value.schedules;
   const schedulesToDelete = existingSchedules.filter(
-      (ex) => !formSchedules.some((f) => f.id_schedule === ex.id_schedule)
+      (ex) => !formSchedules.some((f) => f.id === ex.id)
   );
 
   const schedulesToUpdate = formSchedules.filter(
-      (f) => f.id_schedule && existingSchedules.some((ex) => ex.id_schedule === f.id_schedule)
+      (f) => f.id && existingSchedules.some((ex) => ex.id === f.id)
   );
 
-  const schedulesToAdd = formSchedules.filter((f) => !f.id_schedule);
+  const schedulesToAdd = formSchedules.filter((f) => !f.id);
 
-  schedulesToDelete.forEach((s) => registerStore.deleteTechnicianSchedule(s.id_schedule));
+  schedulesToDelete.forEach((s) => deleteTechnicianSchedule(s.id));
   schedulesToUpdate.forEach((s) => {
     const updated = new TechnicianSchedule({
-      id_schedule: s.id_schedule,
-      id_technician: id,
+      id: s.id,
+      technician_id: id,
       day_of_week: s.day_of_week,
       start_time: s.start_time,
       end_time: s.end_time,
       is_active: true,
     });
-    registerStore.updateTechnicianSchedule(updated.id_technician, updated);
+    updateTechnicianSchedule(updated.id, updated);
   });
 
   const base = Date.now();
   schedulesToAdd.forEach((s, i) => {
     const newSchedule = new TechnicianSchedule({
-      id_schedule: `TS${base}_${i}`,
-      id_technician: id_technician,
+      id: `TS${base}_${i}`,
+      technician_id: id,
       day_of_week: s.day_of_week,
       start_time: s.start_time,
       end_time: s.end_time,
       is_active: true,
     });
-    registerStore.addTechnicianSchedule(newSchedule);
+    addTechnicianSchedule(newSchedule);
   });
 
   router.push("/layout-workshop/auto-repair-register/technicians");

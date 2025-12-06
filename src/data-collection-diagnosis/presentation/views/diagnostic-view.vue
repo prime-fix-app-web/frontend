@@ -35,13 +35,13 @@ const steps = [
 const currentAutoRepair = computed(() => {
   const userAccountId = iamStore.sessionUserAccount?.id;
   if (!userAccountId) return null;
-  return catalogStore.autoRepairs.find(ar => ar.id_user_account === userAccountId);
+  return catalogStore.autoRepairs.find(ar => ar.user_account_id === userAccountId);
 });
 
 const visitsByAutoRepair = computed(() => {
-  const autoRepairId = currentAutoRepair.value?.id_auto_repair;
+  const autoRepairId = currentAutoRepair.value?.id;
   if (!autoRepairId) return [];
-  return dataCollectionStore.visits.filter(v=>v.id_auto_repair === autoRepairId);
+  return dataCollectionStore.visits.filter(v=>v.auto_repair_id === autoRepairId);
 });
 
 const vehiclesByVisits = computed(() => {
@@ -49,10 +49,10 @@ const vehiclesByVisits = computed(() => {
   if (!visits.length) {
     return [];
   }
-  const vehicleIds = new Set(visits.map(v => String(v.id_vehicle).trim()));
+  const vehicleIds = new Set(visits.map(v => String(v.vehicle_id).trim()));
 
   const filteredVehicles = trackingStore.vehicles.filter(v => {
-    const match = vehicleIds.has(String(v.id_vehicle).trim());
+    const match = vehicleIds.has(String(v.id).trim());
     return match;
   });
 
@@ -64,13 +64,13 @@ const stateOptions = computed(() =>
 );
 
 function getUserByVehicleId(vehicleId) {
-  const vehicle = trackingStore.vehicles.find(v => v.id_vehicle === vehicleId);
+  const vehicle = trackingStore.vehicles.find(v => v.id === vehicleId);
   if (!vehicle) return null;
-  return iamStore.users.find(u => u.id_user === vehicle.id_user) || null;
+  return iamStore.users.find(u => u.id === vehicle.user_id) || null;
 }
 
 function getVisitByVehicleId(vehicleId) {
-  return visitsByAutoRepair.value.find(v => v.id_vehicle === vehicleId) || null;
+  return visitsByAutoRepair.value.find(v => v.vehicle_id === vehicleId) || null;
 }
 
 function addDiagnostic(vehicleId) {
@@ -87,7 +87,7 @@ async function updateVehicleState() {
     state_maintenance: selectedState.value
   });
   try {
-    await trackingStore.updateVehicle(updatedVehicle.id_vehicle, updatedVehicle);
+    await trackingStore.updateVehicle(updatedVehicle.id, updatedVehicle);
   } catch (err) {
     console.error('Error al actualizar el vehículo:', err);
   }
@@ -141,7 +141,7 @@ onMounted(async () => {
       </div>
 
       <div class="vehicles-list" v-if="iamStore.sessionUserAccount && vehiclesByVisits.length">
-        <div v-for="vehicle in vehiclesByVisits" :key="vehicle.id_vehicle" class="vehicle-card">
+        <div v-for="vehicle in vehiclesByVisits" :key="vehicle.id" class="vehicle-card">
           <div class="vehicle-info">
             <div class="info-row">
               <span class="info-label">{{ $t('vehicle-diagnosis.vehicle-card.car') }}</span>
@@ -154,8 +154,8 @@ onMounted(async () => {
             <div class="info-row">
               <span class="info-label">{{ $t('vehicle-diagnosis.vehicle-card.owner') }}</span>
               <span class="info-value">
-          <template v-if="getUserByVehicleId(vehicle.id_vehicle)?.name">
-            {{ getUserByVehicleId(vehicle.id_vehicle).name }} {{ getUserByVehicleId(vehicle.id_vehicle).last_name }}
+          <template v-if="getUserByVehicleId(vehicle.id)?.name">
+            {{ getUserByVehicleId(vehicle.id).name }} {{ getUserByVehicleId(vehicle.id).last_name }}
           </template>
           <template v-else>
             {{ $t('vehicle-diagnosis.vehicle-card.unknown-owner') }}
@@ -164,7 +164,7 @@ onMounted(async () => {
             </div>
             <div class="info-row">
               <span class="info-label">{{ $t('vehicle-diagnosis.vehicle-card.id-visit') }}</span>
-              <span class="info-value">{{ getVisitByVehicleId(vehicle.id_vehicle)?.id_visit || 'N/A' }}</span>
+              <span class="info-value">{{ getVisitByVehicleId(vehicle.id)?.id || 'N/A' }}</span>
             </div>
             <div class="info-row">
               <span class="info-label">{{ $t('vehicle-diagnosis.vehicle-card.status') }}</span>
@@ -177,7 +177,7 @@ onMounted(async () => {
             <button
                 type="button"
                 class="state-button"
-                @click="openStateModal(vehicle.id_vehicle, vehicle.state_maintenance)"
+                @click="openStateModal(vehicle.id, vehicle.state_maintenance)"
                 :disabled="loading">
               {{ $t('vehicle-diagnosis.vehicle-card.change-state-button') }}
             </button>
@@ -185,7 +185,7 @@ onMounted(async () => {
             <button
                 type="button"
                 class="check-button"
-                @click="checkDiagnostics(vehicle.id_vehicle)"
+                @click="checkDiagnostics(vehicle.id)"
                 :disabled="loading">
               {{ $t('vehicle-diagnosis.vehicle-card.check-button') }}
             </button>
@@ -193,7 +193,7 @@ onMounted(async () => {
             <button
                 type="button"
                 class="update-button"
-                @click="addDiagnostic(vehicle.id_vehicle)"
+                @click="addDiagnostic(vehicle.id)"
                 :disabled="loading">
               <span v-if="loading">{{ $t('vehicle-diagnosis.vehicle-card.loading-button') }}</span>
               <span v-else>{{ $t('vehicle-diagnosis.button-add') }}</span>

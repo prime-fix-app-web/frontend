@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script setup>
 import { ref, computed, onMounted } from "vue";
 import { useI18n } from "vue-i18n";
 import { storeToRefs } from "pinia";
@@ -27,7 +27,7 @@ const {
 } = iamStore;
 
 // UI state
-const selectedVehicle = ref<any | undefined>(undefined);
+const selectedVehicle = ref(undefined);
 const showProgressBar = ref(false);
 const showError = ref(false);
 const showNotificationModal = ref(false);
@@ -39,8 +39,9 @@ const trackForm = ref({
 });
 
 
-onMounted(() => {
+onMounted(async () => {
   restoreSessionFromStorage?.();
+  await trackingStore.fetchVehicles();
 });
 
 const vehiclesByUserId = computed(() => {
@@ -48,10 +49,10 @@ const vehiclesByUserId = computed(() => {
 
   if (!userId) return [];
 
-  return vehicles.value.filter((v: any) => v.user_id === userId);
+  return vehicles.value.filter((v) => v.user_id === userId);
 });
 
-const isInvalid = computed(() => trackForm.value.selectedVehicle.trim().length === 0);
+const isInvalid = computed(() => !trackForm.value.selectedVehicle || trackForm.value.selectedVehicle === "");
 
 function onSelect() {
   if (isInvalid.value) return;

@@ -11,7 +11,7 @@ export class User {
      * @param {string} last_name - The last name of the user.
      * @param {string} dni - The national identification number of the user.
      * @param {string} phone_number - The phone number of the user.
-     * @param {string} location_id - The identifier for the user's location.
+     * @param {?number} location_id - The identifier for the user's location.
      */
     constructor({ id = null, name = '', last_name = '', dni = '',
                     phone_number = '', location_id = null}) {

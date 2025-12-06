@@ -7,7 +7,9 @@ import {UserAssembler} from "@/iam/infrastructure/user.assembler.js";
 import {User} from "@/iam/domain/model/user.entity.js";
 import {UserAccount} from "@/iam/domain/model/user-account.entity.js";
 import {Location} from "@/auto-repair-catalog/domain/model/location.entity.js";
+import {LocationAssembler} from "@/auto-repair-catalog/infrastructure/location.assembler.js";
 import {Payment} from "@/payment-service/domain/model/payment.entity.js";
+import {PaymentAssembler} from "@/payment-service/infrastructure/payment.assembler.js";
 import {apiConfig} from "@/shared/infrastructure/http/api-config.js";
 
 import useCatalogStore from "@/auto-repair-catalog/application/owner.store.js";
@@ -230,7 +232,7 @@ export const useIamStore = defineStore('iam', () => {
      * Get role ID of the session user account
      * @returns {string} - Role ID of the user account
      */
-    const roleId = computed(() => sessionUserAccount.value?.id_role ?? '');
+    const roleId = computed(() => sessionUserAccount.value.role_id ?? '');
 
     /**
      * Get full name of the session user
@@ -265,16 +267,44 @@ export const useIamStore = defineStore('iam', () => {
             const userAccount = sessionUserAccount.value;
             const user = sessionUser.value;
 
-            if (userAccount && user) {
-                const sessionData = {
-                    userAccount: userAccount,
-                    user: user,
-                    timestamp: Date.now()
-                };
-                localStorage.setItem('prime-fix-session', JSON.stringify(sessionData));
+            // Validar que los datos son válidos antes de guardar
+            if (!userAccount || !user) {
+                console.warn('Cannot save session: Missing userAccount or user');
+                return;
             }
+
+            if (!userAccount.id || !user.id) {
+                console.warn('Cannot save session: Invalid userAccount or user IDs');
+                return;
+            }
+
+            // Crear una copia limpia de los datos para guardar
+            const sessionData = {
+                userAccount: {
+                    id: userAccount.id,
+                    username: userAccount.username,
+                    email: userAccount.email,
+                    password: userAccount.password,
+                    role_id: userAccount.role_id,
+                    user_id: userAccount.user_id,
+                    membership_id: userAccount.membership_id,
+                    is_new: userAccount.is_new
+                },
+                user: {
+                    id: user.id,
+                    name: user.name,
+                    last_name: user.last_name,
+                    dni: user.dni,
+                    phone_number: user.phone_number,
+                    location_id: user.location_id
+                },
+                timestamp: Date.now()
+            };
+
+            localStorage.setItem('prime-fix-session', JSON.stringify(sessionData));
+            console.log('✅ Session saved to localStorage');
         } catch (err) {
-            console.warn('Failed to save session to localStorage:', err);
+            console.error('Failed to save session to localStorage:', err);
         }
     }
 
@@ -286,8 +316,9 @@ export const useIamStore = defineStore('iam', () => {
 
         try {
             localStorage.removeItem('prime-fix-session');
+            console.log('Session cleared from localStorage');
         } catch (err) {
-            console.warn('Failed to clear session from localStorage:', err);
+            console.error('Failed to clear session from localStorage:', err);
         }
     }
 
@@ -301,38 +332,55 @@ export const useIamStore = defineStore('iam', () => {
         }
         try {
             const sessionData = localStorage.getItem('prime-fix-session');
-            if (sessionData) {
-                const parsed = JSON.parse(sessionData);
-                const {userAccount: rawUserAccount, user: rawUser} = parsed;
-
-                // Validar los datos restaurados
-                const isOwner = rawUserAccount?.role_id === VEHICLE_OWNER_ROLE_ID;
-                const isWorkshop = rawUserAccount?.role_id === WORKSHOP_ROLE_ID;
-
-                const hasUserAccountData = rawUserAccount
-                    && typeof rawUserAccount.role_id === 'number'
-                    && (isOwner || isWorkshop);
-                const hasUserData = rawUser
-                    && typeof rawUser.id === 'number'
-                    && rawUser.id_user.length > 0;
-
-                if (hasUserAccountData && hasUserData) {
-                    const userAccount = new UserAccount(rawUserAccount);
-                    const user = new User(rawUser);
-
-                    sessionUserAccount.value = userAccount;
-                    sessionUser.value = user;
-
-                    // Log restored session details
-                    const roleName = isOwner ? RoleChoicesType.VEHICLE_OWNER : RoleChoicesType.AUTO_REPAIR_WORKSHOP;
-
-                    console.log(`Session restored: User ${userAccount.username || userAccount.email || user.name || 'Unknown'} with role ${userAccount.role_id} (${roleName})`);
-                } else {
-                    console.error('NOT LOGGED - Corrupted session detected and cleared.');
-                    clearSessionStorage();
-                }
-            } else {
+            if (!sessionData) {
                 console.log('NOT LOGGED - No session found in localStorage');
+                return;
+            }
+
+            const parsed = JSON.parse(sessionData);
+            const {userAccount: rawUserAccount, user: rawUser, timestamp} = parsed;
+
+            // Verificar que los datos existan
+            if (!rawUserAccount || !rawUser) {
+                console.error('NOT LOGGED - Invalid session data structure');
+                clearSessionStorage();
+                return;
+            }
+
+            // Validar los datos del UserAccount
+            const isOwner = rawUserAccount.role_id === VEHICLE_OWNER_ROLE_ID;
+            const isWorkshop = rawUserAccount.role_id === WORKSHOP_ROLE_ID;
+
+            const hasValidUserAccount = rawUserAccount
+                && typeof rawUserAccount.id === 'number'
+                && typeof rawUserAccount.role_id === 'number'
+                && (isOwner || isWorkshop)
+                && (rawUserAccount.username || rawUserAccount.email);
+
+            // Validar los datos del User
+            const hasValidUser = rawUser
+                && typeof rawUser.id === 'number'
+                && typeof rawUser.name === 'string'
+                && rawUser.name.length > 0;
+
+            if (hasValidUserAccount && hasValidUser) {
+                // Reconstruir las entidades
+                const userAccount = new UserAccount(rawUserAccount);
+                const user = new User(rawUser);
+
+                sessionUserAccount.value = userAccount;
+                sessionUser.value = user;
+
+                // Log restored session details
+                const roleName = isOwner ? RoleChoicesType.VEHICLE_OWNER : RoleChoicesType.AUTO_REPAIR_WORKSHOP;
+                const sessionAge = timestamp ? Math.floor((Date.now() - timestamp) / 1000 / 60) : 'unknown';
+
+                console.log(`✅ Session restored: User ${userAccount.username || userAccount.email || user.name || 'Unknown'} with role ${userAccount.role_id} (${roleName}) - Session age: ${sessionAge} minutes`);
+            } else {
+                console.error('NOT LOGGED - Corrupted session detected and cleared.');
+                console.debug('UserAccount valid:', hasValidUserAccount, 'User valid:', hasValidUser);
+                console.debug('Raw data:', { rawUserAccount, rawUser });
+                clearSessionStorage();
             }
         } catch (err) {
             console.warn('NOT LOGGED - Failed to restore session from localStorage:', err);
@@ -498,15 +546,22 @@ export const useIamStore = defineStore('iam', () => {
      * Clears JWT token and session storage
      */
     function logout() {
+        // Limpiar referencias en memoria
         sessionUserAccount.value = null;
         sessionUser.value = null;
 
         // Limpiar JWT token
-        localStorage.removeItem('authToken');
-        sessionStorage.removeItem('authToken');
+        try {
+            localStorage.removeItem('authToken');
+            sessionStorage.removeItem('authToken');
+        } catch (err) {
+            console.warn('Failed to remove auth tokens:', err);
+        }
 
+        // Limpiar sesión
         clearSessionStorage();
-        console.log('[IAM Store] Logout successful - JWT token cleared');
+
+        console.log('✅ Logout successful - All session data cleared');
     }
 
     /**
@@ -515,7 +570,7 @@ export const useIamStore = defineStore('iam', () => {
      * @returns {User} - The user entity if found, otherwise undefined
      */
     function getUserById(id) {
-        return users.value.find(u => u.id_user === id);
+        return users.value.find(u => u.id === id);
     }
 
     /**
@@ -524,7 +579,7 @@ export const useIamStore = defineStore('iam', () => {
      * @returns {UserAccount} - The user account entity if found, otherwise undefined
      */
     function getUserAccountById(id) {
-        return userAccounts.value.find(ua => ua.id_user_account === id);
+        return userAccounts.value.find(ua => ua.id === id);
     }
 
     /**
@@ -565,7 +620,14 @@ export const useIamStore = defineStore('iam', () => {
         return new Promise((resolve, reject) => {
             const resource = UserAssembler.toResourceFromEntity(user);
             iamApi.createUser(resource).then(response => {
-                const responseData = response.data;
+                // Handle both AWS (single object) and Supabase (array) responses
+                let responseData = response.data;
+
+                // If response is an array (Supabase), get the first element
+                if (Array.isArray(responseData)) {
+                    responseData = responseData[0];
+                }
+
                 const newUser = UserAssembler.toEntityFromResource(responseData);
                 users.value.push(newUser);
                 resolve(newUser);
@@ -589,7 +651,7 @@ export const useIamStore = defineStore('iam', () => {
      * @param location - The location entity with updated data
      */
     function updateLocation(location) {
-        catalogStore.updateLocation(location.id_location, location);
+        catalogStore.updateLocation(location.id, location);
     }
 
     /**
@@ -612,12 +674,12 @@ export const useIamStore = defineStore('iam', () => {
         try {
             const accountId = Number(id);
             const response = await iamApi.updateUserAccount(accountId, accountData)
-            const index = userAccounts.value.findIndex(v => Number(v.id_user_account) === accountId);
+            const index = userAccounts.value.findIndex(v => Number(v.id) === accountId);
             if (index !== -1) {
                 userAccounts.value[index] = {
                     ...userAccounts.value[index],
-                    ...userAccounts,
-                    id_user_account: accountId,
+                    ...accountData,
+                    id: accountId,
                 };
             }
             loading.value = false;
@@ -674,28 +736,31 @@ export const useIamStore = defineStore('iam', () => {
      */
     function saveRegisterOwner(form) {
         const newLocation = new Location({
-            id_location: 'L0' + (locationCount + 1).toString(),
+            id: null, // Backend will assign ID
             department: form.department,
             district: form.district,
             address: form.address
         })
 
         const newUser = new User({
-            id_user: 'U0' + (users.value.length + 1).toString(),
+            id: null, // Backend will assign ID
             name: form.fullName.split(' ')[0] || '',
-            last_name: form.fullName.split(' ').slice(1).join(' '),
+            last_name: form.fullName.split(' ').slice(1).join(' ') || '',
             dni: form.dni,
             phone_number: form.phone_number,
-            id_location: newLocation.id_location,
+            location_id: null, // Will be set after location is created
+            department: form.department,
+            district: form.district,
+            address: form.address
         })
 
         const newUserAccount = new UserAccount({
-            id: th,
+            id: null, // Backend will assign ID
             username: form.username.trim(),
             email: form.email.trim(),
-            user_id: newUser.id_user,
+            user_id: null, // Will be set after user is created
             role_id: VEHICLE_OWNER_ROLE_ID,
-            id_membership: '',
+            membership_id: null, // Will be set when plan is selected
             password: form.password,
             is_new: true
         });
@@ -712,28 +777,28 @@ export const useIamStore = defineStore('iam', () => {
      */
     function saveRegisterWorkshop(form) {
         const newLocation = new Location({
-            id: 0, // Backend will assign ID
+            id: null, // Backend will assign ID
             department: form.department,
             district: form.district,
             address: form.address
         })
 
         const newUser = new User({
-            id: 0, // Backend will assign ID
-            name: form.name,
-            last_name: '',
-            dni: form.ruc,
+            id: null, // Backend will assign ID
+            name: form.workshopName || '', // Workshop name as user name
+            last_name: '', // Workshop doesn't have last name
+            dni: form.ruc, // RUC is used as DNI for workshops
             phone_number: form.phone_number,
-            location_id: newLocation.id,
+            location_id: null // Will be set after location is created
         })
 
         const newUserAccount = new UserAccount({
-            id: 0, // Backend will assign ID
+            id: null, // Backend will assign ID
             username: form.username.trim(),
             email: form.email.trim(),
-            user_id: newUser.id,
+            user_id: null, // Will be set after user is created
             role_id: WORKSHOP_ROLE_ID,
-            membership_id: 0, // Default membership
+            membership_id: null, // Will be set when plan is selected
             password: form.password,
             is_new: true
         });
@@ -760,54 +825,317 @@ export const useIamStore = defineStore('iam', () => {
 
         const userAccountNoMembership = registerUserAccount.value;
         if (userAccountNoMembership) {
-            userAccountNoMembership.id_membership = membershipId;
+            userAccountNoMembership.membership_id = membershipId;
             // For reactivity in Vue, it's often best practice to create a new object
             registerUserAccount.value = {...userAccountNoMembership};
         }
     }
     async function finishRegister(paymentDetails) {
+        console.log('🏁 [IAM-STORE] ========== INICIO DE finishRegister ==========');
+
         const role = registerRole.value;
         const user = registerUser.value;
         const userAccount = registerUserAccount.value;
         const location = registerLocation.value;
         const membershipId = registerMemberShipType.value;
+
+        // Validar y limpiar DNI (debe ser exactamente 8 dígitos)
+        if (user?.dni) {
+            const cleanDni = user.dni.trim();
+            if (!/^\d{8}$/.test(cleanDni)) {
+                const errorMsg = `DNI inválido: debe tener exactamente 8 dígitos. Recibido: "${cleanDni}" (${cleanDni.length} caracteres)`;
+                console.error('❌ [IAM-STORE]', errorMsg);
+                errors.value.push(new Error(errorMsg));
+                throw new Error(errorMsg);
+            }
+            user.dni = cleanDni; // Asegurar que está limpio
+            console.log('✅ [IAM-STORE] DNI validado:', cleanDni);
+        }
+
+        console.log('📊 [IAM-STORE] Datos de registro recopilados:', {
+            role,
+            user: { name: user?.name, last_name: user?.last_name, dni: user?.dni, phone_number: user?.phone_number },
+            userAccount: { username: userAccount?.username, email: userAccount?.email },
+            location: { address: location?.address, district: location?.district, department: location?.department },
+            membershipId,
+            paymentDetails: {
+                card_number: paymentDetails?.card_number,
+                card_type: paymentDetails?.card_type,
+                month: paymentDetails?.month,
+                year: paymentDetails?.year,
+                cvv: paymentDetails?.cvv ? '***' : 'vacío'
+            }
+        });
+
         loading.value = true;
-        error.value = null;
+        errors.value = [];
 
         if(!role || !user || !userAccount || !location || !membershipId || !paymentDetails) {
-            error.value = 'Incomplete registration flow. Please restart.';
+            const errorMsg = 'Incomplete registration flow. Please restart.';
+            console.error('❌ [IAM-STORE] Datos incompletos:', {
+                hasRole: !!role,
+                hasUser: !!user,
+                hasUserAccount: !!userAccount,
+                hasLocation: !!location,
+                hasMembershipId: !!membershipId,
+                hasPaymentDetails: !!paymentDetails
+            });
+            errors.value.push(new Error(errorMsg));
             loading.value = false;
             return;
         }
 
-        const newPayment = new Payment({
-            id_payment: 'PY0' + (paymentStore.paymentCount + 1).toString(), // Simulado
-            card_number: paymentDetails.card_number,
-            card_type: paymentDetails.card_type,
-            month: paymentDetails.month,
-            year: paymentDetails.year,
-            cvv: paymentDetails.cvv,
-            id_user_account: userAccount.id_user_account
-        });
-
         try {
-            // Ejecutar llamadas a la API de forma transaccional (secuencial)
-            await addLocation(location);
-            await addUser(user);
-            await addUserAccount(userAccount);
-            await addPayment(newPayment);
+            console.log('🔄 [IAM-STORE] Starting registration process...');
 
-            // Iniciar sesión automáticamente
-            sessionUserAccount.value = userAccount;
-            sessionUser.value = user;
+            let response;
+
+            // Determinar el tipo de membership_description
+            const membershipDescriptions = {
+                1: 'monthly',
+                2: 'quarterly',
+                3: 'annual'
+            };
+            const membershipDescription = membershipDescriptions[membershipId] || 'monthly';
+            console.log('📅 [IAM-STORE] Membership description:', membershipDescription);
+
+            // Intentar registro con AWS primero (usando AuthApi)
+            if (apiConfig.isAwsPrimary) {
+                try {
+                    console.log('☁️ [IAM-STORE] Attempting AWS registration...');
+                    console.log('🔑 [IAM-STORE] API Strategy:', apiConfig.strategy);
+
+                    if (role === RoleChoicesType.VEHICLE_OWNER) {
+                        // Registro de Vehicle Owner
+                        const vehicleOwnerRequest = {
+                            name: user.name || '',
+                            last_name: user.last_name || '',
+                            dni: user.dni || '',
+                            phone_number: user.phone_number || '',
+                            username: userAccount.username || '',
+                            email: userAccount.email || '',
+                            password: userAccount.password || '',
+                            address: location.address || '',
+                            district: location.district || '',
+                            department: location.department || '',
+                            membership_description: membershipDescription,
+                            started: new Date().toISOString().split('T')[0],
+                            over: new Date(Date.now() + 365*24*60*60*1000).toISOString().split('T')[0],
+                            card_number: String(paymentDetails.card_number || ''),
+                            card_type: String(paymentDetails.card_type || ''),
+                            month: parseInt(paymentDetails.month) || 1,
+                            year: parseInt(paymentDetails.year) || new Date().getFullYear(),
+                            cvv: parseInt(paymentDetails.cvv) || 0
+                        };
+
+                        console.log('👤 [IAM-STORE] Vehicle Owner Request (datos preparados):', {
+                            ...vehicleOwnerRequest,
+                            password: '***',
+                            cvv: '***'
+                        });
+
+                        console.log('📤 [IAM-STORE] Enviando POST a signUpVehicleOwner...');
+                        response = await authApi.signUpVehicleOwner(vehicleOwnerRequest);
+                        console.log('✅ [IAM-STORE] Respuesta de AWS recibida:', {
+                            id: response.id,
+                            username: response.username,
+                            email: response.email,
+                            hasToken: !!response.token
+                        });
+
+                    } else if (role === RoleChoicesType.AUTO_REPAIR_WORKSHOP) {
+                        // Registro de Auto Repair Workshop
+                        const autoRepairRequest = {
+                            auto_repair_name: user.name || '',
+                            phone_number: user.phone_number || '',
+                            username: userAccount.username || '',
+                            contact_email: userAccount.email || '',
+                            password: userAccount.password || '',
+                            ruc: user.dni || '',
+                            address: location.address || '',
+                            district: location.district || '',
+                            department: location.department || '',
+                            membership_description: membershipDescription,
+                            started: new Date().toISOString().split('T')[0],
+                            over: new Date(Date.now() + 365*24*60*60*1000).toISOString().split('T')[0],
+                            card_number: String(paymentDetails.card_number || ''),
+                            card_type: String(paymentDetails.card_type || ''),
+                            month: parseInt(paymentDetails.month) || 1,
+                            year: parseInt(paymentDetails.year) || new Date().getFullYear(),
+                            cvv: parseInt(paymentDetails.cvv) || 0
+                        };
+
+                        console.log('🏭 [IAM-STORE] Auto Repair Request (datos preparados):', {
+                            ...autoRepairRequest,
+                            password: '***',
+                            cvv: '***'
+                        });
+
+                        console.log('📤 [IAM-STORE] Enviando POST a signUpAutoRepair...');
+                        response = await authApi.signUpAutoRepair(autoRepairRequest);
+                        console.log('✅ [IAM-STORE] Respuesta de AWS recibida:', {
+                            id: response.id,
+                            username: response.username,
+                            email: response.email,
+                            hasToken: !!response.token
+                        });
+                    }
+
+                    // Guardar JWT token
+                    if (response.token) {
+                        localStorage.setItem('authToken', response.token);
+                        console.log('🔐 [IAM-STORE] JWT token guardado en localStorage');
+                    } else {
+                        console.warn('⚠️ [IAM-STORE] No se recibió JWT token en la respuesta');
+                    }
+
+                    // Cargar datos del usuario desde el backend
+                    console.log('🔄 [IAM-STORE] Cargando datos del usuario desde el backend...');
+                    await fetchUserAccounts();
+                    await fetchUsers();
+                    await catalogStore.fetchLocations();
+                    console.log('✅ [IAM-STORE] Datos cargados desde el backend');
+
+                    // Buscar el usuario creado por ID retornado
+                    console.log('🔍 [IAM-STORE] Buscando usuario creado con ID:', response.id);
+                    const account = userAccounts.value.find(a => a.id === response.id);
+                    if (!account) {
+                        console.error('❌ [IAM-STORE] No se encontró UserAccount con ID:', response.id);
+                        console.log('📋 [IAM-STORE] UserAccounts disponibles:', userAccounts.value.map(a => ({ id: a.id, username: a.username })));
+                        throw new Error("User account not found after registration");
+                    }
+                    console.log('✅ [IAM-STORE] UserAccount encontrado:', { id: account.id, username: account.username });
+
+                    const createdUser = users.value.find(u => u.id === account.user_id);
+                    if (!createdUser) {
+                        console.error('❌ [IAM-STORE] No se encontró User con ID:', account.user_id);
+                        console.log('📋 [IAM-STORE] Users disponibles:', users.value.map(u => ({ id: u.id, name: u.name })));
+                        throw new Error("User not found after registration");
+                    }
+                    console.log('✅ [IAM-STORE] User encontrado:', { id: createdUser.id, name: createdUser.name });
+
+                    // Establecer sesión
+                    sessionUserAccount.value = account;
+                    sessionUser.value = createdUser;
+                    saveSessionToStorage();
+                    console.log('✅ [IAM-STORE] Sesión establecida y guardada');
+
+                    console.log('🎉 [IAM-STORE] ========== AWS REGISTRATION COMPLETED SUCCESSFULLY ==========');
+                    return;
+
+                } catch (awsError) {
+                    console.error('❌ [IAM-STORE] ========== AWS REGISTRATION FAILED ==========');
+                    console.error('📋 [IAM-STORE] Error details:', {
+                        message: awsError.message,
+                        response: awsError.response?.data,
+                        status: awsError.response?.status,
+                        statusText: awsError.response?.statusText
+                    });
+                    console.warn('🔄 [IAM-STORE] Trying Supabase fallback...');
+
+                    // Limpiar cualquier token parcial
+                    localStorage.removeItem('authToken');
+                    sessionStorage.removeItem('authToken');
+                    // Continúa al fallback de Supabase
+                }
+            }
+
+            // Fallback: Registro manual con Supabase (creación de entidades una por una)
+            console.log('💾 [IAM-STORE] ========== USING SUPABASE MANUAL REGISTRATION ==========');
+
+            // Get catalog and payment APIs from their stores
+            const catalogApi = catalogStore.catalogApi;
+            const paymentApi = paymentStore.paymentServiceApi;
+
+            // Step 1: Create Location
+            console.log('📍 Creating location...', location);
+            const locationResource = LocationAssembler.toResourceFromEntity(location);
+            const locationResponse = await catalogApi.createLocation(locationResource);
+
+            let createdLocation = locationResponse.data;
+            if (Array.isArray(createdLocation)) {
+                createdLocation = createdLocation[0];
+            }
+            console.log('✅ Location created:', createdLocation);
+
+            // Step 2: Create User with location ID
+            user.location_id = createdLocation.id;
+            console.log('👤 Creating user...', user);
+            const userResource = UserAssembler.toResourceFromEntity(user);
+            const userResponse = await iamApi.createUser(userResource);
+
+            let createdUser = userResponse.data;
+            if (Array.isArray(createdUser)) {
+                createdUser = createdUser[0];
+            }
+            console.log('✅ User created:', createdUser);
+
+            // Step 3: Create UserAccount with user ID and membership ID
+            userAccount.user_id = createdUser.id;
+            userAccount.membership_id = membershipId;
+            console.log('🔐 Creating user account...', userAccount);
+            const userAccountResource = UserAccountAssembler.toResourceFromEntity(userAccount);
+            const userAccountResponse = await iamApi.createUserAccount(userAccountResource);
+
+            let createdUserAccount = userAccountResponse.data;
+            if (Array.isArray(createdUserAccount)) {
+                createdUserAccount = createdUserAccount[0];
+            }
+            console.log('✅ User account created:', createdUserAccount);
+
+            // Step 4: Create Payment with user account ID
+            const newPayment = new Payment({
+                id: null,
+                card_number: paymentDetails.card_number,
+                card_type: paymentDetails.card_type,
+                month: paymentDetails.month,
+                year: paymentDetails.year,
+                cvv: paymentDetails.cvv,
+                user_account_id: createdUserAccount.id
+            });
+
+            console.log('💳 Creating payment...', newPayment);
+            const paymentResource = PaymentAssembler.toResourceFromEntity(newPayment);
+            const paymentResponse = await paymentApi.createPayment(paymentResource);
+
+            let createdPayment = paymentResponse.data;
+            if (Array.isArray(createdPayment)) {
+                createdPayment = createdPayment[0];
+            }
+            console.log('✅ Payment created:', createdPayment);
+
+            // Step 5: Store created entities in local arrays
+            const locationEntity = LocationAssembler.toEntityFromResource(createdLocation);
+            const userEntity = UserAssembler.toEntityFromResource(createdUser);
+            const userAccountEntity = UserAccountAssembler.toEntityFromResource(createdUserAccount);
+            const paymentEntity = PaymentAssembler.toEntityFromResource(createdPayment);
+
+            locations.value.push(locationEntity);
+            users.value.push(userEntity);
+            userAccounts.value.push(userAccountEntity);
+            payments.value.push(paymentEntity);
+
+            // Step 6: Set session and save to storage
+            sessionUserAccount.value = userAccountEntity;
+            sessionUser.value = userEntity;
             saveSessionToStorage();
 
+            console.log('🎉 Supabase registration completed successfully!');
+
         } catch (err) {
-            // El error se establece dentro de las funciones CRUD (addUser, etc.)
-            error.value = error.value || formatError(err, 'Final registration step failed');
-            errors.value.push(err);
+            console.error('❌ [IAM-STORE] ========== REGISTRATION FAILED ==========');
+            console.error('📋 [IAM-STORE] Error completo:', {
+                message: err.message,
+                response: err.response?.data,
+                status: err.response?.status,
+                stack: err.stack
+            });
+            const errorMessage = err.response?.data?.message || err.message || 'Registration failed';
+            errors.value.push(new Error(errorMessage));
+            throw err;
         } finally {
             loading.value = false;
+            console.log('🏁 [IAM-STORE] ========== FIN DE finishRegister ==========');
         }
     }
 
@@ -824,27 +1152,6 @@ export const useIamStore = defineStore('iam', () => {
         errors.value = null;
     }
 
-    /**
-     * Load session from local storage on app start
-     */
-    function loadSessionFromStorage() {
-        const storedUserAccount = localStorage.getItem('userAccount');
-        const storedUser = localStorage.getItem('user');
-        const storedIsAuthenticated = localStorage.getItem('isAuthenticated');
-
-        if (storedIsAuthenticated === 'true' && storedUserAccount) {
-            try {
-                sessionUserAccount.value = JSON.parse(storedUserAccount);
-                if (storedUser) {
-                    sessionUser.value = JSON.parse(storedUser);
-                }
-                console.log('Session loaded from storage', sessionUserAccount.value);
-            } catch (e) {
-                console.error('Error loading session from storage', e);
-                clearSession();
-            }
-        }
-    }
 
     return {
         userAccounts,
@@ -896,8 +1203,8 @@ export const useIamStore = defineStore('iam', () => {
         selectPlan,
         finishRegister,
         resetRegistrationFlow,
-        loadSessionFromStorage,
-        updateUserAccount
+        updateUserAccount,
+        hasActiveJWT
     };
 });
 

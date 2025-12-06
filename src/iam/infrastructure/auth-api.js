@@ -99,7 +99,6 @@ export class AuthApi extends BaseApi {
      * @property {Object} user - Workshop owner information
      * @property {string} user.name - Owner's first name
      * @property {string} user.lastName - Owner's last name
-     * @property {string} user.dni - Owner's DNI/ID number
      * @property {string} user.phoneNumber - Owner's phone number
      * @property {Object} userAccount - User account credentials
      * @property {string} userAccount.username - Username

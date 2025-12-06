@@ -42,13 +42,13 @@ const filteredVisits = computed(() => {
   const allVehicles = trackingStore.vehicles
   const isScheduled = props.isNewVisits
 
-  const vehicleMap = new Map(allVehicles.map(v => [v.id_vehicle, v]))
+  const vehicleMap = new Map(allVehicles.map(v => [v.vehicle_id, v]))
 
   return allVisits.filter(visit => {
-    const vehicle = vehicleMap.get(visit.id_vehicle)
+    const vehicle = vehicleMap.get(visit.vehicle_id)
     if (!vehicle) return false
 
-    if (!iamStore.isCurrentUser(vehicle.id_user)) return false
+    if (!iamStore.isCurrentUser(vehicle.user_id)) return false
 
     // Filter by maintenance state
     return isScheduled
@@ -58,7 +58,6 @@ const filteredVisits = computed(() => {
 })
 
 onMounted(() => {
-  dataStore.fetchServices();
   iamStore.fetchUsers();
   trackingStore.fetchVehicles();
   dataStore.fetchVisit();
@@ -69,10 +68,10 @@ onMounted(() => {
  */
 function countPriceDiagnosticByExpectedVisitId(visitId) {
   return computed(() => {
-    const expectedVisit = dataStore.expectedVisit.find(ev => ev.id_visit === visitId)
+    const expectedVisit = dataStore.expectedVisit.find(ev => ev.visit_id === visitId)
 
     return dataStore.expectedVisit
-        .filter(d => d.id_expected === expectedVisit?.id_expected)
+        .filter(d => d.id === expectedVisit?.id)
         .reduce((sum, d) => sum + d.price, 0)
   })
 }
@@ -97,7 +96,7 @@ function confirmCancelVisit() {
 
   modalLoading.value = true
 
-  const expectedVisit = dataStore.expectedVisit.find(v => v.id_visit === visitId)
+  const expectedVisit = dataStore.expectedVisit.find(v => v.visit_id === visitId)
   if (!expectedVisit) {
     modalLoading.value = false
     closeCancelModal()
@@ -105,10 +104,11 @@ function confirmCancelVisit() {
   }
 
   dataStore.updateExpected({
-    id_expected: expectedVisit.id_expected,
+    id: expectedVisit.id,
     state_visit: 'Visit Cancelled',
-    id_visit: visitId,
-    is_scheduled: false
+    visit_id: visitId,
+    is_scheduled: false,
+    vehicle_id: expectedVisit.vehicle_id,
   })
 
   setTimeout(() => {
@@ -121,7 +121,7 @@ function confirmCancelVisit() {
  * Cancelled check
  */
 function isVisitCancelled(visitId) {
-  const expectedVisit = dataStore.expectedVisit.find(v => v.id_visit === visitId)
+  const expectedVisit = dataStore.expectedVisit.find(v => v.id === visitId)
   return expectedVisit?.state_visit === 'Visit Cancelled' && !expectedVisit.is_scheduled
 }
 
@@ -149,13 +149,13 @@ function getAddressByAutoRepair(autoRepairId) {
     const autoRepair = getAutoRepair(autoRepairId)
     if (!autoRepair) return 'Unknown Location'
 
-    const userAccount = getUserAccountById(autoRepair.id_user_account)
+    const userAccount = getUserAccountById(autoRepair.user_account_id)
     if (!userAccount) return 'Unknown Location'
 
-    const user = getUserById(userAccount.id_user)
+    const user = getUserById(userAccount.user_id)
     if (!user) return 'Unknown Location'
 
-    const location = getLocationById(user.id_location)
+    const location = getLocationById(user.location_id)
     return location?.address ?? 'Unknown Location'
   })
 }
@@ -194,16 +194,16 @@ function getAddressByAutoRepair(autoRepairId) {
 
 
         <div v-else class="visits-container">
-          <div v-for="visit in filteredVisits" :key="visit.id_visit" class="visit-card">
+          <div v-for="visit in filteredVisits" :key="visit.id" class="visit-card">
 
 
             <div class="visit-header">
               <div class="visit-id">
                 <span class="label">{{ t('visit_list.visitId') }}</span>
-                <span class="value">{{ visit.id_visit }}</span>
+                <span class="value">{{ visit.id }}</span>
 
                 <span
-                    v-if="isNewVisits && isVisitCancelled(visit.id_visit)"
+                    v-if="isNewVisits && isVisitCancelled(visit.id)"
                     class="label-cancelled"
                 >
                   {{ t('visit_list.label-cancelled') }}
@@ -217,7 +217,7 @@ function getAddressByAutoRepair(autoRepairId) {
                 <div class="info-item">
                   <span class="info-label">{{ t('visit_list.workshop') }}</span>
                   <span class="info-value">
-                    {{ getUserAccountById(getAutoRepair(visit.id_auto_repair)?.id_user_account)?.username || "N/A" }}
+                    {{ getUserAccountById(getAutoRepair(visit.auto_repair_id)?.user_account_id)?.username || "N/A" }}
                   </span>
                 </div>
               </div>
@@ -233,7 +233,7 @@ function getAddressByAutoRepair(autoRepairId) {
                 <div class="info-item">
                   <span class="info-label">{{ t('visit_list.address') }}</span>
                   <span class="info-value">
-                    {{ getAddressByAutoRepair(visit.id_auto_repair) || "N/A" }}
+                    {{ getAddressByAutoRepair(visit.auto_repair_id) || "N/A" }}
                   </span>
                 </div>
               </div>
@@ -242,7 +242,7 @@ function getAddressByAutoRepair(autoRepairId) {
                 <div class="info-item">
                   <span class="info-label">{{ t('visit_list.price') }}</span>
                   <span class="info-value">
-                    {{ countPriceDiagnosticByExpectedVisitId(visit.id_visit) || 0 }}
+                    {{ countPriceDiagnosticByExpectedVisitId(visit.id) || 0 }}
                   </span>
                 </div>
               </div>
@@ -252,11 +252,11 @@ function getAddressByAutoRepair(autoRepairId) {
             <div v-if="isNewVisits" class="visit-actions">
               <button
                   class="btn-cancel"
-                  :disabled="isVisitCancelled(visit.id_visit)"
-                  @click="openCancelModal(visit.id_visit)"
+                  :disabled="isVisitCancelled(visit.id)"
+                  @click="openCancelModal(visit.id)"
               >
                 {{
-                  isVisitCancelled(visit.id_visit)
+                  isVisitCancelled(visit.id)
                       ? t('visit_list.visitCancelled')
                       : t('visit_list.cancelVisit')
                 }}

@@ -10,6 +10,7 @@ import useIamStore from "@/iam/application/iam.store.js";
 import useTrackingStore from "@/maintenance-tracking/application/tracking.store.js";
 import useCatalogStore from "@/auto-repair-catalog/application/owner.store.js";
 import {useI18n} from "vue-i18n";
+import * as serviceOffers from "@primeuix/themes/aura/knob";
 
 const registerStore = useAutoRepairRegisterStore();
 const trackingStore = useTrackingStore();
@@ -19,6 +20,9 @@ const router = useRouter();
 
 const { t } = useI18n();
 
+const autoRepairOffers = computed(() => catalogStore.serviceOffers);
+const isOffersLoading = computed(() => catalogStore.loading);
+
 // Valores reactivos usando storeToRefs
 const {
   sessionUserAccount,
@@ -27,6 +31,7 @@ const {
 
 const {
   autoRepairs,
+  loading
 } = storeToRefs(catalogStore);
 
 // Funciones/acciones mediante destructuración directa
@@ -73,6 +78,11 @@ onMounted(() => {
   iamStore.fetchUsers()
   iamStore.fetchUserAccounts()
   catalogStore.fetchAutoRepairs()
+
+
+  if(currentAutoRepair.value?.id){
+    catalogStore.getServiceOfferById(currentAutoRepair.value.id)
+  }
 });
 
 function loadCurrentData() {
@@ -124,6 +134,8 @@ function onSaveChanges() {
 
   const user = sessionUser.value;
   const location = currentLocation.value;
+  const autoRepairOffers = computed(() => serviceOffers.value);
+  const isOffersLoading = computed(() => loading.value);
   const autoRepair = currentAutoRepair.value;
 
   if (!user || !location || !autoRepair) {
@@ -175,6 +187,37 @@ function onSaveChanges() {
     setTimeout(() => (errorMessage.value = null), 5000);
   }
 }
+
+function getServiceName(id) {
+  return catalogStore.getServiceById(id)?.name ?? "";
+}
+
+function goToAddService() {
+  router.push("/layout-workshop/auto-repair-catalog/service-form");
+}
+
+function onDeleteOffer(id) {
+  errorMessage.value = null;
+  successMessage.value = null;
+
+  const currentAutoRepairId = currentAutoRepair.value?.id;
+
+  if (!currentAutoRepairId) {
+    errorMessage.value = "Unable to determine the workshop ID.";
+    return;
+  }
+
+  try {
+    catalogStore.deleteServiceOffer(currentAutoRepairId, id);
+  } catch (error) {
+    console.error("Error deleting service offer:", error);
+    errorMessage.value =
+        "Failed to delete the service. Please try again.";
+  }
+}
+
+
+
 </script>
 
 <template>
@@ -333,6 +376,29 @@ function onSaveChanges() {
         </button>
       </div>
     </form>
+  </div>
+
+  <div class="auto-repair-service-container">
+    <h2 class="auto-repair-title">{{ t('manage-auto-repair.catalogTitle') }}</h2>
+
+    <div v-if="isOffersLoading">{{ t('general.loadingCatalog') }}...</div>
+
+    <div v-else-if="autoRepairOffers.length > 0" class="offers-cards">
+      <div v-for="offer in autoRepairOffers" :key="offer.service_offer_id" class="offer-card">
+        <h3 class="service-name">{{ getServiceName(offer.service_id) }}</h3>
+        <p class="price"><strong>{{ t('manage-auto-repair.price') }}:</strong> {{ offer.price }}</p>
+        <p class="duration"><strong>{{ t('manage-auto-repair.duration') }}:</strong> {{ offer.duration_hour }}</p>
+        <div class="actions">
+          <button class="btn-delete" @click="onDeleteOffer(offer.service_offer_id)">{{ t('manage-auto-repair.delete') }}</button>
+        </div>
+      </div>
+    </div>
+
+    <div v-else>{{ t('manage-auto-repair.noOffers') }}</div>
+
+    <div class="catalog-action-footer">
+      <button class="btn-add-service" @click="goToAddService">{{ t('manage-auto-repair.addService') }}</button>
+    </div>
   </div>
 </template>
 
@@ -556,4 +622,94 @@ function onSaveChanges() {
     font-size: 0.95rem;
   }
 }
+
+.offers-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.5rem;
+  background-color: var(--color-second-complementary);
+  border-radius: 12px;
+  border: 2px solid var(--color-primary);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  max-width: 1500px;
+  margin-bottom: 40px;
+}
+
+.offer-card {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.actions {
+  margin-left: auto;
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+}
+
+.btn-edit{
+  background-color: transparent;
+  color: var(--color-first-complementary);
+  border: 2px solid var(--color-first-complementary);
+  padding: 0.75rem 1.5rem;
+  border-radius: 25px;
+  font-family: var(--font-semibold);
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-delete {
+  background-color: transparent;
+  color: var(--color-primary);
+  border: 2px solid var(--color-primary);
+  padding: 0.75rem 1.5rem;
+  border-radius: 25px;
+  font-family: var(--font-semibold);
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-delete:hover {
+  background-color: var(--color-primary);
+  color:white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(242, 170, 31, 0.3);
+}
+
+.btn-edit:hover {
+  background-color: var(--color-first-complementary);
+  color: var(--color-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(242, 170, 31, 0.3);
+}
+
+.catalog-action-footer {
+  width: 100%;
+  margin-top: 1.5rem;
+  display: flex;
+  justify-content: flex-end; /* derecha */
+}
+
+.btn-add-service {
+  background-color: var(--color-first-complementary);
+  color: var(--color-dark);
+  border: none;
+  padding: 0.9rem 2.5rem;
+  border-radius: 25px;
+  font-family: var(--font-semibold);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-bottom: 30px;
+}
+
+.btn-add-service:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(242, 170, 31, 0.3);
+}
+
 </style>

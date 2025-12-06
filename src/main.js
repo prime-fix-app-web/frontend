@@ -45,6 +45,6 @@ app.use(i18n)
 
 // Load IAM session from storage if available
 const iamStore = useIamStore();
-iamStore.loadSessionFromStorage();
+iamStore.restoreSessionFromStorage();
 
 app.mount('#app');

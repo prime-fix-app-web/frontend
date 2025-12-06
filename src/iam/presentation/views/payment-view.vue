@@ -54,14 +54,14 @@ const planSelected = computed(() => {
     return t('payment.oneMonthPlan');
   }
 
-  const membershipId = registerUserAccount.id_membership;
+  const membershipId = registerUserAccount.membership_id;
 
   switch (membershipId) {
-    case 'M001':
+    case 1:
       return t('payment.threeMonthsPlan');
-    case 'M002':
+    case 2:
       return t('payment.twelveMonthsPlan');
-    case 'M003':
+    case 3:
       return t('payment.oneMonthPlan');
     default:
       return t('payment.oneMonthPlan');
@@ -78,15 +78,15 @@ const amountSelected = computed(() => {
     return 'S/.19';
   }
 
-  const membershipId = registerUserAccount.id_membership;
+  const membershipId = registerUserAccount.membership_id;
   console.log('💳 Membership ID for amount:', membershipId);
 
   switch (membershipId) {
-    case 'M001':
+    case 1:
       return 'S/.59';
-    case 'M002':
+    case 2:
       return 'S/.219';
-    case 'M003':
+    case 3:
       return 'S/.19';
     default:
       return 'S/.19';
@@ -125,11 +125,15 @@ const isProcessing = ref(false);
  */
 function validateForm() {
   const e = {};
-  if (!form.value.card_number) e.card_number = t('payment.cardNumberRequired');
+  if (!form.value.card_number || form.value.card_number.length < 7) {
+    e.card_number = t('payment.cardNumberRequired');
+  }
   if (!form.value.card_type) e.card_type = t('payment.cardTypeRequired');
   if (!form.value.month) e.month = t('payment.monthRequired');
   if (!form.value.year) e.year = t('payment.yearRequired');
-  if (!form.value.cvv) e.cvv = t('payment.cvvRequired');
+  if (!form.value.cvv || form.value.cvv.length < 3) {
+    e.cvv = t('payment.cvvRequired');
+  }
   if (!form.value.document_number || form.value.document_number.length < 3)
     e.document_number = t('payment.documentNumberRequired');
   errors.value = e;
@@ -142,27 +146,64 @@ function validateForm() {
  * @returns {Promise<void>} - A promise that resolves when the submission is complete
  */
 async function onSubmit() {
-  if (!validateForm() || isProcessing.value) return;
+  console.log('🎯 [PAYMENT-VIEW] ========== INICIO DEL PROCESO DE REGISTRO ==========');
+
+  if (!validateForm()) {
+    console.error('❌ [PAYMENT-VIEW] Validación de formulario falló');
+    console.log('📋 [PAYMENT-VIEW] Errores:', errors.value);
+    return;
+  }
+
+  if (isProcessing.value) {
+    console.warn('⚠️ [PAYMENT-VIEW] Ya se está procesando un registro');
+    return;
+  }
+
   isProcessing.value = true;
   const formData = form.value;
 
+  console.log('💳 [PAYMENT-VIEW] Datos del formulario de pago:', {
+    card_number: formData.card_number,
+    card_type: formData.card_type,
+    month: formData.month,
+    year: formData.year,
+    cvv: formData.cvv ? '***' : 'vacío',
+    card_number_length: formData.card_number?.length,
+    cvv_length: formData.cvv?.length,
+    month_type: typeof formData.month,
+    year_type: typeof formData.year
+  });
+
   try {
+    console.log('📤 [PAYMENT-VIEW] Llamando a finishRegister con formData...');
     await finishRegister(formData);
+    console.log('✅ [PAYMENT-VIEW] finishRegister completado exitosamente');
     console.log(t('payment.successMessage'));
 
     /**
      * Fetch necessary data after registration to ensure the store is up-to-date
      */
+    console.log('🔄 [PAYMENT-VIEW] Cargando datos después del registro...');
     await fetchUserAccounts();
     await fetchUsers();
     await fetchLocations();
     await fetchPayments();
+    console.log('✅ [PAYMENT-VIEW] Datos cargados correctamente');
 
+    console.log('🎉 [PAYMENT-VIEW] ========== REGISTRO COMPLETADO ==========');
     goToLogin();
   } catch (error) {
+    console.error('❌ [PAYMENT-VIEW] ========== ERROR EN EL REGISTRO ==========');
     console.error(t('payment.failureMessage'), error);
+    console.error('📋 [PAYMENT-VIEW] Error completo:', {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status,
+      stack: error.stack
+    });
     isProcessing.value = false;
   } finally {
+    console.log('🧹 [PAYMENT-VIEW] Limpiando flujo de registro...');
     resetRegistrationFlow();
   }
 }
@@ -191,12 +232,14 @@ function goToLogin() {
           <div class="form-group">
             <label for="cardNumber" class="form-label">{{ $t('payment.cardNumber') }}</label>
             <input
-                type="number"
+                type="text"
                 id="cardNumber"
                 v-model="form.card_number"
                 class="form-input"
                 placeholder="1149849846611161"
                 maxlength="16"
+                pattern="[0-9]*"
+                inputmode="numeric"
                 :class="{ 'error': errors.card_number }"
             />
             <span v-if="errors.card_number" class="error-message">
@@ -222,14 +265,14 @@ function goToLogin() {
         <div class="form-row three-columns">
           <div class="form-group">
             <label for="month" class="form-label">{{ $t('payment.month') }}</label>
-            <select id="month" v-model="form.month" class="form-select">
+            <select id="month" v-model.number="form.month" class="form-select">
               <option v-for="month in months" :key="month.value" :value="month.value">{{ month.name }}</option>
             </select>
             <span v-if="errors.month" class="error-message">{{ errors.month }}</span>
           </div>
           <div class="form-group">
             <label for="year" class="form-label">{{ $t('payment.year') }}</label>
-            <select id="year" v-model="form.year" class="form-select">
+            <select id="year" v-model.number="form.year" class="form-select">
               <option v-for="year in years" :key="year" :value="year">{{ year }}</option>
             </select>
             <span v-if="errors.year" class="error-message">{{ errors.year }}</span>
@@ -237,12 +280,14 @@ function goToLogin() {
           <div class="form-group">
             <label for="cvv" class="form-label">{{ $t('payment.cvv') }}</label>
             <input
-                type="number"
+                type="text"
                 id="cvv"
                 v-model="form.cvv"
                 class="form-input"
                 placeholder="333"
-                maxlength="3"
+                maxlength="4"
+                pattern="[0-9]*"
+                inputmode="numeric"
                 :class="{ 'error': errors.cvv }"
             />
             <span v-if="errors.cvv" class="error-message">

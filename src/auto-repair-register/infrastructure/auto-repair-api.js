@@ -46,6 +46,10 @@ export class AutoRepairRegisterApi extends BaseApi {
         return this.#technicianScheduleEndpoint.getById(id);
     }
 
+    createTechnicianSchedule(resource){
+        return this.#technicianScheduleEndpoint.create(resource);
+    }
+
     updateTechnicianSchedule(id,resource){
         return this.#technicianScheduleEndpoint.update(id, resource);
     }

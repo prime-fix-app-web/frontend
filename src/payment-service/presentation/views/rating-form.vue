@@ -41,7 +41,7 @@ async function submitRating() {
   isSubmitting.value = true;
 
   const newRating = {
-    id_rating: "RT" + Math.floor(Math.random() * 1000), // ID simulado
+    id: "RT" + Math.floor(Math.random() * 1000), // ID simulado
     star_rating: selectedRating.value,
     comment: comment.value || "Sin comentarios",
     auto_repair_id: idAutoRepair,
@@ -51,7 +51,7 @@ async function submitRating() {
   try {
     await addRating(newRating);
     console.log("Rating enviado:", newRating);
-    router.push("/layout-vehicle-owner/payment-service/rating/done");
+    await router.push("/layout-vehicle-owner/payment-service/rating/done");
   } catch (err) {
     console.error("Error al enviar rating:", err);
   } finally {

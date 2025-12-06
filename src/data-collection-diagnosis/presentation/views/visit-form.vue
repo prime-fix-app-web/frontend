@@ -17,11 +17,11 @@ const trackingStore = useTrackingStore();
 const {errors, visits, addVisit, updateVisit, deleteVisit, fetchVisit, fetchServices} = dataStore;
 
 const form = ref({
-  id_vehicle: null,
+  vehicle_id: null,
   failure: "",
   time_visit: null,
-  id_auto_repair: null,
-  id_service: null,
+  auto_repair_id: null,
+  service_id: null,
 });
 
 const isEdit = computed(() => !!route.params.id);
@@ -31,12 +31,12 @@ const editDialog = ref(false);
 
 const filteredVehicles = computed(() => {
   const currentUser = iamStore.sessionUser;
-  if (!currentUser || !currentUser.id_user) return [];
+  if (!currentUser || !currentUser.id) return [];
 
   if (!trackingStore.vehicles || !Array.isArray(trackingStore.vehicles)) return []
 
   return trackingStore.vehicles.filter(
-      (v) => v.id_user === currentUser.id_user
+      (v) => v.user_id === currentUser.id
   );
 });
 
@@ -46,31 +46,31 @@ onMounted(async () => {
 
   if (!visits.length) await fetchVisit();
 
-  const repairId = route.query.id_auto_repair || null;
+  const repairId = route.query.auto_repair_id || null;
 
   if (isEdit.value) {
-    let visit = getVisitById(route.params.id_visit);
+    let visit = getVisitById(route.params.visit_id);
     if (!visit && !visits.length) {
       await fetchVisit();
-      visit = getVisitById(route.params.id_visit);
+      visit = getVisitById(route.params.visit_id);
     }
 
     if (visit) {
       form.value = {
-        id_vehicle: visit.id_vehicle || null,
+        vehicle_id: visit.vehicle_id || null,
         failure: visit.failure || "",
         time_visit: visit.time_visit ? new Date(visit.time_visit) : null,
-        id_auto_repair: repairId || visit.id_auto_repair || null,
-        id_service: visit.id_service || null,
+        auto_repair_id: repairId || visit.auto_repair_id || null,
+        service_id: visit.service_id || null,
       };
     }
   } else {
     form.value = {
-      id_vehicle: null,
+      vehicle_id: null,
       failure: "",
       time_visit: null,
-      id_auto_repair: repairId,
-      id_service: null,
+      auto_repair_id: repairId,
+      service_id: null,
     };
   }
 });
@@ -81,11 +81,11 @@ function getVisitById(id) {
 
 function saveVisit () {
   const visitData = {
-    id_vehicle: form.value.id_vehicle,
+    vehicle_id: form.value.vehicle_id,
     failure: form.value.failure,
     time_visit: form.value.time_visit ? form.value.time_visit.toISOString().split('T')[0] : null,
-    id_auto_repair: form.value.id_auto_repair,
-    id_service: form.value.id_service,
+    auto_repair_id: form.value.auto_repair_id,
+    service_id: form.value.service_id,
   };
 
   try {
@@ -95,7 +95,7 @@ function saveVisit () {
       editDialog.value = true;
     } else {
       const newVisit = {
-        id_visit: Math.floor(Math.random() * 1000000),
+        id: Math.floor(Math.random() * 1000000),
         ...visitData
       };
       addVisit(newVisit);
@@ -110,10 +110,10 @@ function saveVisit () {
 }
 
 const isFormValid = computed(() => {
-  return form.value.id_vehicle &&
+  return form.value.vehicle_id &&
       form.value.failure &&
       form.value.time_visit &&
-      form.value.id_service;
+      form.value.service_id;
 });
 
 
@@ -137,8 +137,8 @@ const goBack = () => router.back();
           <pv-select
               :options="filteredVehicles"
               optionLabel="model"
-              optionValue="id_vehicle"
-              v-model="form.id_vehicle"
+              optionValue="vehicle_id"
+              v-model="form.vehicle_id"
               :placeholder="t('visit-form.vehicle_model')"
               class="full-width"
           />
@@ -161,8 +161,8 @@ const goBack = () => router.back();
           <pv-select
               :options="dataStore.services"
               optionLabel="name"
-              optionValue="id_service"
-              v-model="form.id_service"
+              optionValue="id"
+              v-model="form.service_id"
               :placeholder="t('visit-form.select_service')"
               class="full-width"
           />
@@ -198,8 +198,8 @@ const goBack = () => router.back();
     <div v-if="completedVisit">
       <p class="success-message">{{ t('completed-screen.message') }}</p>
       <p><strong>{{ t('completed-screen.date') }}:</strong> {{ completedVisit.time_visit }}</p>
-      <p><strong>{{ t('completed-screen.vehicle') }}:</strong> {{ trackingStore.getVehiclesById(completedVisit.id_vehicle)?.model }}</p>
-      <p><strong>{{ t('completed-screen.service') }}:</strong> {{ dataStore.getServiceById(completedVisit.id_service)?.name }}</p>
+      <p><strong>{{ t('completed-screen.vehicle') }}:</strong> {{ trackingStore.getVehiclesById(completedVisit.vehicle_id)?.model }}</p>
+      <p><strong>{{ t('completed-screen.service') }}:</strong> {{ dataStore.getServiceById(completedVisit.service_id)?.name }}</p>
 
       <div class="button-container">
         <pv-button class="back-button" @click="dialogVisible = false">{{ t('completed-screen.back') }}</pv-button>

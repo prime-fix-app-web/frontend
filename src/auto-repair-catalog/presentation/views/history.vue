@@ -5,9 +5,9 @@
     <table class="table" v-if="myVisits.length">
       <thead><tr><th>Taller</th><th>Vehículo</th><th>Fecha</th><th>Estado</th></tr></thead>
       <tbody>
-        <tr v-for="v in myVisits" :key="v.id_visit">
-          <td>{{ workshopName(v.id_auto_repair) }}</td>
-          <td>{{ store.vehicles.find(x=>x.id===v.id_vehicle)?.plate || v.id_vehicle }}</td>
+        <tr v-for="v in myVisits" :key="v.id">
+          <td>{{ workshopName(v.auto_repair_id) }}</td>
+          <td>{{ store.vehicles.find(x=>x.id===v.vehicle_id)?.plate || v.vehicle_id }}</td>
           <td>{{ v.time_visit }}</td>
           <td>{{ v.status }}</td>
         </tr>

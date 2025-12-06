@@ -2,7 +2,6 @@ import {DataApi} from "@/data-collection-diagnosis/infrastructure/data-api.js";
 import {defineStore} from "pinia";
 import {computed,ref} from "vue";
 import {VisitAssembler} from "@/data-collection-diagnosis/infrastructure/visit.assembler.js";
-import {ServiceAssembler} from "@/data-collection-diagnosis/infrastructure/service.assembler.js";
 import {DiagnosticAssembler} from "@/data-collection-diagnosis/infrastructure/diagnostic.assembler.js";
 import {ExpectedVisitAssembler} from "@/data-collection-diagnosis/infrastructure/expected-visit.assembler.js";
 import { apiConfig } from '@/shared/infrastructure/http/api-config.js';
@@ -21,7 +20,6 @@ const dataApi = new DataApi();
 const useDataCollection = defineStore('useDataCollection', ()=>{
 
     const visits = ref([]);
-    const services = ref([]);
     const expectedVisit = ref([]);
     const diagnostic = ref([]);
 
@@ -29,7 +27,6 @@ const useDataCollection = defineStore('useDataCollection', ()=>{
     const loading = ref(false);
 
     const visitsLoaded = ref(false);
-    const servicesLoaded = ref(false);
     const expectedLoaded = ref(false);
     const diagnosticLoaded = ref(false);
 
@@ -37,9 +34,6 @@ const useDataCollection = defineStore('useDataCollection', ()=>{
         return visitsLoaded ? visits.value.length:0;
     })
 
-    const servicesCount = computed(() => {
-        return servicesLoaded ? servicesLoaded.value.length:0;
-    })
 
     const expectedCount = computed(()=>{
         return expectedLoaded ? expectedLoaded.value.length:0;
@@ -65,21 +59,6 @@ const useDataCollection = defineStore('useDataCollection', ()=>{
         });
     }
 
-    function fetchServices(){
-        // Si estamos usando AWS y no hay JWT, no hacer fetch
-        if (apiConfig.isAwsPrimary && !hasActiveJWT()) {
-            console.log('[Data Collection Store] Skipping fetchServices - No JWT token available');
-            return Promise.resolve();
-        }
-
-        return dataApi.getServices().then(response =>{
-            services.value=ServiceAssembler.toEntitiesFromResponse(response);
-            servicesLoaded.value = true;
-        }).catch(error => {
-            console.error('[Data Collection Store] fetchServices error:', error);
-            errors.value.push(error);
-        });
-    }
 
     function fetchDiagnostic(){
         // Si estamos usando AWS y no hay JWT, no hacer fetch
@@ -114,16 +93,13 @@ const useDataCollection = defineStore('useDataCollection', ()=>{
     }
 
     function getVisitsById(id){
-        return visits.value.find((visit) => visit.id_visit === id);
-    }
-    function getServiceById(id){
-        return services.value.find((visit) => visit.id_service === id);
+        return visits.value.find((visit) => visit.id === id);
     }
     function getExpectedById(id){
-        return expectedVisit.value.find((expected)=>expected.id_expected_visit === id);
+        return expectedVisit.value.find((expected)=>expected.id === id);
     }
     function getDiagnosticById(id){
-        return diagnostic.value.find((diagnostic) => diagnostic.id_diagnostic === id);
+        return diagnostic.value.find((diagnostic) => diagnostic.id === id);
     }
 
     function addVisit(visit){
@@ -133,15 +109,6 @@ const useDataCollection = defineStore('useDataCollection', ()=>{
             visits.value.push(newVisit);
             return newVisit
         }).catch(error => {
-            errors.value.push(error);
-        })
-    }
-    function addService(service){
-        dataApi.createService(service).then(response =>{
-            const resource= response.data;
-            const newService= ServiceAssembler.toEntityFromResource(resource);
-            services.value.push(newService);
-        }).catch(error =>{
             errors.value.push(error);
         })
     }
@@ -170,12 +137,12 @@ const useDataCollection = defineStore('useDataCollection', ()=>{
         try {
             const visitId = Number(id);
             const response = await dataApi.updateVisit(visitId, visitData);
-            const index = visits.value.findIndex(v => Number(v.id_visit) === visitId);
+            const index = visits.value.findIndex(v => Number(v.id) === visitId);
             if (index !== -1) {
                 visits.value[index] = {
                     ...visits.value[index],
                     ...visitData,
-                    id_visit: visitId
+                    id: visitId
                 };
             }
             loading.value = false;
@@ -186,40 +153,18 @@ const useDataCollection = defineStore('useDataCollection', ()=>{
             throw error;
         }
     };
-    const updateService = async (id,serviceData) =>{
-        loading.value = true;
-        errors.value = [];
-        try{
-            const serviceId=Number(id);
-            const response = await dataApi.updateService(serviceId, serviceData);
-            const index = services.value.findIndex(v => Number(v.id_services) === serviceId);
-            if(index !==1){
-                services.value[index] ={
-                    ...services.value[index],
-                    ...serviceData,
-                    id_service:serviceId
-                }
-            }
-            loading.value = false;
-            return response;
-        }catch(error){
-            errors.value.push(error);
-            loading.value = false;
-            throw error;
-        }
-    }
     const updateExpected = async (id,expectedData) =>{
         loading.value = true;
         errors.value = [];
         try{
             const expectedId = Number(id);
             const response = await dataApi.updateExpectedVisit(expectedId, expectedData);
-            const index =expectedVisit.value.findIndex(v => Number(v.id_expected) === expectedId);
+            const index =expectedVisit.value.findIndex(v => Number(v.id) === expectedId);
             if(index !== -1){
                 expectedData.value[index] ={
                     ...expectedVisit.value[index],
                     ...expectedData,
-                    id_expected:expectedId
+                    id:expectedId
                 };
             }
             loading.value = false;
@@ -236,12 +181,12 @@ const useDataCollection = defineStore('useDataCollection', ()=>{
         try{
             const diagnosticId=Number(id);
             const response = await dataApi.updateDiagnostic(diagnosticId, diagnosticData);
-            const index = diagnostic.value.findIndex(v => Number(v.id_diagnostic)===diagnosticId);
+            const index = diagnostic.value.findIndex(v => Number(v.id)===diagnosticId);
             if(index !== -1){
                 diagnosticData.value[index] ={
                     ...diagnostic.value[index],
                     ...diagnosticData,
-                    id_diagnostic:diagnosticId
+                    id:diagnosticId
                 };
             }
             loading.value = false;
@@ -257,73 +202,57 @@ const useDataCollection = defineStore('useDataCollection', ()=>{
         if (!id_visit) return;
         dataApi.deleteVisit(id_visit)
             .then(() => {
-                const index = visits.value.findIndex(v => v.id_visit === id_visit);
+                const index = visits.value.findIndex(v => v.id === id_visit);
                 if (index !== -1) visits.value.splice(index, 1);
             })
             .catch(error => errors.value.push(error));
     }
-    function deleteService(id_service){
-        if(!id_service) return;
-        dataApi.deleteService(id_service)
-            .then(()=>{
-                const index = services.value.findIndex(v=>v.id_service === id_service);
-                if (index !== -1) services.value.splice(index, 1);
-            })
-            .catch(error => errors.value.push(error));
-    }
 
-    function deleteExpectedVisit (id_expected){
-        if(!id_expected) return;
-        dataApi.deleteExpectedVisit(id_expected)
+
+    function deleteExpectedVisit (expectedId){
+        if(!expectedId) return;
+        dataApi.deleteExpectedVisit(expectedId)
             .then(()=>{
-                const index = expectedVisit.value.findIndex(v => v.id_expected === id_expected);
+                const index = expectedVisit.value.findIndex(v => v.id === expectedId);
                 if (index !== -1) expectedVisit.value.splice(index, 1);
             })
             .catch(error => errors.value.push(error));
     }
 
-    function deleteDiagnostic(id_diagnostic){
-        if(!id_diagnostic) return;
-        dataApi.deleteDiagnostic(id_diagnostic)
+    function deleteDiagnostic(diagnosticId){
+        if(!diagnosticId) return;
+        dataApi.deleteDiagnostic(diagnosticId)
             .then(()=>{
-                const index = diagnostic.value.findIndex(v => v.id_diagnostic === id_diagnostic);
+                const index = diagnostic.value.findIndex(v => v.id === diagnosticId);
                 if(index !==-1) diagnostic.value.splice(index, 1);
             })
             .catch(error => errors.value.push(error));
     }
     return {
         visits,
-        services,
         expectedVisit,
         diagnostic,
         errors,
         loading,
         visitsLoaded,
-        servicesLoaded,
         expectedLoaded,
         diagnosticLoaded,
         visitsCount,
-        servicesCount,
         expectedCount,
         diagnosticCount,
-        fetchServices,
         fetchVisit,
         fetchExpected,
         fetchDiagnostic,
         getVisitsById,
-        getServiceById,
         getExpectedById,
         getDiagnosticById,
         addDiagnostic,
         addVisit,
-        addService,
         addExpected,
         updateVisit,
-        updateService,
         updateExpected,
         updateDiagnostic,
         deleteVisit,
-        deleteService,
         deleteDiagnostic,
         deleteExpectedVisit
     };

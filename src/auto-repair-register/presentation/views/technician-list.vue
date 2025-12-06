@@ -39,7 +39,7 @@ async function loadTechnicians() {
 
 
     technicians.value = autoRepairStore.technicians.filter(
-        tech => tech.id_role === 'R002'
+        tech => tech.role_id === 'R002'
     );
 
     console.log('🎯 Técnicos filtrados (R002):', technicians.value);
@@ -64,7 +64,7 @@ function deleteTechnician(tech) {
 
 
   const initialCount = technicians.value.length
-  technicians.value = technicians.value.filter(t => t.id_user_account !== tech.id_user_account)
+  technicians.value = technicians.value.filter(t => t.user_account_id !== tech.user_account_id)
   const finalCount = technicians.value.length
 
   if (finalCount < initialCount) {
@@ -80,14 +80,14 @@ function deleteTechnician(tech) {
 
 function getAutoRepairName(id_auto_repair) {
   const ar = autoRepairStore.autoRepairRegisters.find(repair =>
-      repair.id_auto_repair === id_auto_repair
+      repair.id === id_auto_repair
   )
   return ar?.ruc ?? 'Desconocido'
 }
 
 function editTechnician(tech) {
-  // USAR id_user_account para editar también
-  router.push('/technicians/edit/' + tech.id_user_account)
+  // USAR id para editar también
+  router.push('/technicians/edit/' + tech.id)
 }
 function submit() {
   if (!name.value) {
@@ -148,13 +148,13 @@ function getRoleDisplay(roleId) {
 
     <!-- Lista de técnicos -->
     <div v-else class="tecnicos-lista">
-      <div v-for="tech in technicians" :key="tech.id_user_account" class="tecnico-card">
+      <div v-for="tech in technicians" :key="tech.id" class="tecnico-card">
         <div class="tecnico-info">
           <h3>{{ tech.username }}</h3>
           <div class="tecnico-details">
             <p><strong>Email:</strong> {{ tech.email }}</p>
-            <p><strong>Rol:</strong> {{ getRoleDisplay(tech.id_role) }}</p>
-            <p><strong>ID Usuario:</strong> {{ tech.id_user_account }}</p>
+            <p><strong>Rol:</strong> {{ getRoleDisplay(tech.role_id) }}</p>
+            <p><strong>ID Usuario:</strong> {{ tech.id }}</p>
           </div>
         </div>
         <div class="tecnico-acciones">

@@ -86,7 +86,16 @@ const useTrackingStore = defineStore('tracking', () => {
     async function addNotification(notification) {
         try {
             const resource = NotificationAssembler.toResourceFromEntity(notification);
-            const created = await trackingApi.createNotification(resource);
+            const response = await trackingApi.createNotification(resource);
+
+            // Handle both AWS (single object) and Supabase (array) responses
+            let created = response.data;
+
+            // If response is an array (Supabase), get the first element
+            if (Array.isArray(created)) {
+                created = created[0];
+            }
+
             const entity = NotificationAssembler.toEntityFromResource(created);
             notifications.value.push(entity);
             return entity;
@@ -153,12 +162,19 @@ const useTrackingStore = defineStore('tracking', () => {
     }
 
     function getVehiclesById(id) {
-        return vehicles.value.find((vehicle) => vehicle.id_vehicle === id);
+        return vehicles.value.find((vehicle) => vehicle.id === id);
     }
 
     function addVehicle (vehicle){
         trackingApi.createVehicle(vehicle).then((response) => {
-            const resource = response.data;
+            // Handle both AWS (single object) and Supabase (array) responses
+            let resource = response.data;
+
+            // If response is an array (Supabase), get the first element
+            if (Array.isArray(resource)) {
+                resource = resource[0];
+            }
+
             const newVehicle = VehicleAssembler.toEntityFromResource(resource);
             vehicles.value.push(newVehicle);
         }).catch((err) => {
@@ -174,12 +190,12 @@ const useTrackingStore = defineStore('tracking', () => {
 
             const response = await trackingApi.updateVehicle(vehicleId, vehicleData);
 
-            const index = vehicles.value.findIndex(v => v.id_vehicle === vehicleId);
+            const index = vehicles.value.findIndex(v => v.id === vehicleId);
             if (index !== -1) {
                 vehicles.value[index] = {
                     ...vehicles.value[index],
                     ...vehicleData,
-                    id_vehicle: vehicleId,
+                    id: vehicleId,
                 };
             }
 
@@ -192,12 +208,12 @@ const useTrackingStore = defineStore('tracking', () => {
         }
     };
 
-    const deleteVehicle = async (id_vehicle) => {
-        if (!id_vehicle) {
+    const deleteVehicle = async (vehicleId) => {
+        if (!vehicleId) {
             return;
         }
-        trackingApi.deleteVehicle(id_vehicle).then(() => {
-            const index = vehicles.value.findIndex(v => v.id_vehicle === id_vehicle);
+        trackingApi.deleteVehicle(vehicleId).then(() => {
+            const index = vehicles.value.findIndex(v => v.id === vehicleId);
             if (index !== -1) vehicles.value.splice(index, 1);
         }).catch((err) => {
             errors.value.push(err);

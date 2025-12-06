@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script setup>
 import { ref, reactive, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -27,7 +27,7 @@ const touched = ref(false)
  * Select role handler
  * @param role - selected role
  */
-function selectRole(role: string) {
+function selectRole(role) {
   form.role = role
   touched.value = true
 }
@@ -52,7 +52,7 @@ function onSubmit() {
   submitting.value = true
   const target =
       form.role === 'Vehicle Owner'
-          ? '/iam/register-auto-repair-catalog'
+          ? '/iam/register-owner'
           : '/iam/register-workshop'
 
   router.push(target)

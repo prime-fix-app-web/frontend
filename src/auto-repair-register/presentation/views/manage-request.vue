@@ -20,48 +20,48 @@ const isLoading = ref(false)
 const sessionUserAccount = computed(() => iamStore.sessionUserAccount)
 
 const currentAutoRepair = computed(() => {
-  const userAccountId = sessionUserAccount.value?.id_auto_repair
+  const userAccountId = sessionUserAccount.value?.id
   if (!userAccountId) return undefined
-  return catalogStore.autoRepairs.find(ar => ar.id_user_account === userAccountId)
+  return catalogStore.autoRepairs.find(ar => ar.user_account_id === userAccountId)
 })
 
 const pendingExpectedVisits = computed(() => {
   const visitsByAutoRepair = dataCollectionStore.visits.filter(
-      v => v.id_auto_repair === currentAutoRepair.value?.id_auto_repair
+      v => v.auto_repair_id === currentAutoRepair.value?.id
   )
   const expectedVisitByVisit = dataCollectionStore.expectedVisit
 
   return expectedVisitByVisit.filter(
       ev =>
-          visitsByAutoRepair.some(v => v.id_visit === ev.id_visit) &&
+          visitsByAutoRepair.some(v => v.id === ev.visit_id) &&
           !ev.is_scheduled &&
           ev.state_visit === 'Pending Visit'
   )
 })
 
-function getVisitByExpectedVisitId(id_expected_visit) {
+function getVisitByExpectedVisitId(expectedVisitId) {
   return computed(() => {
-    const expectedVisit = dataCollectionStore.expectedVisit.find(ev => ev.id_expected === id_expected_visit)
-    return dataCollectionStore.visits.find(v => v.id_visit === expectedVisit?.id_visit) || null
+    const expectedVisit = dataCollectionStore.expectedVisit.find(ev => ev.id === expectedVisitId)
+    return dataCollectionStore.visits.find(v => v.id === expectedVisit?.visit_id) || null
   })
 }
 
-function getUserFullNameByVisitId(id_visit) {
+function getUserFullNameByVisitId(visitId) {
   return computed(() => {
-    const visit = dataCollectionStore.visits.find(v => v.id_visit === id_visit)
+    const visit = dataCollectionStore.visits.find(v => v.id === visitId)
     if (!visit) return 'Unknown User'
 
-    const vehicle = trackingStore.vehicles.find(veh => veh.id_vehicle === visit.id_vehicle)
+    const vehicle = trackingStore.vehicles.find(veh => veh.id === visit.vehicle_id)
     if (!vehicle) return 'Unknown User'
 
-    const user = iamStore.users.find(u => u.id_user === vehicle.id_user)
+    const user = iamStore.users.find(u => u.id === vehicle.user_id)
     return user ? `${user.name} ${user.last_name}` : 'Unknown User'
   })
 }
 
-function getVehicleByVehicleId(id_vehicle) {
+function getVehicleByVehicleId(vehicleId) {
   return computed(() => {
-    return trackingStore.vehicles.find(v => v.id_vehicle === id_vehicle) || null
+    return trackingStore.vehicles.find(v => v.id === vehicleId) || null
   })
 }
 
@@ -77,22 +77,22 @@ function onCloseModal() {
 
 function onAcceptExpectedVisit(expectedVisit) {
   const newExpectedVisit = new ExpectedVisit({
-    id_expected: expectedVisit.id_expected,
+    id: expectedVisit.id,
     state_visit: 'Scheduled visit',
-    id_visit: expectedVisit.id_visit,
+    visit_id: expectedVisit.visit_id,
     is_scheduled: true
   })
-  dataCollectionStore.updateExpected(newExpectedVisit.id_expected, newExpectedVisit)
+  dataCollectionStore.updateExpected(newExpectedVisit.id, newExpectedVisit)
 }
 
 function onRejectExpectedVisit(expectedVisit) {
   const newExpectedVisit = new ExpectedVisit({
-    id_expected: expectedVisit.id_expected,
+    id: expectedVisit.id,
     state_visit: 'Visit cannot be scheduled',
-    id_visit: expectedVisit.id_visit,
+    visit_id: expectedVisit.visit_id,
     is_scheduled: false
   })
-  dataCollectionStore.updateExpected(newExpectedVisit.id_expected, newExpectedVisit)
+  dataCollectionStore.updateExpected(newExpectedVisit.id, newExpectedVisit)
 }
 
 </script>
@@ -104,25 +104,25 @@ function onRejectExpectedVisit(expectedVisit) {
     <div class="requests-list">
       <div
           v-for="expectedVisit in pendingExpectedVisits"
-          :key="expectedVisit.id_expected"
+          :key="expectedVisit.id"
           class="request-card"
       >
         <div class="request-info">
           <h3 class="customer-name">
-            {{ getUserFullNameByVisitId(expectedVisit.id_visit).value }}
+            {{ getUserFullNameByVisitId(expectedVisit.visit_id).value }}
           </h3>
 
           <div class="request-details">
             <p class="detail-item">
               <span class="detail-label">{{ $t('manage-requests.date') }}:</span>
               {{
-                getVisitByExpectedVisitId(expectedVisit.id_expected).value?.time_visit?.slice(0, 10)
+                getVisitByExpectedVisitId(expectedVisit.id).value?.time_visit?.slice(0, 10)
               }}
             </p>
             <p class="detail-item">
               <span class="detail-label">{{ $t('manage-requests.time') }}:</span>
               {{
-                getVisitByExpectedVisitId(expectedVisit.id_expected).value?.time_visit?.slice(11, 16)
+                getVisitByExpectedVisitId(expectedVisit.id).value?.time_visit?.slice(11, 16)
               }}
             </p>
           </div>
@@ -131,7 +131,7 @@ function onRejectExpectedVisit(expectedVisit) {
         <div class="request-actions">
           <button
               class="btn-details"
-              @click="onShowDetails(expectedVisit, getVisitByExpectedVisitId(expectedVisit.id_expected).value)"
+              @click="onShowDetails(expectedVisit, getVisitByExpectedVisitId(expectedVisit.id).value)"
           >
             {{ $t('manage-requests.details') }}
           </button>
@@ -175,7 +175,7 @@ function onRejectExpectedVisit(expectedVisit) {
           <p class="detail-value">
             {{
               getUserFullNameByVisitId(
-                  selectedExpectedVisitAndVisit.expectedVisit?.id_visit
+                  selectedExpectedVisitAndVisit.expectedVisit?.visit_id
               ).value
             }}
           </p>
@@ -186,7 +186,7 @@ function onRejectExpectedVisit(expectedVisit) {
           <p class="detail-value">
             {{
               getVehicleByVehicleId(
-                  selectedExpectedVisitAndVisit.visit?.id_vehicle
+                  selectedExpectedVisitAndVisit.visit?.vehicle_id
               ).value?.model
             }}
           </p>

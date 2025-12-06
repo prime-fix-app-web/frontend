@@ -25,7 +25,7 @@ const totalResults = computed(() => store.filteredAutoRepairs.length)
 // Suggested districts in the same department that currently have workshops
 const suggestedDistricts = computed(() => {
   if (!store.selectedDepartment) return []
-  // Build sets of location keys from workshops: by code (id_location) and by pk (location_id)
+  // Build sets of location keys from workshops: by location_id (foreign key)
   const codeKeys = new Set(store.autoRepairs.map(ar => String(ar.locationId || '').trim()).filter(Boolean))
   const pkKeys = new Set(store.autoRepairs.map(ar => String(ar.locationPk || '').trim()).filter(Boolean))
   const dists = new Set(

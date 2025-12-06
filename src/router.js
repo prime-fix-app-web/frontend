@@ -3,7 +3,7 @@ import iamRoutes from "@/iam/presentation/iam-routes.js";
 import {roleGuard} from "@/shared/infrastructure/guards/auth.guard.js";
 import dataRoutes from "@/data-collection-diagnosis/presentation/data-routes.js";
 import paymentServiceRoutes from "@/payment-service/presentation/payment-service-routes.js";
-import autoCatalogRoutes from "@/auto-repair-catalog/presentation/auto-repair-catalog-routes.js";
+import autoRepairCatalogRoutes from "@/auto-repair-catalog/presentation/auto-repair-catalog-routes.js";
 import dashboardOwner from "@/shared/presentation/views/dashboard-owner.vue";
 import DashboardWorkshop from "@/shared/presentation/views/dashboard-workshop.vue";
 import trackingRoutes from "@/maintenance-tracking/presentation/maintenance-tracking.routes.js";
@@ -56,26 +56,23 @@ const routes = [
                 component:setting,
                 meta:{title: 'Settings'}
             },
-            {
-              path:'auto-repair-catalog',
-              name: 'auto-repair-catalog',
-              children: autoCatalogRoutes,
-            },
-            {
-                path:'visit',
-                name: 'visit-owner',
-                children: dataRoutes,
-            },
-            {
-                path: 'payment-service',
-                name: 'payment-service',
-                children: paymentServiceRoutes,
-            },
-            {
-                path:'maintenance-tracking',
-                name: 'maintenance-tracking',
-                children: trackingRoutes
-            },
+            ...autoRepairCatalogRoutes.map(route => ({
+                ...route,
+                path: `auto-repair-catalog/${route.path}`,
+            })),
+            ...dataRoutes.map(route => ({
+                ...route,
+                path: `visit/${route.path}`,
+                name: route.name ? `visit-owner-${route.name}` : undefined,
+            })),
+            ...paymentServiceRoutes.map(route => ({
+                ...route,
+                path: `payment-service/${route.path}`,
+            })),
+            ...trackingRoutes.map(route => ({
+                ...route,
+                path: `maintenance-tracking/${route.path}`,
+            })),
             {
                 path:'history',
                 component:visitHistory,
@@ -107,21 +104,24 @@ const routes = [
                 component:profile,
                 meta: {title: 'Profile Workshop'}
             },
-            {
-                path:'visit',
-                name: 'visit-workshop',
-                children: dataRoutes,
-            },
+            ...dataRoutes.map(route => ({
+                ...route,
+                path: `visit/${route.path}`,
+                name: route.name ? `visit-workshop-${route.name}` : undefined,
+            })),
             {
                 path:'settings',
                 component:setting,
                 meta:{title: 'Settings'}
             },
-            {
-                path:'auto-repair-register',
-                name: 'auto-repair-register',
-                children: autoRepairRegisterRoutes,
-            }
+            ...autoRepairRegisterRoutes.map(route => ({
+                ...route,
+                path: `auto-repair-register/${route.path}`,
+            })),
+            ...autoRepairCatalogRoutes.map(route => ({
+                ...route,
+                path: `auto-repair-catalog/${route.path}`,
+            }))
 
         ]
     },

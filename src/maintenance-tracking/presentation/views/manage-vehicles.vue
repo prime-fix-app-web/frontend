@@ -136,7 +136,7 @@ const onAddVehicle = () => {
  */
 const onEditVehicle = (vehicle) => {
   isEditMode.value = true;
-  selectedVehicleId.value = vehicle.id_vehicle;
+  selectedVehicleId.value = vehicle.id;
   vehicleForm.model = vehicle.model;
   vehicleForm.brand = vehicle.vehicle_brand;
   vehicleForm.type = vehicle.vehicle_type;
@@ -179,34 +179,34 @@ const onCloseModal = () => {
 const onSubmit = () => {
   if (!validateForm()) return;
 
-  const userId = sessionUser.value?.id_user || '';
+  const userId = sessionUser.value?.id || '';
   if (isEditMode.value) {
     const vehicleId = selectedVehicleId.value;
     if (vehicleId) {
       const updatedVehicle = new Vehicle({
-        id_vehicle: vehicleId,
+        id: vehicleId,
         model: vehicleForm.model,
         vehicle_plate: vehicleForm.plate,
         color: vehicleForm.color,
-        id_user: userId,
+        user_id: userId,
         vehicle_brand: vehicleForm.brand,
         vehicle_type: vehicleForm.type,
-        state_maintenance: 0
+        maintenance_status: 0
       });
-      trackingStore.updateVehicle(updatedVehicle.id_vehicle,updatedVehicle);
+      trackingStore.updateVehicle(updatedVehicle.id,updatedVehicle);
     }
   } else {
     const newId = crypto.randomUUID();
 
     const newVehicle = new Vehicle({
-      id_vehicle: newId,
+      id: newId,
       model: vehicleForm.model,
       vehicle_plate: vehicleForm.plate,
       color: vehicleForm.color,
-      id_user: userId,
+      user_id: userId,
       vehicle_brand: vehicleForm.brand,
       vehicle_type: vehicleForm.type,
-      state_maintenance: 0
+      maintenance_status: 0
     });
     trackingStore.addVehicle(newVehicle);
   }

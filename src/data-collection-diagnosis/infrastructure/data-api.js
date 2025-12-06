@@ -21,11 +21,6 @@ export class DataApi extends BaseApi{
      * @type {BaseEndpoint}
      * @private
      */
-    #serviceEndpoint;
-    /**
-     * @type {BaseEndpoint}
-     * @private
-     */
     #visitsEndpoint;
     /**
      * Initializes endpoints for visits, auto repairs,vehicles and services.
@@ -38,23 +33,12 @@ export class DataApi extends BaseApi{
         this.#visitsEndpoint = new BaseEndpoint(this,visitsEndpointPath,{
             usePathParams:import.meta.env.VITE_USE_PATH_PARAMS,
         });
-        this.#serviceEndpoint = new BaseEndpoint(this,serviceEndpointPath,{
-            usePathParams:import.meta.env.VITE_USE_PATH_PARAMS,
-        });
         this.#diagnosticEndpoint = new BaseEndpoint(this,diagnosticEndpointPath,{
             usePathParams:import.meta.env.VITE_USE_PATH_PARAMS,
         });
         this.#expectedEndpoint = new BaseEndpoint(this,expectedVisitEndpointPath,{
             usePathParams:import.meta.env.VITE_USE_PATH_PARAMS,
         })
-    }
-
-    /**
-     * Fetches all Services.
-     * @returns {Promise<import('axios').AxiosResponse>} Promise resolving to the services response.
-     */
-    getServices(){
-        return this.#serviceEndpoint.getAll();
     }
 
     getExpectedVisits(){
@@ -81,9 +65,6 @@ export class DataApi extends BaseApi{
         return this.#visitsEndpoint.create(resource);
     }
 
-    createService(resource){
-        return this.#visitsEndpoint.create(resource);
-    }
 
     createDiagnostic(resource){
         return this.#diagnosticEndpoint.create(resource);
@@ -101,9 +82,6 @@ export class DataApi extends BaseApi{
         return this.#visitsEndpoint.update(id, resource);
     }
 
-    updateService(id,resource){
-        return this.#serviceEndpoint.update(id, resource);
-    }
     updateExpectedVisit(id, resource){
         return this.#expectedEndpoint.update(id,resource);
     }
@@ -118,9 +96,7 @@ export class DataApi extends BaseApi{
     deleteVisit(id){
         return this.#visitsEndpoint.delete(id);
     }
-    deleteService(id){
-        return this.#serviceEndpoint.delete(id);
-    }
+
     deleteExpectedVisit(id){
         return this.#expectedEndpoint.delete(id);
     }

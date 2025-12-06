@@ -72,12 +72,12 @@ export const useAutoRepairRegisterStore = defineStore('autoRepairRegister', () =
         try{
             const technicianId =Number(id);
             const response = await autoRepairApi.updateTechnician(technicianId,technicianData);
-            const index = technicians.value.findIndex(v => Number(v.id_technician)===technicianId);
+            const index = technicians.value.findIndex(v => Number(v.id)===technicianId);
             if(index !==-1){
                 technicians.value[index]={
                     ...technicians.value[index],
                     ...technicianData,
-                    id_technician: technicianId
+                    id: technicianId
                 };
             }
             loading.value = false;
@@ -94,12 +94,12 @@ export const useAutoRepairRegisterStore = defineStore('autoRepairRegister', () =
         try {
             const scheduleId = Number(id);
             const response = await autoRepairApi.updateTechnicianSchedule(scheduleId,scheduleData);
-            const index = techniciansSchedule.value.findIndex(v => Number(v.id_technician_schedule)===scheduleId);
+            const index = techniciansSchedule.value.findIndex(v => Number(v.id)===scheduleId);
             if(index !==-1){
                 techniciansSchedule.value[index]={
                     ...techniciansSchedule.value[index],
                     ...scheduleData,
-                    id_schedule: scheduleId
+                    id: scheduleId
                 };
             }
             loading.value = false;
@@ -112,47 +112,69 @@ export const useAutoRepairRegisterStore = defineStore('autoRepairRegister', () =
     }
 
     function addTechnician(technician){
-        autoRepairApi.createTechnician(technician).then(response =>{
-            const resource = response.data;
-            const newTechnician = TechnicianAssembler.toEntityFromResource(resource);
+        const resource = TechnicianAssembler.toResourceFromEntity(technician);
+        return autoRepairApi.createTechnician(resource).then(response =>{
+            // Handle both AWS (single object) and Supabase (array) responses
+            let responseData = response.data;
+
+            // If response is an array (Supabase), get the first element
+            if (Array.isArray(responseData)) {
+                responseData = responseData[0];
+            }
+
+            const newTechnician = TechnicianAssembler.toEntityFromResource(responseData);
             technicians.value.push(newTechnician);
+
+            // Retornar el técnico creado con el ID real del backend
+            return newTechnician;
         }).catch(error =>{
+            console.error('[AutoRepair Register Store] addTechnician error:', error);
             errors.value.push(error);
+            throw error; // Re-lanzar el error para que el componente lo maneje
         })
     }
     function addTechnicianSchedule(schedule){
-        autoRepairApi.createTechnician(schedule).then(response =>{
-            const resource = response.data;
-            const newSchedule = TechnicianScheduleAssembler.toEntityFromResource(resource);
+        const resource = TechnicianScheduleAssembler.toResourceFromEntity(schedule);
+        autoRepairApi.createTechnicianSchedule(resource).then(response =>{
+            // Handle both AWS (single object) and Supabase (array) responses
+            let responseData = response.data;
+
+            // If response is an array (Supabase), get the first element
+            if (Array.isArray(responseData)) {
+                responseData = responseData[0];
+            }
+
+            const newSchedule = TechnicianScheduleAssembler.toEntityFromResource(responseData);
             techniciansSchedule.value.push(newSchedule);
         }).catch(error =>{
+            console.error('[AutoRepair Register Store] addTechnicianSchedule error:', error);
             errors.value.push(error);
         })
     }
 
-    function deleteTechnician(id_technician){
-        if(!id_technician) return;
-        autoRepairApi.deleteTechnician(id_technician)
+    function deleteTechnician(technicianId){
+        if(!technicianId) return;
+        autoRepairApi.deleteTechnician(technicianId)
             .then(()=>{
-                const index = technicians.value.findIndex(v => v.id_technician === id_technician);
+                const index = technicians.value.findIndex(v => v.id === technicianId);
                 if(index !== -1) technicians.value.splice(index, 1);
             }).catch(error =>{
                 errors.value.push(error);
         })
 
     }
-    function deleteTechnicianSchedule(id_schedule){
-        if(!id_schedule) return;
-        autoRepairApi.deleteTechnicianSchedule(id_schedule).then(()=>{
-            const index = techniciansSchedule.value.findIndex(v=> v.id_technician_schedule === id_schedule);
+    function deleteTechnicianSchedule(scheduleId){
+        if(!scheduleId) return;
+        autoRepairApi.deleteTechnicianSchedule(scheduleId).then(()=>{
+            const index = techniciansSchedule.value.findIndex(v=> v.id === scheduleId);
             if(index !== -1) technicians.value.splice(index, 1);
         }).catch(error =>{
             errors.value.push(error);
         })
     }
 
-    function getTechnicianById(id_technician){
-        return technicians.value.find(v => v.id_technician === id_technician);
+    function getTechnicianById(technicianId){
+        return technicians.value.find(v => v.id === technicianId);
     }
 
 

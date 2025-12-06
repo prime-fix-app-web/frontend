@@ -1,13 +1,6 @@
 <script setup>
 
 import LanguageSwitcher from "@/shared/presentation/components/language-switcher.vue";
-import {onMounted} from "vue";
-import LayoutOwner from "@/shared/presentation/components/layout-owner.vue";
-
-onMounted(() => {
-  console.log(typeof import.meta.env.VITE_NOTIFICATION_QUERY_PARAM_KEY);
-  console.log(import.meta.env.VITE_NOTIFICATION_QUERY_PARAM_KEY);
-})
 
 </script>
 
@@ -16,7 +9,7 @@ onMounted(() => {
     <div class="global-language-switcher">
       <language-switcher />
     </div>
-   <router-view />>
+   <router-view />
   </div>
 </template>
 

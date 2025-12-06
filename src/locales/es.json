@@ -518,23 +518,26 @@
     }
   },
   "manage-auto-repair": {
-    "title": "Workshop",
-    "workshopName": "Workshop name",
-    "workshopNamePlaceholder": "AutoRepairs",
+    "title": "Taller",
+    "workshopName": "Nombre del Taller",
+    "workshopNamePlaceholder": "Taller ",
     "ruc": "R.U.C.",
     "rucPlaceholder": "564165161",
-    "phoneNumber": "Workshop phone number",
+    "phoneNumber": "Numero del Taller",
     "phoneNumberPlaceholder": "99888959",
-    "department": "Department",
+    "department": "Departamento",
     "departmentPlaceholder": "Lima",
-    "district": "District",
+    "district": "Distrito",
     "districtPlaceholder": "San Miguel",
-    "address": "Address",
+    "address": "Dirección",
     "addressPlaceholder": "Castilla 696 C",
     "email": "Email",
     "emailPlaceholder": "autorepairs@gmail.com",
-    "back": "Back",
-    "saveChanges": "Save changes"
+    "back": "BRegresar",
+    "saveChanges": "Guardar Cambios",
+    "catalogTitle": "Catalogo de Servicios",
+    "noOffers": "Ningun servicio disponible",
+    "addService": "Añadir servicio"
   },
   "payment-service": {
     "title": "Pago a realizar",
@@ -623,5 +626,55 @@
       "availableTechnicians": "Técnicos disponibles:",
       "selectButton": "Seleccionar taller"
     }
+  },
+  "general": {
+    "view-all-services": "Todos los servicios registrados",
+    "back-to-workshop": "Taller",
+    "view-recently-created": "Recientes",
+    "cancel": "Cancelar",
+    "loadingCatalog": "Cargando catálogo",
+    "delete": "Eliminar"
+  },
+  "manage-services": {
+    "service-title": "Gestionar Servicios",
+    "create-new": "Crear nuevo servicio",
+    "service-name": "Nombre del servicio:",
+    "name-placeholder": "Nombre",
+    "service-description": "Descripción",
+    "description-placeholder": "Descripción",
+    "create-service-btn": "Agregar servicio",
+    "existing-services": "Servicios creados",
+    "pending": "Asignado",
+    "configured": "Configurado",
+    "configure-offer-btn": "Asignar servicio",
+    "recently-created": "Servicio creado recientemente",
+    "no-services-yet": "No hay servicios registrados",
+    "name-required": "El nombre es obligatorio",
+    "description-required": "La descripción es obligatoria",
+    "create-form-error": "Error al crear el servicio",
+    "service-created-success": "Servicio creado exitosamente",
+    "confirm-delete": "¿Eliminar servicio?",
+    "service-deleted-success": "Servicio eliminado"
+  },
+  "service-offer": {
+    "title": "Detalles del servicio",
+    "service-not-found": "Servicio no encontrado",
+    "price": "Precio del servicio",
+    "price-placeholder": "Precio",
+    "price-required": "El precio es obligatorio",
+    "duration": "Duración del servicio",
+    "duration-placeholder": "Duración",
+    "duration-required": "La duración es obligatoria",
+    "save-config-btn": "Guardar servicio"
+  },
+  "visit-alert": {
+    "title": "Buscar taller",
+    "message-title": "En espera",
+    "message-description": "Estamos esperando la respuesta del taller",
+    "go-to-dashboard": "Ir al panel"
   }
+
+
+
+
 }

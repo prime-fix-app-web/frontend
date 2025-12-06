@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script setup>
 import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { storeToRefs } from "pinia";
@@ -38,7 +38,7 @@ const {
   fetchVisit,
 } = dataStore;
 
-const selectedMethod = ref<string>("");
+const selectedMethod = ref("");
 
 const visitsByVehicleId = computed(() =>
     visits.value.filter(
@@ -46,7 +46,7 @@ const visitsByVehicleId = computed(() =>
     )
 );
 
-const onPaymentChange = (value: string) => {
+const onPaymentChange = (value) => {
   selectedMethod.value = value;
 };
 

@@ -37,14 +37,14 @@ const selectRepair = (id) => {
         <pv-card>
           <template #header>
             <h3>{{ repair.id }}</h3>
-            <p>RUC: {{ repair.RUC }}</p>
+            <p>RUC: {{ repair.ruc }}</p>
           </template>
           <template #content>
             <p>Email: {{ repair.contact_email }}</p>
-            <p>Técnicos: {{ repair.technician_count }}</p>
+            <p>Técnicos: {{ repair.technicians_count }}</p>
           </template>
           <template #footer>
-            <pv-button color="primary" @click="selectRepair(repair.id_auto_repair)">
+            <pv-button color="primary" @click="selectRepair(repair.id)">
               Agendar Visita
             </pv-button>
           </template>
