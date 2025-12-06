@@ -1,47 +1,44 @@
 <script setup>
 import {computed, onMounted} from 'vue';
 import { useRouter } from 'vue-router';
+import { storeToRefs } from 'pinia';
 import TechnicianCard from "@/auto-repair-register/presentation/components/technician-card.vue";
 import useAutoRepairRegisterStore from "@/auto-repair-register/application/auto-repair.store.js";
 import useIamStore from "@/iam/application/iam.store.js";
 import useCatalogStore from "@/auto-repair-catalog/application/owner.store.js";
 
+const router = useRouter();
+
+// Stores
 const registerStore = useAutoRepairRegisterStore();
 const iamStore = useIamStore();
 const catalogStore = useCatalogStore();
 
-const router = useRouter();
+const { technicians, techniciansSchedule } = storeToRefs(registerStore);
+const { sessionUserAccount } = storeToRefs(iamStore);
+const { autoRepairs } = storeToRefs(catalogStore);
 
-const sessionUserAccount = iamStore.sessionUserAccount;
-
-const technicianSchedules = computed(() => registerStore.technicianSchedules || []);
-
+const { fetchTechnicians, fetchTechnicianSchedule } = registerStore;
 
 const autoRepair = computed(() => {
-  const userAccount = sessionUserAccount;
+  const userAccount = sessionUserAccount.value;
   if (!userAccount) return undefined;
-  const autoRepairs = catalogStore.autoRepairs;
-  return autoRepairs.find(ar => ar.id_user_account === userAccount.id);
+  return autoRepairs.value.find(ar => ar.user_account_id === userAccount.id);
 });
 
-const technicians = computed(() => {
+const techniciansList = computed(() => {
   const ar = autoRepair.value;
   if (!ar) return [];
-  const allTechnicians = registerStore.technicians;
-  return allTechnicians.filter(t => t.id_auto_repair === ar.id_auto_repair);
+  return technicians.value.filter(t => t.auto_repair_id === ar.id);
 });
 
 const getTechnicianSchedules = (technicianId) => {
-  const schedules = computed(() => {
-    const allSchedules = registerStore.techniciansSchedule;
-    return allSchedules.filter(s => s.id_technician === technicianId);
-  });
-  return schedules.value;
+  return techniciansSchedule.value.filter(s => s.technician_id === technicianId);
 };
 
 onMounted(async () => {
-  registerStore.fetchTechnicians()
-  registerStore.fetchTechnicianSchedule()
+  await fetchTechnicians();
+  await fetchTechnicianSchedule();
 })
 </script>
 
@@ -61,14 +58,14 @@ onMounted(async () => {
       </div>
 
       <div class="technicians-list">
-        <div v-if="technicians.length === 0" class="empty-state">
+        <div v-if="techniciansList.length === 0" class="empty-state">
           <p>{{ $t('manage-technicians.noTechnicians') }}</p>
         </div>
         <TechnicianCard
-            v-for="tech in registerStore.technicians"
-            :key="tech.id_technician"
+            v-for="tech in techniciansList"
+            :key="tech.id"
             :technician="tech"
-            :technicianSchedules="technicianSchedules"
+            :technicianSchedules="getTechnicianSchedules(tech.id)"
         />
       </div>
     </div>

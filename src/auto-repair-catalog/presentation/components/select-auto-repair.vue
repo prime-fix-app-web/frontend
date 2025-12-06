@@ -27,7 +27,7 @@ const iamStore = useIamStore();
  * The user account associated with the auto repair shop.
  */
 const userAccount = computed(() => {
-  const idUserAccount =props.autoRepair?.id_user_account;
+  const idUserAccount =props.autoRepair?.user_account_id;
   return idUserAccount ? iamStore.getUserAccountById(idUserAccount) : undefined;
 });
 
@@ -41,14 +41,14 @@ const userAccountName = computed(() => userAccount.value?.username ?? '');
  * @param id - The ID of the auto repair shop to select.
  */
 const selectRepair = (id) => {
-  router.push({ name: "visitForm", query: { id_auto_repair: id } });
+  router.push({ name: "visitForm", query: { id: id } });
 };
 
 /**
  * Fetch user accounts and users on component mount.
  */
 onMounted(async ()=>{
-  iamStore.fetchUserAccounts();
+  await iamStore.fetchUserAccounts();
   iamStore.fetchUsers();
 })
 

@@ -171,7 +171,7 @@ function onBack() {
       <div v-if="filteredAutoRepairs.length > 0" class="workshops-list">
         <SelectAutoRepair
             v-for="item in filteredAutoRepairs"
-            :key="item.autoRepair.id_auto_repair"
+            :key="item.autoRepair.id"
             :auto-repair="item.autoRepair"
             :location="item.location"
         />

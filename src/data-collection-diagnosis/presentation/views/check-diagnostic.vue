@@ -31,36 +31,36 @@ const steps = [
 const currentAutoRepair = computed(() => {
   const userAccountId = iamStore.sessionUserAccount?.id;
   if (!userAccountId) return null;
-  return catalogStore.autoRepairs.find(ar => ar.id_user_account === userAccountId);
+  return catalogStore.autoRepairs.find(ar => ar.user_account_id === userAccountId);
 });
 
 const currentVehicle = computed(() => {
   if (!vehicleId.value) return null;
-  return trackingStore.vehicles.find(v => v.id_vehicle === vehicleId.value) || null;
+  return trackingStore.vehicles.find(v => v.id === vehicleId.value) || null;
 });
 
 const currentVisit = computed(() => {
   const vehicle = currentVehicle.value;
   if (!vehicle) return null;
 
-  const autoRepairId = currentAutoRepair.value?.id_auto_repair;
+  const autoRepairId = currentAutoRepair.value?.id;
   if (!autoRepairId) return null;
 
   return dataCollectionStore.visits.find(
-      v => v.id_vehicle === vehicle.id_vehicle && v.id_auto_repair === autoRepairId
+      v => v.vehicle_id === vehicle.id && v.auto_repair_id === autoRepairId
   ) || null;
 });
 
 const currentExpectedVisit = computed(() => {
   const visit = currentVisit.value;
   if (!visit) return null;
-  return dataCollectionStore.expectedVisit.find(ev => ev.id_visit === visit.id_visit) || null;
+  return dataCollectionStore.expectedVisit.find(ev => ev.visit_id === visit.id) || null;
 });
 
-const currentDiagnosticsByCurrentExpectedVisitId = computed(() => {
-  const expectedVisit = currentExpectedVisit.value;
-  if (!expectedVisit) return [];
-  return dataCollectionStore.diagnostic.filter(d => d.id_expected === expectedVisit.id_expected);
+const currentDiagnosticsByVehicleId = computed(() => {
+  const vehicle = currentVehicle.value;
+  if (!vehicle) return [];
+  return dataCollectionStore.diagnostic.filter(d => d.vehicle_id === vehicle.id);
 });
 
 onMounted(async () => {
@@ -91,14 +91,14 @@ onMounted(async () => {
         {{ translate('vehicleDiagnosis.loading') }}
       </div>
 
-      <div v-else-if="currentDiagnosticsByCurrentExpectedVisitId.length === 0" class="empty-state">
+      <div v-else-if="currentDiagnosticsByVehicleId.length === 0" class="empty-state">
         <p class="empty-text">{{ translate('vehicleDiagnosis.noDiagnostics') }}</p>
       </div>
 
       <div class="diagnostics-list">
         <div
-            v-for="diagnostic in currentDiagnosticsByCurrentExpectedVisitId"
-            :key="diagnostic.id_diagnostic"
+            v-for="diagnostic in currentDiagnosticsByVehicleId"
+            :key="diagnostic.id"
             class="diagnostic-card"
         >
           <div class="card-header">

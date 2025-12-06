@@ -1,15 +1,24 @@
-<script setup lang="ts">
+<script setup>
 import { useRouter } from 'vue-router';
 import usePaymentStore from "@/payment-service/application/payment-service.store.js";
 import {useI18n} from "vue-i18n";
 
 /**
  * Props definition for the ProgressBar component.
+ * @property {number} currentStep - The current step in the progress bar
+ * @property {Object} currentVehicle - The current vehicle object
+ * @property {string} currentVehicle.id - The vehicle ID
  */
-const props = defineProps<{
-  currentStep: number;
-  currentVehicle?: { id: string };
-}>();
+const props = defineProps({
+  currentStep: {
+    type: Number,
+    required: true
+  },
+  currentVehicle: {
+    type: Object,
+    default: null
+  }
+});
 
 const router = useRouter();
 const {t} = useI18n();
@@ -30,24 +39,24 @@ const steps = [
 
 /**
  * Determines if a step is completed, current, or pending.
- * @param stepId - The ID of the step to check.
- * @returns Boolean indicating the status of the step.
+ * @param {number} stepId - The ID of the step to check.
+ * @returns {boolean} Boolean indicating the status of the step.
  */
-const isStepCompleted = (stepId: number) => stepId < props.currentStep;
+const isStepCompleted = (stepId) => stepId < props.currentStep;
 
 /**
  * Determines if a step is the current step.
- * @param stepId - The ID of the step to check.
- * @returns Boolean indicating if the step is current.
+ * @param {number} stepId - The ID of the step to check.
+ * @returns {boolean} Boolean indicating if the step is current.
  */
-const isCurrentStep = (stepId: number) => stepId === props.currentStep;
+const isCurrentStep = (stepId) => stepId === props.currentStep;
 
 /**
  * Determines if a step is pending.
- * @param stepId - The ID of the step to check.
- * @returns Boolean indicating if the step is pending.
+ * @param {number} stepId - The ID of the step to check.
+ * @returns {boolean} Boolean indicating if the step is pending.
  */
-const isStepPending = (stepId: number) => stepId > props.currentStep;
+const isStepPending = (stepId) => stepId > props.currentStep;
 
 /**
  * Navigates to the payment page for the current vehicle.

@@ -98,23 +98,23 @@ const formErrors = computed(() => {
 
   return {
     fullName: touchedFields.value.fullName && registerForm.value.fullName.trim().length < 2
-      ? t('register-auto-repair-catalog.fullNameRequired') : null,
+      ? t('register-owner.fullNameRequired') : null,
     username: touchedFields.value.username && registerForm.value.username.trim().length < 2
-      ? t('register-auto-repair-catalog.usernameRequired') : null,
+      ? t('register-owner.usernameRequired') : null,
     dni: touchedFields.value.dni && !isValidDni(trimmedDni)
-      ? t('register-auto-repair-catalog.dniPattern') : null,
+      ? t('register-owner.dniPattern') : null,
     phone_number: touchedFields.value.phone_number && !isValidPhone(trimmedPhone)
-      ? t('register-auto-repair-catalog.phonePattern') : null,
+      ? t('register-owner.phonePattern') : null,
     department: touchedFields.value.department && registerForm.value.department.trim().length < 2
-      ? t('register-auto-repair-catalog.departmentRequired') : null,
+      ? t('register-owner.departmentRequired') : null,
     district: touchedFields.value.district && registerForm.value.district.trim().length < 2
-      ? t('register-auto-repair-catalog.districtRequired') : null,
+      ? t('register-owner.districtRequired') : null,
     address: touchedFields.value.address && registerForm.value.address.trim().length < 5
-      ? t('register-auto-repair-catalog.addressRequired') : null,
+      ? t('register-owner.addressRequired') : null,
     email: touchedFields.value.email && !isValidEmail(trimmedEmail)
-      ? t('register-auto-repair-catalog.emailInvalid') : null,
+      ? t('register-owner.emailInvalid') : null,
     password: touchedFields.value.password && registerForm.value.password.length < 6
-      ? t('register-auto-repair-catalog.passwordRequired') : null,
+      ? t('register-owner.passwordRequired') : null,
   };
 });
 
@@ -152,10 +152,10 @@ function navigateToLogin() {
 }
 
 /**
- * Navigate to plan auto-repair-catalog page
+ * Navigate to plan owner page
  */
 function navigateToPlanOwner() {
-  router.push('/iam/plan-auto-repair-catalog');
+  router.push('/iam/plan-owner');
 }
 
 /**
@@ -244,6 +244,8 @@ function onSubmit() {
                     @blur="markAsTouched('dni')"
                     type="text"
                     maxlength="8"
+                    pattern="[0-9]{8}"
+                    inputmode="numeric"
                     :placeholder="$t('register-owner.dniPlaceholder')"
                     class="input"
                     :class="{ error: formErrors.dni }"

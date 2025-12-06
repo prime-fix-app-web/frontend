@@ -54,7 +54,7 @@ async function submitPayment() {
   }
 
   const newPayment = {
-    id_payment: "PY" + Math.floor(Math.random() * 1000),
+    id: "PY" + Math.floor(Math.random() * 1000),
     card_number: form.value.card_number,
     card_type: form.value.card_type,
     month: form.value.month,

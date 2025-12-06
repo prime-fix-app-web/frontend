@@ -12,6 +12,8 @@ const sessionUserAccount = computed(() => iamStore.sessionUserAccount);
 // UI state
 const showPasswordFields = ref(false);
 const showAddPaymentModal = ref(false);
+const showNewPassword = ref(false);
+const showRepeatPassword = ref(false);
 
 // Payments filtered by session user account ID
 const paymentByUserAccountId = computed(() => {
@@ -90,10 +92,6 @@ const months = [
 const years = Array.from({ length: 10 }, (_, i) => new Date().getFullYear() + i);
 
 // Methods
-const togglePasswordVisibility = (inputId) => {
-  const input = document.getElementById(inputId);
-  if (input) input.type = input.type === 'password' ? 'text' : 'password';
-};
 
 const onSavePassword = () => {
   if (!validatePasswordForm()) return;
@@ -210,7 +208,7 @@ onMounted(async () => {
       <h2 class="section-title">{{ $t('settings-view.paymentMethods') }}</h2>
 
       <div class="payment-methods-list">
-        <div v-for="payment in paymentByUserAccountId" :key="payment.id_payment" class="payment-card">
+        <div v-for="payment in paymentByUserAccountId" :key="payment.id" class="payment-card">
           <div class="payment-info">
             <p class="payment-bank">{{ $t('settings-view.bank') }}: {{ getCardBrand(payment.card_number) }}</p>
             <p class="payment-number">{{ $t('settings-view.cardNumber') }}: {{ formatCardNumber(payment.card_number) }}</p>
@@ -299,7 +297,7 @@ onMounted(async () => {
 }
 
 .settings-title {
-  font-family: var(--font-bold);
+  font-family: var(--font-bold), sans-serif;
   font-size: 3rem;
   color: var(--color-primary);
   margin: 0 0 2rem 0;
@@ -315,7 +313,7 @@ onMounted(async () => {
 }
 
 .section-title {
-  font-family: var(--font-semibold);
+  font-family: var(--font-semibold), sans-serif;
   font-size: 1.5rem;
   color: var(--color-dark);
   margin-bottom: 1.5rem;
@@ -345,7 +343,7 @@ onMounted(async () => {
 }
 
 .form-label {
-  font-family: var(--font-medium);
+  font-family: var(--font-medium), sans-serif;
   font-size: 1rem;
   color: var(--color-dark);
 }
@@ -355,7 +353,7 @@ onMounted(async () => {
   padding: 0.875rem 1rem;
   border: 2px solid var(--color-primary);
   border-radius: 25px;
-  font-family: var(--font-regular);
+  font-family: var(--font-regular), sans-serif;
   font-size: 1rem;
   color: var(--color-dark);
   background-color: var(--color-light);
@@ -579,7 +577,7 @@ onMounted(async () => {
 }
 
 .modal-title {
-  font-family: var(--font-bold);
+  font-family: var(--font-bold), sans-serif;
   font-size: 1.8rem;
   color: var(--color-primary);
   margin: 0 0 1.5rem 0;

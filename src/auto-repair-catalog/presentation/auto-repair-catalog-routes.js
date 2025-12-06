@@ -11,7 +11,7 @@ const autoCatalogRoutes = [
     {path: "searchWorkshop", name: "searchWorkshop", component: searchAutoRepair, meta: {title: 'Search Workshop'}},
     {path: "visitRequest", name: "visitRequest", component: visitRequest, meta: {title: 'Visit Request'}},
     {path: "workshopSelection", name: "workshopSelection", component: workshopSelection, meta: {title: 'Workshop Selection'}},
-    {path: "schedule-visit/:id_auto_repair?", name: "visitForm", component: visitForm, meta: {title: 'Schedule Visit'}},
+    {path: "schedule-visit/:id?", name: "visitForm", component: visitForm, meta: {title: 'Schedule Visit'}},
     {path:"service-form", component:serviceForm},
     {path:"offer-form/:id", component:serviceOffer}
 ];

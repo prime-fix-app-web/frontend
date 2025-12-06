@@ -25,7 +25,7 @@ const offerForm = ref({
 
 const autoRepairId = computed(() => {
   const autoRepair = catalogStore.getAutoRepairById(iamStore.sessionUserAccountId);
-  return autoRepair?.auto_repair_id || null;
+  return autoRepair?.id || null;
 });
 
 watch([autoRepairId, serviceId], ([autoRepair, sId]) => {

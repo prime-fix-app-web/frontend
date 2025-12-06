@@ -173,7 +173,14 @@ const usePaymentStore = defineStore('payment-service',() => {
      */
     function addRating(rating) {
         paymentServiceApi.createRating(rating).then(response => {
-            const resource = response.data;
+            // Handle both AWS (single object) and Supabase (array) responses
+            let resource = response.data;
+
+            // If response is an array (Supabase), get the first element
+            if (Array.isArray(resource)) {
+                resource = resource[0];
+            }
+
             const newRating = RatingAssembler.toEntityFromResource(resource);
             ratings.value.push(newRating);
         }).catch(error => {
@@ -212,6 +219,7 @@ const usePaymentStore = defineStore('payment-service',() => {
     }
 
     return {
+        paymentServiceApi, // Export API instance for external use (aliased as paymentApi in other contexts)
         payments,
         ratings,
         paymentsLoaded,

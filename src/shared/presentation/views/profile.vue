@@ -70,14 +70,14 @@ const togglePasswordVisibility = () => {
 
 const saveChanges = () => {
   const locationEdit = new Location({
-    id_location: sessionLocation.value?.id_location,
+    id: sessionLocation.value?.id,
     address: addressToEdit.value,
     district: sessionLocation.value?.district,
     department: sessionLocation.value?.department
   });
 
   const updatedUserAccount = new UserAccount({
-    id_user_account: sessionUserAccount.value?.id,
+    id: sessionUserAccount.value?.id,
     username: usernameToEdit.value,
     email: sessionUserAccount.value?.email,
     user_id: sessionUserAccount.value?.user_id,

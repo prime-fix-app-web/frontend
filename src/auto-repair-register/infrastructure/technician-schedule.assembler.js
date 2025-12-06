@@ -14,6 +14,28 @@ export class TechnicianScheduleAssembler {
     }
 
     /**
+     * Converts a Technician Schedule entity to a resource object for API requests.
+     * @param {TechnicianSchedule} entity - The Technician Schedule entity to convert.
+     * @returns {Object} - The resource object for the API.
+     */
+    static toResourceFromEntity(entity) {
+        const resource = {
+            technician_id: entity.technician_id,
+            day_of_week: entity.day_of_week,
+            start_time: entity.start_time,
+            end_time: entity.end_time,
+            is_active: entity.is_active
+        };
+
+        // Solo incluir id si existe y NO es temporal (no comienza con 'TS')
+        if (entity.id && typeof entity.id === 'number') {
+            resource.id = entity.id;
+        }
+
+        return resource;
+    }
+
+    /**
      * Converts a response containing multiple Technician Schedule resources to an array of Technician Schedule entities.
      * @param response - The response object containing Technician Schedule resources.
      * @returns {TechnicianSchedule[]} - An array of Technician Schedule entities.

@@ -93,13 +93,13 @@ const useDataCollection = defineStore('useDataCollection', ()=>{
     }
 
     function getVisitsById(id){
-        return visits.value.find((visit) => visit.id_visit === id);
+        return visits.value.find((visit) => visit.id === id);
     }
     function getExpectedById(id){
-        return expectedVisit.value.find((expected)=>expected.id_expected_visit === id);
+        return expectedVisit.value.find((expected)=>expected.id === id);
     }
     function getDiagnosticById(id){
-        return diagnostic.value.find((diagnostic) => diagnostic.id_diagnostic === id);
+        return diagnostic.value.find((diagnostic) => diagnostic.id === id);
     }
 
     function addVisit(visit){
@@ -137,12 +137,12 @@ const useDataCollection = defineStore('useDataCollection', ()=>{
         try {
             const visitId = Number(id);
             const response = await dataApi.updateVisit(visitId, visitData);
-            const index = visits.value.findIndex(v => Number(v.id_visit) === visitId);
+            const index = visits.value.findIndex(v => Number(v.id) === visitId);
             if (index !== -1) {
                 visits.value[index] = {
                     ...visits.value[index],
                     ...visitData,
-                    id_visit: visitId
+                    id: visitId
                 };
             }
             loading.value = false;
@@ -159,12 +159,12 @@ const useDataCollection = defineStore('useDataCollection', ()=>{
         try{
             const expectedId = Number(id);
             const response = await dataApi.updateExpectedVisit(expectedId, expectedData);
-            const index =expectedVisit.value.findIndex(v => Number(v.id_expected) === expectedId);
+            const index =expectedVisit.value.findIndex(v => Number(v.id) === expectedId);
             if(index !== -1){
                 expectedData.value[index] ={
                     ...expectedVisit.value[index],
                     ...expectedData,
-                    id_expected:expectedId
+                    id:expectedId
                 };
             }
             loading.value = false;
@@ -181,12 +181,12 @@ const useDataCollection = defineStore('useDataCollection', ()=>{
         try{
             const diagnosticId=Number(id);
             const response = await dataApi.updateDiagnostic(diagnosticId, diagnosticData);
-            const index = diagnostic.value.findIndex(v => Number(v.id_diagnostic)===diagnosticId);
+            const index = diagnostic.value.findIndex(v => Number(v.id)===diagnosticId);
             if(index !== -1){
                 diagnosticData.value[index] ={
                     ...diagnostic.value[index],
                     ...diagnosticData,
-                    id_diagnostic:diagnosticId
+                    id:diagnosticId
                 };
             }
             loading.value = false;
@@ -202,28 +202,28 @@ const useDataCollection = defineStore('useDataCollection', ()=>{
         if (!id_visit) return;
         dataApi.deleteVisit(id_visit)
             .then(() => {
-                const index = visits.value.findIndex(v => v.id_visit === id_visit);
+                const index = visits.value.findIndex(v => v.id === id_visit);
                 if (index !== -1) visits.value.splice(index, 1);
             })
             .catch(error => errors.value.push(error));
     }
 
 
-    function deleteExpectedVisit (id_expected){
-        if(!id_expected) return;
-        dataApi.deleteExpectedVisit(id_expected)
+    function deleteExpectedVisit (expectedId){
+        if(!expectedId) return;
+        dataApi.deleteExpectedVisit(expectedId)
             .then(()=>{
-                const index = expectedVisit.value.findIndex(v => v.id_expected === id_expected);
+                const index = expectedVisit.value.findIndex(v => v.id === expectedId);
                 if (index !== -1) expectedVisit.value.splice(index, 1);
             })
             .catch(error => errors.value.push(error));
     }
 
-    function deleteDiagnostic(id_diagnostic){
-        if(!id_diagnostic) return;
-        dataApi.deleteDiagnostic(id_diagnostic)
+    function deleteDiagnostic(diagnosticId){
+        if(!diagnosticId) return;
+        dataApi.deleteDiagnostic(diagnosticId)
             .then(()=>{
-                const index = diagnostic.value.findIndex(v => v.id_diagnostic === id_diagnostic);
+                const index = diagnostic.value.findIndex(v => v.id === diagnosticId);
                 if(index !==-1) diagnostic.value.splice(index, 1);
             })
             .catch(error => errors.value.push(error));

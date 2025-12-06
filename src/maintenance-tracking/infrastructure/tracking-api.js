@@ -88,7 +88,7 @@ export class TrackingApi extends BaseApi {
     async deleteNotification(input) {
         const id = (typeof input === 'string' || typeof input === 'number')
             ? input
-            : input?.id ?? input?.id_notification;
+            : input?.id;
 
         if (id === undefined || id === null || id === '') {
             throw new Error("deleteNotification: id required");

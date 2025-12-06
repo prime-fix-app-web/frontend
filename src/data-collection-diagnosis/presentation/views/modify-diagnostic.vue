@@ -42,39 +42,39 @@ const steps = [
 ]
 
 const currentAutoRepair = computed(() => {
-  const userAccountId = iamStore.sessionUserAccount.id_user_account
+  const userAccountId = iamStore.sessionUserAccount.id
   if (!userAccountId) return null
-  return catalogStore.autoRepairs.find(ar => ar.id_user_account === userAccountId)
+  return catalogStore.autoRepairs.find(ar => ar.user_account_id === userAccountId)
 })
 
 const currentVehicle = computed(() => {
   const id = vehicleId.value
   if (!id) return null
-  return trackingStore.vehicles.find(v => v.id_vehicle === id) || null
+  return trackingStore.vehicles.find(v => v.id === id) || null
 })
 
 const currentVisit = computed(() => {
   const vehicle = currentVehicle.value
   if (!vehicle) return null
 
-  const autoRepairId = currentAutoRepair.value?.id_auto_repair
+  const autoRepairId = currentAutoRepair.value?.id
   if (!autoRepairId) return null
 
   return dataCollectionStore.visits.find(
-      v => v.id_vehicle === vehicle.id_vehicle && v.id_auto_repair === autoRepairId
+      v => v.vehicle_id === vehicle.id && v.auto_repair_id === autoRepairId
   ) || null
 })
 
 const currentOwner = computed(() => {
   const vehicle = currentVehicle.value
   if (!vehicle) return null
-  return iamStore.users.find(u => u.id === vehicle.id_user) || null
+  return iamStore.users.find(u => u.id === vehicle.user_id) || null
 })
 
 const currentExpectedVisit = computed(() => {
   const visit = currentVisit.value
   if (!visit) return null
-  return dataCollectionStore.expectedVisit.find(ev => ev.id_visit === visit.id_visit) || null
+  return dataCollectionStore.expectedVisit.find(ev => ev.visit_id === visit.id) || null
 })
 
 onMounted(() => {
@@ -121,11 +121,10 @@ function onSubmit() {
 
   try {
     const diagnostic = new Diagnostic({
-      id_diagnostic: generateDiagnosticId(),
+      id: generateDiagnosticId(),
       price: modifyForm.price,
-      id_vehicle: vehicle.id_vehicle,
-      diagnosis: modifyForm.diagnosis,
-      id_expected: expectedVisit.id_expected
+      vehicle_id: vehicle.id,
+      diagnosis: modifyForm.diagnosis
     })
 
     dataCollectionStore.addDiagnostic(diagnostic)

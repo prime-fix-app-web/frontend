@@ -248,6 +248,8 @@ function onSubmit() {
                     @blur="markAsTouched('ruc')"
                     type="text"
                     maxlength="11"
+                    pattern="[0-9]{11}"
+                    inputmode="numeric"
                     :placeholder="$t('register-workshop.rucPlaceholder')"
                     class="input"
                     :class="{ error: formErrors.ruc }"

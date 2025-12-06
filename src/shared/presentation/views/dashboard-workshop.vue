@@ -19,9 +19,9 @@ const selectedExpectedVisitAndVisit = ref(null); // { expectedVisit, visit } | n
 const sessionUserAccount = computed(() => iamStore.sessionUserAccount);
 
 const currentAutoRepair = computed(() => {
-  const userAccountId = sessionUserAccount.value?.id_user_account;
+  const userAccountId = sessionUserAccount.value?.id;
   if (!userAccountId || !catalogStore.autoRepairs.length) return null;
-  return catalogStore.autoRepairs.find(ar => ar.id_user_account === userAccountId) || null;
+  return catalogStore.autoRepairs.find(ar => ar.user_account_id === userAccountId) || null;
 });
 
 const expectedVisitsScheduled = computed(() => {
@@ -29,47 +29,47 @@ const expectedVisitsScheduled = computed(() => {
     return [];
 
   const visitsByAutoRepair = dataCollectionStore.visits.filter(
-      v => v.id_auto_repair === currentAutoRepair.value.id_auto_repair
+      v => v.auto_repair_id === currentAutoRepair.value.auto_repair_id
   );
 
   return dataCollectionStore.expectedVisit.filter(ev =>
-      visitsByAutoRepair.some(v => v.id_visit === ev.id_visit) // ignoramos is_scheduled
+      visitsByAutoRepair.some(v => v.id === ev.visit_id) // ignoramos is_scheduled
   );
 });
 
 
 const receivedRatings = computed(() => {
   return paymentServiceStore.ratings.filter(
-      r => r.id_auto_repair === currentAutoRepair.value?.id_auto_repair
+      r => r.auto_repair_id === currentAutoRepair.value?.id
   );
 });
 
 // Methods
-function getUserNameByUserAccountId(id_user_account) {
+function getUserNameByUserAccountId(userAccountId) {
   return computed(() => {
     const accounts = iamStore.userAccounts || [];
-    const userAccount = accounts.find(ua => ua.id_user_account === id_user_account);
+    const userAccount = accounts.find(ua => ua.id === userAccountId);
     return userAccount ? userAccount.username : 'Unknown User';
   });
 }
 
-function getVisitByExpectedVisitId(id_expected_visit) {
+function getVisitByExpectedVisitId(expectedVisitId) {
   return computed(() => {
     const expectedVisits = dataCollectionStore.expectedVisit || [];
     const visits = dataCollectionStore.visits || [];
 
-    const expectedVisit = expectedVisits.find(ev => ev.id === id_expected_visit);
+    const expectedVisit = expectedVisits.find(ev => ev.id === expectedVisitId);
     if (!expectedVisit) return null;
     return visits.find(v => v.id === expectedVisit.visit_id) || null;
   });
 }
 
-function getUserFullNameByVisitId(id_visit) {
+function getUserFullNameByVisitId(visitId) {
   const visits = dataCollectionStore.visits || [];
   const vehicles = trackingStore.vehicles || [];
   const users = iamStore.users || [];
 
-  const visit = visits.find(v => v.id === id_visit);
+  const visit = visits.find(v => v.id === visitId);
   if (!visit) return 'Unknown User';
 
   const vehicle = vehicles.find(veh => veh.id === visit.vehicle_id);
@@ -132,28 +132,28 @@ onMounted(async () => {
       <div class="visits-list">
         <div
             v-for="expectedVisit in expectedVisitsScheduled"
-            :key="expectedVisit.id_expected"
+            :key="expectedVisit.id"
             class="visit-card"
         >
           <div class="visit-info">
             <h3 class="customer-name">
-              {{ getUserFullNameByVisitId(expectedVisit.id_visit) }}
+              {{ getUserFullNameByVisitId(expectedVisit.visit_id) }}
             </h3>
             <div class="visit-details">
               <p class="detail-item">
                 <span class="detail-label">{{ $t('dashboard-workshop.date') }}:</span>
-                {{ getVisitByExpectedVisitId(expectedVisit.id_expected).value?.time_visit?.slice(0,10) }}
+                {{ getVisitByExpectedVisitId(expectedVisit.id).value?.time_visit?.slice(0,10) }}
               </p>
               <p class="detail-item">
                 <span class="detail-label">{{ $t('dashboard-workshop.time') }}:</span>
-                {{ getVisitByExpectedVisitId(expectedVisit.id_expected).value?.time_visit?.slice(11,16) }}
+                {{ getVisitByExpectedVisitId(expectedVisit.id).value?.time_visit?.slice(11,16) }}
               </p>
             </div>
           </div>
 
           <button
               class="btn-details"
-              @click="onShowDetails(expectedVisit, getVisitByExpectedVisitId(expectedVisit.id_expected).value)"
+              @click="onShowDetails(expectedVisit, getVisitByExpectedVisitId(expectedVisit.id).value)"
           >
             {{ $t('dashboard-workshop.details') }}
           </button>
@@ -176,7 +176,7 @@ onMounted(async () => {
         >
           <div class="rating-header">
             <h3 class="customer-name">
-              {{ $t('dashboard-workshop.client') }}: {{ getUserNameByUserAccountId(rating.id_user_account).value }}
+              {{ $t('dashboard-workshop.client') }}: {{ getUserNameByUserAccountId(rating.user_account_id).value }}
             </h3>
             <p class="rating-date">
               {{ $t('dashboard-workshop.ratingDate') }}: {{ rating.time_rating }}

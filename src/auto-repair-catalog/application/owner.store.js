@@ -45,7 +45,7 @@ const useCatalogStore = defineStore('auto-repair-catalog', () => {
       return locationsLoaded ? locations.value.length : 0;
   })
 
-    function fetchAutoRepairs(){
+    async function fetchAutoRepairs(){
         // Si estamos usando AWS y no hay JWT, no hacer fetch
         if (apiConfig.isAwsPrimary && !hasActiveJWT()) {
             console.log('[Catalog Store] Skipping fetchAutoRepairs - No JWT token available');
@@ -61,7 +61,7 @@ const useCatalogStore = defineStore('auto-repair-catalog', () => {
         });
     }
 
-  function fetchLocations(){
+    async function fetchLocations(){
       // Si estamos usando AWS y no hay JWT, no hacer fetch
       if (apiConfig.isAwsPrimary && !hasActiveJWT()) {
           console.log('[Catalog Store] Skipping fetchLocations - No JWT token available');
@@ -77,7 +77,7 @@ const useCatalogStore = defineStore('auto-repair-catalog', () => {
       });
   }
 
-    function fetchServices(){
+    async function fetchServices(){
       if(apiConfig.isAwsPrimary && !hasActiveJWT()){
           console.log('[Catalog Store] Skipping fetchServices - No JWT toke available');
           return Promise.resolve();
@@ -95,14 +95,14 @@ const useCatalogStore = defineStore('auto-repair-catalog', () => {
       loading.value = true;
       errors.value =[];
       try{
-          const locationId = Number(id);
-          const response = await catalogApi.updateLocation(locationId, locationData);
-          const index = locations.value.findIndex(v =>Number(v.id_location) === locationId)
+          const locationId = id;
+          const response = await catalogApi.updateLocation(locationData);
+          const index = locations.value.findIndex(l => l.id === locationId)
           if(index !==-1){
               locations.value[index] ={
                   ...locations.value[index],
                   ...locationData,
-                  id_location: locationId
+                  id: locationId
               };
           }
           loading.value = false;
@@ -119,14 +119,14 @@ const useCatalogStore = defineStore('auto-repair-catalog', () => {
       errors.value =[];
       try {
           const autoRepairId = Number(id);
-          const response = await catalogApi.updateAutoRepair(autoRepairId, autoRepairData);
-          const index = autoRepairs.value.findIndex(v =>Number(v.id_auto_repair) === autoRepairId);
+          const response = await catalogApi.updateAutoRepair(autoRepairData);
+          const index = autoRepairs.value.findIndex(v =>Number(v.id) === autoRepairId);
 
           if(index !== -1){
               autoRepairs.value[index] = {
                   ...autoRepairs.value[index],
                   ...autoRepairData,
-                  id_auto_repair: autoRepairId
+                  id: autoRepairId
               };
           }
           loading.value = false;
@@ -159,27 +159,27 @@ const useCatalogStore = defineStore('auto-repair-catalog', () => {
   }
 
   function getLocationById(id){
-      return locations.value.find((location)=>location.id_location === id);
+      return locations.value.find((location)=>location.id === id);
   }
 
   function getAutoRepairById(id){
-      return autoRepairs.value.find((autoRepair)=>autoRepair.id_auto_repair === id);
+      return autoRepairs.value.find((autoRepair)=>autoRepair.id === id);
   }
 
-  function deleteAutoRepair(id_auto_repair){
-      if(!id_auto_repair) return;
-      catalogApi.deleteAutoRepair(id_auto_repair).then(response =>{
-          const index = autoRepairs.value.findIndex(v => v.id_auto_repair === id_auto_repair);
+  function deleteAutoRepair(autoRepairId){
+      if(!autoRepairId) return;
+      catalogApi.deleteAutoRepair(autoRepairId).then(response =>{
+          const index = autoRepairs.value.findIndex(v => v.id === autoRepairId);
           if(index !== -1) autoRepairs.value.splice(index, 1);
       }).catch(error =>{
           errors.value.push(error);
       })
   }
 
-  function deleteLocation(id_location){
-      if(!id_location) return;
-      catalogApi.deleteLocation(id_location).then(response =>{
-          const index = locations.value.findIndex(v => v.id_location === id_location);
+  function deleteLocation(locationId){
+      if(!locationId) return;
+      catalogApi.deleteLocation(locationId).then(response =>{
+          const index = locations.value.findIndex(v => v.id === locationId);
           if(index !== -1) locations.value.splice(index, 1);
       }).catch(error =>{
           errors.value.push(error);
@@ -198,7 +198,15 @@ const useCatalogStore = defineStore('auto-repair-catalog', () => {
             };
 
             const response = await catalogApi.createService(payload);
-            const resource = response.data;
+
+            // Handle both AWS (single object) and Supabase (array) responses
+            let resource = response.data;
+
+            // If response is an array (Supabase), get the first element
+            if (Array.isArray(resource)) {
+                resource = resource[0];
+            }
+
             const newService = ServiceAssembler.toEntityFromResource(resource);
 
             services.value.push(newService);
@@ -289,6 +297,7 @@ const useCatalogStore = defineStore('auto-repair-catalog', () => {
     }
 
   return {
+      catalogApi, // Export API instance for external use
       autoRepairs,
       locations,
       errors,

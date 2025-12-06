@@ -117,14 +117,14 @@ onMounted(async () => {
       <button
           class="edit-button"
           type="button"
-          @click="editTechnician(technician.id_technician)"
+          @click="editTechnician(technician.id)"
       >
         {{ t('manage-technicians.technician-card.edit-button') }}
       </button>
       <button
           class="delete-button"
           type="button"
-          @click="deleteTechnician(technician.id_technician)"
+          @click="deleteTechnician(technician.id)"
       >
         {{ t('manage-technicians.technician-card.delete-button') }}
       </button>
