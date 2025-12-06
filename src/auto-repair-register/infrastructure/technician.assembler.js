@@ -19,18 +19,11 @@ export class TechnicianAssembler {
      * @returns {Object} - The resource object for the API.
      */
     static toResourceFromEntity(entity) {
-        const resource = {
+        return {
             name: entity.name,
             last_name: entity.last_name,
             auto_repair_id: entity.auto_repair_id
         };
-
-        // Solo incluir id si existe y NO es temporal (no comienza con 'T')
-        if (entity.id && typeof entity.id === 'number') {
-            resource.id = entity.id;
-        }
-
-        return resource;
     }
 
     /**

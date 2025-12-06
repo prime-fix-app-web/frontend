@@ -70,9 +70,9 @@ export const useAutoRepairRegisterStore = defineStore('autoRepairRegister', () =
         loading.value = true;
         errors.value = [];
         try{
-            const technicianId =Number(id);
+            const technicianId =id;
             const response = await autoRepairApi.updateTechnician(technicianId,technicianData);
-            const index = technicians.value.findIndex(v => Number(v.id)===technicianId);
+            const index = technicians.value.findIndex(v => v.id===technicianId);
             if(index !==-1){
                 technicians.value[index]={
                     ...technicians.value[index],
@@ -92,9 +92,9 @@ export const useAutoRepairRegisterStore = defineStore('autoRepairRegister', () =
         loading.value = true;
         errors.value = [];
         try {
-            const scheduleId = Number(id);
+            const scheduleId = id;
             const response = await autoRepairApi.updateTechnicianSchedule(scheduleId,scheduleData);
-            const index = techniciansSchedule.value.findIndex(v => Number(v.id)===scheduleId);
+            const index = techniciansSchedule.value.findIndex(v => v.id===scheduleId);
             if(index !==-1){
                 techniciansSchedule.value[index]={
                     ...techniciansSchedule.value[index],
@@ -156,7 +156,7 @@ export const useAutoRepairRegisterStore = defineStore('autoRepairRegister', () =
         if(!technicianId) return;
         autoRepairApi.deleteTechnician(technicianId)
             .then(()=>{
-                const index = technicians.value.findIndex(v => v.id === technicianId);
+                const index = technicians.value.findIndex(t => t.id === technicianId);
                 if(index !== -1) technicians.value.splice(index, 1);
             }).catch(error =>{
                 errors.value.push(error);
@@ -174,7 +174,7 @@ export const useAutoRepairRegisterStore = defineStore('autoRepairRegister', () =
     }
 
     function getTechnicianById(technicianId){
-        return technicians.value.find(v => v.id === technicianId);
+        return autoRepairApi.getTechnicianById(technicianId);
     }
 
 

@@ -9,6 +9,10 @@ const router = useRouter()
 const catalogStore = useCatalogStore()
 const iamStore = useIamStore()
 
+const { fetchLocations , fetchAutoRepairs } = catalogStore;
+const { fetchUserAccounts, fetchUsers  } = iamStore;
+
+
 const showResults = ref(false)
 const selectedDepartment = ref('')
 
@@ -21,10 +25,10 @@ const searchForm = reactive({
 })
 
 onMounted(async ()=>{
-  catalogStore.fetchLocations();
-  catalogStore.fetchAutoRepairs();
-  iamStore.fetchUserAccounts();
-  iamStore.fetchUsers();
+  await fetchLocations();
+  await fetchAutoRepairs();
+  await fetchUserAccounts();
+  await fetchUsers();
 })
 
 watch(() => searchForm.department, (value) => {

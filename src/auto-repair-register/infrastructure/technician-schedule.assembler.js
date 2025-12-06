@@ -19,20 +19,13 @@ export class TechnicianScheduleAssembler {
      * @returns {Object} - The resource object for the API.
      */
     static toResourceFromEntity(entity) {
-        const resource = {
+        return {
             technician_id: entity.technician_id,
             day_of_week: entity.day_of_week,
             start_time: entity.start_time,
             end_time: entity.end_time,
             is_active: entity.is_active
         };
-
-        // Solo incluir id si existe y NO es temporal (no comienza con 'TS')
-        if (entity.id && typeof entity.id === 'number') {
-            resource.id = entity.id;
-        }
-
-        return resource;
     }
 
     /**

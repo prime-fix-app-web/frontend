@@ -6,6 +6,7 @@ import { computed, onMounted, ref } from "vue";
 import { Visit } from "@/data-collection-diagnosis/domain/model/visit.entity.js";
 import useIamStore from "@/iam/application/iam.store.js";
 import useTrackingStore from "@/maintenance-tracking/application/tracking.store.js";
+import useCatalogStore from "@/auto-repair-catalog/application/owner.store.js";
 
 const { t } = useI18n();
 const route = useRoute();
@@ -13,8 +14,10 @@ const router = useRouter();
 const dataStore = useDataCollection();
 const iamStore = useIamStore();
 const trackingStore = useTrackingStore();
+const catalogStore = useCatalogStore();
 
-const {errors, visits, addVisit, updateVisit, deleteVisit, fetchVisit, fetchServices} = dataStore;
+const {errors, visits, addVisit, updateVisit, deleteVisit, fetchVisit} = dataStore;
+const { fetchServices } = catalogStore;
 
 const form = ref({
   vehicle_id: null,
@@ -41,7 +44,7 @@ const filteredVehicles = computed(() => {
 });
 
 onMounted(async () => {
-  await dataStore.fetchServices();
+  await fetchServices();
   await trackingStore.fetchVehicles();
 
   if (!visits.length) await fetchVisit();

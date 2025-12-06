@@ -118,10 +118,6 @@ const routes = [
                 ...route,
                 path: `auto-repair-register/${route.path}`,
             })),
-            ...autoRepairCatalogRoutes.map(route => ({
-                ...route,
-                path: `auto-repair-catalog/${route.path}`,
-            }))
 
         ]
     },

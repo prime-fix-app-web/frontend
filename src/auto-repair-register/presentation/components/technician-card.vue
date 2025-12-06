@@ -100,7 +100,7 @@ onMounted(async () => {
       <div v-else class="schedule-list">
         <div
             v-for="schedule in sortedSchedules || []"
-            :key="schedule.id_schedule"
+            :key="schedule.id"
             v-if="schedule.is_active"
             class="schedule-item"
         >
