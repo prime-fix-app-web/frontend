@@ -84,7 +84,7 @@ async function updateVehicleState() {
   }
   const updatedVehicle = new Vehicle({
     ...oldVehicle,
-    state_maintenance: selectedState.value
+    maintenance_status: selectedState.value
   });
   try {
     await trackingStore.updateVehicle(updatedVehicle.id, updatedVehicle);
@@ -169,7 +169,7 @@ onMounted(async () => {
             <div class="info-row">
               <span class="info-label">{{ $t('vehicle-diagnosis.vehicle-card.status') }}</span>
               <span class="info-value state-value">
-              <span class="info-value state-value">{{steps[vehicle.state_maintenance - 1]?.translationKey ? $t(steps[vehicle.state_maintenance - 1].translationKey) : 'N/A' }}</span>
+              <span class="info-value state-value">{{steps[vehicle.maintenance_status - 1]?.translationKey ? $t(steps[vehicle.maintenance_status - 1].translationKey) : 'N/A' }}</span>
         </span>
             </div>
           </div>
@@ -177,7 +177,7 @@ onMounted(async () => {
             <button
                 type="button"
                 class="state-button"
-                @click="openStateModal(vehicle.id, vehicle.state_maintenance)"
+                @click="openStateModal(vehicle.id, vehicle.maintenance_status)"
                 :disabled="loading">
               {{ $t('vehicle-diagnosis.vehicle-card.change-state-button') }}
             </button>
